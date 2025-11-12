@@ -42,8 +42,6 @@ export const registerUser = async (req: Request, res: Response, next: NextFuncti
             maxAge: 7 * 24 * 60 * 60 * 1000
         });
 
-
-
         res.status(201).json({
             message: ' ✅ User created successfully',
             id: newUser._id,
@@ -63,25 +61,29 @@ export const registerUser = async (req: Request, res: Response, next: NextFuncti
 
 export const loginUser = async (req: Request, res: Response) => {
     try {
-        const { email, password } = req.body;
+        const { login, password } = req.body;
 
-        if(!email || !password) {
-            res.status(400).json({ error:  'Email and password are required'})
-            return
+        if (!login || !password) {
+            return res.status(400).json({ 
+                error: 'Username/email and password are required' 
+            });
         }
-        
-        const user = await User.findOne({email});
+
+        const user = await User.findOne({
+            $or: [
+                { email: login.toLowerCase() },
+                { username: login }
+            ]
+        });
+
         
         if(!user) {
             res.status(400).json({ error: 'Invalid credentials'})
             return
         }
 
-        
-
         const isPasswordValid = await user.comparePassword(password);
         
-
         const token = generateToken({
             userId: user._id.toString(),
             email: user.email
