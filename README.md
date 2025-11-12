@@ -1,4 +1,17 @@
-# Coffeemates-Final_Project
+# ☕ Coffeemates - Final Project
+
+A full-stack application for coffee enthusiasts to connect and share their coffee experiences.
+
+## 🚀 Features
+- User authentication & profiles
+- Coffee shop reviews & ratings
+- Image upload for coffee creations
+- Real-time messaging between users
+
+
+## 🛠️ Development Setup
+
+
 
 ## SERVER
 
@@ -29,13 +42,14 @@
 
 ![Vite](https://img.shields.io/badge/Vite-7.2-646CFF?logo=vite&logoColor=white)
 ![React](https://img.shields.io/badge/React-18.2-61DAFB?logo=react)
+![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-06B6D4?logo=tailwindcss&logoColor=white)
 
 
 ## DATABASE
 
-- Database tool will be PostgreSQL
+- MongoDB is used for database
 
-![PostgreSQL](https://img.shields.io/badge/PostgreSQL-316192?logo=postgresql&logoColor=white)
+![MongoDB](https://img.shields.io/badge/MongoDB-47A248?logo=mongodb&logoColor=white)
 
 
 # Docker 
@@ -49,10 +63,20 @@
 
 
 
+### **API Documentation**
+
+## 📡 API Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/auth/register` | User registration |
+| POST | `/api/auth/login` | User login |
+| GET | `/api/users/profile` | Get user profile |
+| POST | `/api/upload` | Image upload |
+
 
 
 ![NGINX](https://img.shields.io/badge/NGINX-009639?logo=nginx&logoColor=white)
 ![Cypress](https://img.shields.io/badge/Cypress-17202C?logo=cypress&logoColor=white)
-![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-06B6D4?logo=tailwindcss&logoColor=white)
 ![Figma](https://img.shields.io/badge/Figma-F24E1E?logo=figma&logoColor=white)
 ![VS Code](https://img.shields.io/badge/VS_Code-007ACC?logo=visualstudiocode)

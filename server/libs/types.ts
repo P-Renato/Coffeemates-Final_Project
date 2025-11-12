@@ -10,12 +10,13 @@ export interface UserType extends Document {
   updatedAt: Date;
 }
 
-// Or even better, use mongoose's Document directly:
 export interface IUser extends Document {
   username: string;
   email: string;
   password: string;
   comparePassword(candidatePassword: string): Promise<boolean>;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 
