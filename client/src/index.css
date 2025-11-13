@@ -1,8 +1,5 @@
 @import "tailwindcss";
-@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
 
-@layer base {
-  body {
-    @apply font-base text-text bg-white;
-  }
+.border-greyline {
+  border-color: #C4C4C4 !important;
 }
