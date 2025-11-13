@@ -18,7 +18,7 @@ module.exports = {
         sendMessageBtn: "#C4C4C4",
         chatBg: "#9EEF9E",
         profileListBg: "#FBFBED",
-        line: "#C4C4C4",
+        greyline: "#C4C4C4",
         typeBox: "#C4C4C4",
         triangle: "#D9D9D9",
       },
