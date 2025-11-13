@@ -1,9 +1,19 @@
 import express from 'express';
-import { registerUser, loginUser } from '../controllers/userController';
 
-const user = express.Router();
+import { registerUser, loginUser, getCurrentUser, getUserById, getAllUsers, updateUser, changePassword } from '../controllers/userController';
+import { authenticateToken } from '../middlewares/authMiddleware';
 
-user.post('/login', loginUser);
-user.post('/register', registerUser);
 
-export default user;
+const userRouter = express.Router();
+
+userRouter.post('/login', loginUser);
+userRouter.post('/register', registerUser);
+userRouter.get('/:id', getUserById); 
+userRouter.get('/', getAllUsers);
+
+
+userRouter.get('/profile/me', authenticateToken, getCurrentUser);
+userRouter.patch('/profile/update', authenticateToken, updateUser);
+userRouter.patch('/password/change', authenticateToken, changePassword);
+
+export default userRouter;

@@ -1,6 +1,9 @@
 import type { Request, Response, NextFunction } from "express";
 import User from "../models/User";
 import { generateToken } from "../utils/auth";
+import type { AuthRequest } from "../middlewares/authMiddleware";
+import type { UserType } from "../libs/types";
+
 
 
 export const registerUser = async (req: Request, res: Response, next: NextFunction) => {
@@ -111,3 +114,199 @@ export const loginUser = async (req: Request, res: Response) => {
         res.status(500).json({ error: ' ❌  Server error during login' });
     }
 }
+
+
+// This route is to get the currently logged in user's own profile
+export const getCurrentUser = async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.user?.userId;
+    
+    const user: UserType = await User.findById(userId).select('-password');
+    
+    if (!user) {
+      return res.status(404).json({ error: '❌ User not found' });
+    }
+
+    const userObj = (user as any).toObject ? (user as any).toObject() : (user as any);
+
+    res.json({
+      user: {
+        id: userObj._id,
+        username: userObj.username,
+        email: userObj.email,
+        createdAt: userObj.createdAt,
+        updatedAt: userObj.updatedAt
+      }
+    });
+
+  } catch (error) {
+    console.error('❌ Get user error:', error);
+    res.status(500).json({ error: '❌ Server error fetching user' });
+  }
+};
+
+// This route is to get a user's profile publicly, it doesn't need to be your own profile
+export const getUserById = async (req: Request, res: Response) => {
+  try {
+    const userId = req.params.id;
+    
+    const user = await User.findById(userId).select('-password -email');
+    
+    if (!user) {
+      return res.status(404).json({ error: '❌ User not found' });
+    }
+
+    const userObj = (user as any).toObject ? (user as any).toObject() : (user as any);
+
+
+    res.json({
+      user: {
+        id: userObj._id,
+        username: userObj.username,
+        createdAt: userObj.createdAt
+      }
+    });
+
+  } catch (error) {
+    console.error('❌ Get user by ID error:', error);
+    res.status(500).json({ error: '❌ Server error fetching user' });
+  }
+};
+
+
+// Get all users (with pagination)
+export const getAllUsers = async (req: Request, res: Response) => {
+  try {
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 10;
+    const skip = (page - 1) * limit;
+
+    const users = await User.find()
+      .select('-password')
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
+
+    const total = await User.countDocuments();
+
+    res.json({
+      users,
+      currentPage: page,
+      totalPages: Math.ceil(total / limit),
+      totalUsers: total
+    });
+
+  } catch (error) {
+    console.error('❌ Get all users error:', error);
+    res.status(500).json({ error: '❌ Server error fetching users' });
+  }
+};
+
+
+// Update user profile
+export const updateUser = async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.user?.userId;
+    const { username, email } = req.body;
+
+    if (!userId) {
+      return res.status(401).json({ error: '❌ Not authenticated' });
+    }
+
+    // Check if username or email already exists (excluding current user)
+    if (username || email) {
+      const existingUser = await User.findOne({
+        $and: [
+          { _id: { $ne: userId } }, // Not the current user
+          { $or: [{ email }, { username }] }
+        ]
+      });
+
+      if (existingUser) {
+        return res.status(400).json({ 
+          error: '❌ Username or email already taken' 
+        });
+      }
+    }
+
+    const updateData: any = {};
+    if (username) updateData.username = username;
+    if (email) updateData.email = email;
+
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      updateData,
+      { new: true, runValidators: true }
+    ).select('-password');
+
+    if (!updatedUser) {
+      return res.status(404).json({ error: '❌ User not found' });
+    }
+
+    const userObj = (updatedUser as any).toObject ? (updatedUser as any).toObject() : (updatedUser as any);
+
+
+    res.json({
+      message: '✅ Profile updated successfully',
+      user: {
+        id: userObj._id,
+        username: userObj.username,
+        email: userObj.email,
+        updatedAt: userObj.updatedAt
+      }
+    });
+
+  } catch (error: any) {
+    if (error.name === 'ValidationError') {
+      const errors = Object.values(error.errors).map((err: any) => err.message);
+      return res.status(400).json({ error: errors.join(', ') });
+    }
+    console.error('❌ Update user error:', error);
+    res.status(500).json({ error: '❌ Server error updating profile' });
+  }
+};
+
+// Change password
+export const changePassword = async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.user?.userId;
+    const { currentPassword, newPassword } = req.body;
+
+    if (!userId) {
+      return res.status(401).json({ error: '❌ Not authenticated' });
+    }
+
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ 
+        error: '❌ Current password and new password are required' 
+      });
+    }
+
+    if (newPassword.length < 6) {
+      return res.status(400).json({ 
+        error: '❌ New password must be at least 6 characters' 
+      });
+    }
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ error: '❌ User not found' });
+    }
+
+    // Verify current password
+    const isCurrentPasswordValid = await user.comparePassword(currentPassword);
+    if (!isCurrentPasswordValid) {
+      return res.status(400).json({ error: '❌ Current password is incorrect' });
+    }
+
+    // Update password (will be hashed by pre-save hook)
+    user.password = newPassword;
+    await user.save();
+
+    res.json({ message: '✅ Password updated successfully' });
+
+  } catch (error) {
+    console.error('❌ Change password error:', error);
+    res.status(500).json({ error: '❌ Server error changing password' });
+  }
+};
