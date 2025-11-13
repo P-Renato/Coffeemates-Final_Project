@@ -3,6 +3,8 @@ import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import connectDB from './libs/db';
 import userRouter from './routes/userRoutes'
+import commentRouter from './routes/commentRoutes'
+import postRouter from './routes/postRoutes'
 
 const app = express();
 
@@ -33,7 +35,12 @@ app.use('/api/auth', userRouter);
 
 app.get('/api/test', (req, res) => {
   res.json({ message: 'Server is working!' });
-});
+})
+
+app.use("/api/post", postRouter);
+
+app.use("/api/comment", commentRouter )  
+
 
 /* ---------------------- error handlers ---------------------- */
 
@@ -52,4 +59,4 @@ const port = process.env.PORT || 4343;
 
 app.listen(port, () => {
     console.log("Server is running on port ", port)
-});
+})
