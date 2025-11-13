@@ -1,0 +1,34 @@
+import type { Request, Response, NextFunction } from 'express';
+import { verifyToken } from '../utils/auth'; 
+
+
+export interface AuthRequest extends Request {
+  user?: {
+    userId: string;
+    email: string;
+  };
+}
+
+// Authentication middleware
+export const authenticateToken = (req: AuthRequest, res: Response, next: NextFunction) => {
+  try {
+
+    const token = req.cookies.token;
+    
+    if (!token) {
+      return res.status(401).json({ error: '❌ Access denied. No token provided.' });
+    }
+
+    const decoded = verifyToken(token);
+    
+    req.user = {
+      userId: decoded.userId,
+      email: decoded.email
+    };
+    
+    next();
+  } catch (error) {
+    console.error('❌ Token verification error:', error);
+    return res.status(401).json({ error: '❌ Invalid or expired token' });
+  }
+};
