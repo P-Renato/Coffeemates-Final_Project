@@ -2,7 +2,8 @@ import express from 'express';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import connectDB from './libs/db';
-import userRouter from './routes/userRoutes'
+import userRouter from './routes/userRoutes';
+import profileRouter from './routes/profileRoutes';
 
 const app = express();
 
@@ -29,6 +30,7 @@ connectDB();
 
 /* -------------------- routers ------------------------  */
 
+app.use('/api/auth/profile', profileRouter);
 app.use('/api/auth', userRouter);
 
 app.get('/api/test', (req, res) => {

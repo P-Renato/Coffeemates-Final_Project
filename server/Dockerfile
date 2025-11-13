@@ -15,7 +15,7 @@ RUN bun install
 COPY . .
 
 # Expose port
-EXPOSE 5000
+EXPOSE 4343
 
 # Start development server
-CMD ["bun", "--watch", "run", "dev"]
+CMD ["bun", "--watch", "index.ts"]

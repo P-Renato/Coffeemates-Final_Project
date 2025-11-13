@@ -6,6 +6,38 @@ export interface IUser extends Document {
   email: string;
   password: string;
   comparePassword(candidatePassword: string): Promise<boolean>;
+
+  coffeeProfile?: {
+    basics?: {
+      favoriteType?: string;
+      neighborhood?: string;
+      favoriteCafe?: string;
+      coffeeTime?: string;
+      goToPastry?: string;
+    };
+    personality?: {
+      usualOrder?: string;
+      musicCombo?: string;
+      coffeeVibe?: string;
+      friendCafe?: string;
+      dateCafe?: string;
+      coffeeStylePerson?: string;
+    };
+    taste?: {
+      beanOrigin?: string;
+      roastPreference?: string;
+      brewingMethod?: string;
+      milkChoice?: string;
+      sugarSyrup?: string;
+    };
+    vibe?: {
+      coffeeMeaning?: string;
+      bestMemory?: string;
+      idealMate?: string;
+      dreamCafe?: string;
+      cafeToVisit?: string;
+    };
+  };
 }
 
 
@@ -30,6 +62,37 @@ const userSchema = new mongoose.Schema(
             required: [true, '❌ Password is required'],
             minlength: [6, '❌ Password must be at least 6 characters']
         },
+        coffeeProfile: {
+            basics: {
+                favoriteType: String,
+                neighborhood: String,
+                favoriteCafe: String,
+                coffeeTime: String,
+                goToPastry: String
+            },
+            personality: {
+                usualOrder: String,
+                musicCombo: String,
+                coffeeVibe: String,
+                friendCafe: String,
+                dateCafe: String,
+                coffeeStylePerson: String
+            },
+            taste: {
+                beanOrigin: String,
+                roastPreference: String,
+                brewingMethod: String,
+                milkChoice: String,
+                sugarSyrup: String
+            },
+            vibe: {
+                coffeeMeaning: String,
+                bestMemory: String,
+                idealMate: String,
+                dreamCafe: String,
+                cafeToVisit: String
+            }
+        }
     },
     { timestamps: true }
 );

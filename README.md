@@ -47,7 +47,18 @@ A full-stack application for coffee enthusiasts to connect and share their coffe
 
 ## DATABASE
 
-- MongoDB is used for database
+- MongoDB is used for database, and in order to have database accessible to everyone, we an use a default provided by MongoDB and Docker. To run some tests, you will need to initialize the docker container.
+
+- You will also need to create a /server/.env file and have this in it, in order to connect to the database: 
+```
+MONGODB_URI=mongodb://mongodb:27017/coffeemates_db
+
+NODE_ENV=development
+PORT=4343
+
+JWT_SECRET=coffeemates-dev-secret-2024
+JWT_EXPIRES_IN=7d
+```
 
 ![MongoDB](https://img.shields.io/badge/MongoDB-47A248?logo=mongodb&logoColor=white)
 
