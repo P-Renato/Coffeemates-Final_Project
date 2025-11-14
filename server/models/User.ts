@@ -1,47 +1,9 @@
 import mongoose from "mongoose";
 import bcrypt from 'bcrypt';
-
-export interface IUser extends Document {
-  username: string;
-  email: string;
-  password: string;
-  comparePassword(candidatePassword: string): Promise<boolean>;
-
-  coffeeProfile?: {
-    basics?: {
-      favoriteType?: string;
-      neighborhood?: string;
-      favoriteCafe?: string;
-      coffeeTime?: string;
-      goToPastry?: string;
-    };
-    personality?: {
-      usualOrder?: string;
-      musicCombo?: string;
-      coffeeVibe?: string;
-      friendCafe?: string;
-      dateCafe?: string;
-      coffeeStylePerson?: string;
-    };
-    taste?: {
-      beanOrigin?: string;
-      roastPreference?: string;
-      brewingMethod?: string;
-      milkChoice?: string;
-      sugarSyrup?: string;
-    };
-    vibe?: {
-      coffeeMeaning?: string;
-      bestMemory?: string;
-      idealMate?: string;
-      dreamCafe?: string;
-      cafeToVisit?: string;
-    };
-  };
-}
+import type { IUser } from "../libs/types";
 
 
-const userSchema = new mongoose.Schema(
+const userSchema = new mongoose.Schema<IUser>(
     {
         username: {
             type: String,
@@ -105,7 +67,8 @@ userSchema.pre("save", async function (next) {
 })
 
 userSchema.methods.comparePassword = async function(candidatePassword: string): Promise<boolean> {
-  return bcrypt.compare(candidatePassword, this.password);
+    if (!this.password) return false;
+    return bcrypt.compare(candidatePassword, this.password);
 };
 
 const User = mongoose.model<IUser>("User", userSchema);
