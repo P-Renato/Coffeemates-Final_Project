@@ -11,7 +11,7 @@ export interface UserType extends Document {
 }
 
 export interface ICounter extends Document {
-  _id: string; // e.g., 'posts', 'users', etc.
+  _id: string; // posts, users, comments
   seq: number;
 }
 
@@ -26,7 +26,10 @@ export interface IUser extends Document {
 
 export interface IPost extends Document {
   pid: number;
+  title: string;
   content: string;
+  location: string;
+  star: number  ;
   uid: number;
   imageUrl: string;
   commentIds: number[];
@@ -40,10 +43,15 @@ export interface IComment extends Document {
   content: string;
   uid: number;
   pid: number;
-  parentcommentId: number;
+  parentCommentId: number;
   createdAt: Date;
   updatedAt: Date;
 }
+
+export interface CommentWithReplies extends IComment {
+  replies: CommentWithReplies[];
+}
+
 
 export type ErrorType = {
   status: number;

@@ -1,12 +1,13 @@
 import express from 'express';
-import { allPosts, addNewPost, onePost, editPost } from '../controllers/postController';
+import { allPosts, addNewPost, onePost, editPost, deletePost } from '../controllers/postController';
 
-const post = express.Router();
+const posts = express.Router();
 
-post.get("/", allPosts);
-post.post("/", addNewPost);
+// Routes
+posts.get("/:id", onePost);      // Get single post by ID
+posts.patch("/:id", editPost);   // Edit a post by ID
+posts.get("/", allPosts);        // Get all posts
+posts.post("/", addNewPost);     // Add a new post
+posts.delete("/:id", deletePost) // Delete a post and its comments
 
-post.get("/:id",onePost);
-post.patch("/:id", editPost);
-
-export default post
+export default posts;
