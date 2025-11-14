@@ -2,8 +2,6 @@ import type { Request, Response, NextFunction } from "express";
 import User from "../models/User";
 import { generateToken } from "../utils/auth";
 import type { AuthRequest } from "../middlewares/authMiddleware";
-import type { UserType } from "../libs/types";
-
 
 
 export const registerUser = async (req: Request, res: Response, next: NextFunction) => {
@@ -121,7 +119,7 @@ export const getCurrentUser = async (req: AuthRequest, res: Response) => {
   try {
     const userId = req.user?.userId;
     
-    const user: UserType = await User.findById(userId).select('-password');
+    const user = await User.findById(userId).select('-password');
     
     if (!user) {
       return res.status(404).json({ error: '❌ User not found' });
