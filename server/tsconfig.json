@@ -25,6 +25,13 @@
     "noPropertyAccessFromIndexSignature": false,
 
     "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true
-  }
+    "allowSyntheticDefaultImports": true,
+
+    // FOR EXPRESS TYPES
+    "typeRoots": ["./node_modules/@types", "./src/types"],
+    "types": ["node", "express"]
+  },
+  // PATTERN
+   "include": ["**/*"],
+  "exclude": ["node_modules", "dist"]
 }
