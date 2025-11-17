@@ -8,6 +8,8 @@ import commentRouter from './routes/commentRoutes'
 import postRouter from './routes/postRoutes';
 import authRouter from './routes/authRoutes';
 import passport from './utils/passport';
+import locationRouter from './routes/locationRoutes';
+import geocodeRouter from './routes/geocodeRoutes'
 
 const app = express();
 
@@ -40,37 +42,17 @@ app.get('/api/test', (req, res) => {
     res.json({ message: 'Server is working!' });
 })
 
-app.use("/api/post", postRouter);
+// post route
+app.use("/api/post", postRouter); 
 
+// comment route
 app.use("/api/comment", commentRouter);
 
-// map
-app.get("/geocode", async (req, res) => {
-    const address = req.query.address;
+// get location of all posts
+app.use("/api/location", locationRouter);
 
-    if (!address) return res.status(400).send({ error: "Missing address" });
-
-    const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}`;
-
-    try {
-        const response = await fetch(url, {
-            headers: {
-                "User-Agent": "Coffeemates/1.0 (dcistudentcoffemates@gmail.com)",
-            },
-        });
-
-        if (!response.ok) {
-            console.error("Nominatim error:", response.statusText);
-            return res.status(500).send({ error: "Failed to fetch from Nominatim" });
-        }
-
-        const data = await response.json();
-        res.send(data);
-    } catch (err) {
-        console.error("Geocode route error:", err);
-        res.status(500).send({ error: "Failed to fetch from Nominatim" });
-    }
-});
+// change from address to marker in map
+app.use("/api/geocode", geocodeRouter);
 
 
 
