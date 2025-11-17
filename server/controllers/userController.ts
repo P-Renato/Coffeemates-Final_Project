@@ -115,9 +115,10 @@ export const loginUser = async (req: Request, res: Response) => {
 
 
 // This route is to get the currently logged in user's own profile
-export const getCurrentUser = async (req: AuthRequest, res: Response) => {
+export const getCurrentUser = async (req: Request, res: Response) => {
   try {
-    const userId = req.user?.userId;
+    const authReq = req as AuthRequest;
+    const userId = authReq.user?.userId;
     
     const user = await User.findById(userId).select('-password');
     
@@ -202,9 +203,10 @@ export const getAllUsers = async (req: Request, res: Response) => {
 
 
 // Update user profile
-export const updateUser = async (req: AuthRequest, res: Response) => {
+export const updateUser = async (req: Request, res: Response) => {
   try {
-    const userId = req.user?.userId;
+    const authReq = req as AuthRequest;
+    const userId = authReq.user?.userId;
     const { username, email } = req.body;
 
     if (!userId) {
@@ -265,9 +267,10 @@ export const updateUser = async (req: AuthRequest, res: Response) => {
 };
 
 // Change password
-export const changePassword = async (req: AuthRequest, res: Response) => {
+export const changePassword = async (req: Request, res: Response) => {
   try {
-    const userId = req.user?.userId;
+    const authReq = req as AuthRequest;
+    const userId = authReq.user?.userId;
     const { currentPassword, newPassword } = req.body;
 
     if (!userId) {
