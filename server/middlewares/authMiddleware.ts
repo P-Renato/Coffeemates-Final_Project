@@ -2,15 +2,8 @@ import type { Request, Response, NextFunction } from 'express';
 import { verifyToken } from '../utils/auth'; 
 
 
-export interface AuthRequest extends Request {
-  user?: {
-    userId: string;
-    email: string;
-  };
-}
-
 // Authentication middleware
-export const authenticateToken = (req: AuthRequest, res: Response, next: NextFunction) => {
+export const authenticateToken = (req: Request, res: Response, next: NextFunction) => {
   try {
 
     const token = req.cookies.token;
