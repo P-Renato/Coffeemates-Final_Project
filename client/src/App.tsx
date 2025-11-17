@@ -13,7 +13,7 @@ import SettingPage from "./features/settings/SettingPage";
 import LoginPage from "./features/auth/LoginPage";
 import OAuthSuccess from "./pages/OAuthSuccess";
 
-const App = () => {
+export const App = () => {
   return (
     <AppProvider>
       <AuthProvider>
