@@ -1,5 +1,6 @@
 import { Routes, Route } from 'react-router-dom';
 import RegisterPage from './features/auth/RegisterPage';
+import LoginPage from './features/auth/LoginPage';
 import Home from './pages/HomePage';
 import SearchPage from './features/search/SearchPage';
 import MessagePage from './features/messages/MessagePage';
@@ -8,7 +9,7 @@ import SettingPage from './features/settings/SettingPage';
 import OAuthSuccess from './pages/OAuthSuccess';
 
 
-const LoginPage = () => <div>Login Page Coming Soon!</div>;
+// const LoginPage = () => <div>Login Page Coming Soon!</div>;
 // const FeedPage = () => <div>Social Feed</div>;
 
 const App = () => {
