@@ -21,7 +21,7 @@ const initialFormData: RegisterFormData = {
 };
 
 // change to actual backend URL when deployed or running locally
-const API_BASE_URL = 'http://localhost:3000/api/auth/signup';
+const API_BASE_URL = 'http://localhost:4343/api/auth/register';
 
 
 const RegisterPage: React.FC = () => {
@@ -50,6 +50,7 @@ const RegisterPage: React.FC = () => {
       const response = await fetch(API_BASE_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify(formData),
       });
 
@@ -59,13 +60,14 @@ const RegisterPage: React.FC = () => {
         throw new Error(errorData.message || 'Registration failed due to server error.');
       }
       
-      
+      const result = await response.json();
       setStatus({ loading: false, error: null, success: true });
       setFormData(initialFormData);
-      console.log('Registration Successful! Ready to redirect.');
+      console.log('Registration Successful: ', result);
       
-      // If redirection is enabled:
-      // navigate('/login');
+      setTimeout(() => {
+        window.location.href = '/login';
+      }, 2000);
 
     } catch (err) {
      
@@ -127,8 +129,8 @@ const RegisterPage: React.FC = () => {
 
      
       <div style={{ display: 'flex', gap: '10px', margin: '20px 0' }}>
-          <button type="button" style={socialButtonStyle}>Sign up with Google</button>
-          <button type="button" style={socialButtonStyle}>Sign up with Facebook</button>
+          <button type="button" onClick={() => window.location.href = "http://localhost:4343/auth/google"} style={socialButtonStyle}>Sign up with Google</button>
+          <button type="button" onClick={() => window.location.href = "http://localhost:4343/auth/facebook"} style={socialButtonStyle}>Sign up with Facebook</button>
       </div>
 
       <div style={{ margin: '20px 0', color: '#888' }}>— OR —</div>
