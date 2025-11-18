@@ -1,11 +1,12 @@
-import Sidebar from "../components/Sidebar";
-import FeedPage from "../features/posts/FeedPage";
 
-export default function Home() {
-  return (
-    <div className="flex gap-8 ">
-        <Sidebar />
-        <FeedPage />
-    </div>
-  )
+import Map from "../components/Map";
+import PostPage from "../features/posts/PostPage";
+
+export default function HomePage() {
+   return (
+     <div className="bg-pink-300 w-[90%]">
+         <Map />
+         <PostPage />
+     </div>
+   )
 }

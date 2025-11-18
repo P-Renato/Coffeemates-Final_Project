@@ -1,4 +1,3 @@
-// src/geocode.ts
 
 export interface Coordinates {
   lat: number;
@@ -13,7 +12,7 @@ interface NominatimResult {
 }
 
 export async function geocodeAddress(address: string): Promise<Coordinates | null> {
-  const res = await fetch(`http://localhost:4343/geocode?address=${encodeURIComponent(address)}`);
+  const res = await fetch(`http://localhost:4343/api/geocode?address=${encodeURIComponent(address)}`);
   
   if (!res.ok) {
     console.error("Failed to fetch geocode:", res.statusText);

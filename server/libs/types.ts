@@ -78,6 +78,14 @@ export interface IComment extends Document {
   updatedAt: Date;
 }
 
+export interface ILocation extends Document {
+  address: string;
+  lat: number;
+  lng: number;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 export interface CommentWithReplies extends IComment {
   replies: CommentWithReplies[];
 }
