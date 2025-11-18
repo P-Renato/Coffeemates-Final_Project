@@ -11,6 +11,7 @@ const postSchema = new mongoose.Schema(
     location: {type: String, require: true },
     star: {type: Number, require: false },
     uid: { type: String, required: true },
+    shopName: {type: String, require: true},
     imageUrl: { type: String }, 
     commentIds: { type: [String], default: [] }, 
     likeIds: { type: [String], default: [] },  

@@ -1,11 +1,20 @@
 export type PostType = {
+    _id: string,
     title: string,
     content: string,
     location: string,
     star: number,
-    uid: number,
+    uid: string,
+    shopName: string,
     commentIds: number[],
     likeIds: number[],
     imageUrl: string,
-    pid: number,
+    pid: string,
+}
+
+export type CommentType = {
+    content: string,
+    uid: string,
+    pid: string,
+    parentCommentId: string,
 }
