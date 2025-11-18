@@ -1,4 +1,4 @@
-import React from 'react'
+//cliant/compornents/Navbar
 
 interface NavbarProps {
     user?: {
@@ -45,7 +45,7 @@ export default function Navbar({ user }: NavbarProps) {
                         Hello <span className="font-bold text-2xl">{user.name}</span>
                     </p>
 
-                    {/* 横線 */}
+                    {/* holizontal */}
                     <div className="w-full border-t border-greyline mt-3 mb-4"></div>
 
                     {/* Notification */}

@@ -2,7 +2,12 @@
 module.exports = {
   content: [
     "./src/**/*.{js,ts,jsx,tsx}",
+    "./pages/**/*.{js,ts,jsx,tsx}",
+    "./components/**/*.{js,ts,jsx,tsx}",
+    "./client/**/*.{js,ts,jsx,tsx}",
+    "./client/components/**/*.{js,ts,jsx,tsx}",
   ],
+
   theme: {
     extend: {
       colors: {
@@ -11,7 +16,10 @@ module.exports = {
         bg2: "#FFFFFF",
         bgTransparentWhite: "rgba(255, 255, 255, 0.9)",
         bgTransparentDark: "rgba(26, 26, 26, 0.9)",
+
         deleteBtn: "#B01D1D",
+        saveBtn: "#6A8DFF",
+
         noBtn: "#857D7D",
         followBtn: "#908A8A",
         editProfileBtn: "#908A8A",

@@ -13,28 +13,13 @@ const LoginPage = () => <div>Login Page Coming Soon!</div>;
 
 const App = () => {
   return (
-    <Routes>
+    <div className="flex">
+      <Navbar user={user} />
 
-      {/*  Routes without sidebar - after activate login authentication will open this route
-      <Route element={<AuthLayout />}>
-        <Route path="/signup" element={<RegisterPage />} />
-        <Route path="/login" element={<LoginPage />} />
-      </Route>
-       */}
-
-      {/*  Routes WITH sidebar */}
-      <Route element={<MainLayout />}>
-        <Route path="/" element={<HomePage />} />
-        <Route path="/search" element={<SearchPage />} />
-        <Route path="/messages" element={<MessagePage />} />
-        <Route path="/profile" element={<ProfilePage />} />
-        <Route path="/settings" element={<SettingPage />} />
-      </Route>
-
-      {/* Catch-all */}
-      <Route path="*" element={<h1>404: Not Found</h1>} />
-    </Routes>
+      <main className="flex-1 bg-[#f8f8f8] min-h-screen p-8">
+        <Settings />
+      </main>
+    </div>
   );
-};
+}
 
-export default App;
