@@ -9,21 +9,21 @@ import SearchPage from "./features/search/SearchPage";
 import MessagePage from "./features/messages/MessagePage";
 import ProfilePage from "./features/profile/ProfilePage";
 import SettingPage from "./features/settings/SettingPage";
-
-const LoginPage = () => <div>Login Page Coming Soon!</div>;
-// const LoginPage = () => <div>Login Page Coming Soon!</div>;
-// const FeedPage = () => <div>Social Feed</div>;
+import LoginPage from "./features/auth/LoginPage";
+import OAuthSuccess from "./pages/OAuthSuccess";
 
 const App = () => {
   return (
     <AuthProvider>
       <Routes>
+        <Route path="/test" element={<div>Test Route Works!</div>} />
 
         {/* Routes without sidebar - after activate login authentication will open this route */}
         <Route element={<AuthLayout />}>
           <Route path="/signup" element={<RegisterPage />} />
           <Route path="/login" element={<LoginPage />} />
         </Route>
+        <Route path="/oauth-success" element={<OAuthSuccess />} />
 
         {/*  Routes WITH sidebar */}
 
@@ -40,9 +40,6 @@ const App = () => {
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/settings" element={<SettingPage />} />
         </Route>
-
-        {/* <Route element={<MainLayout />}>
-        </Route> */}
 
         {/* Catch-all */}
         <Route path="*" element={<h1>404: Not Found</h1>} />
