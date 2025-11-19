@@ -2,10 +2,6 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
 export default defineConfig({
-<<<<<<< HEAD
-  plugins: [react()],
-});
-=======
   plugins: [react(), tailwindcss(),],
   server: {
     port: 5173,
@@ -30,4 +26,3 @@ export default defineConfig({
     }
   }
 })
->>>>>>> c4a4d9d (OAuth login working - Google - Facebook)
