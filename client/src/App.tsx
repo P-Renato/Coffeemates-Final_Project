@@ -40,6 +40,5 @@ const App = () => {
       </Routes>
     </AppProvider>
   );
-};
+}
 
-export default App;

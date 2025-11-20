@@ -1,2 +1,12 @@
+/* client/src/index.css */
 @import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
+.border-greyline {
+  border-color: #C4C4C4 !important;
+}
+.bg-noBtn {
+  background-color: #C4C4C4 !important;
+}
