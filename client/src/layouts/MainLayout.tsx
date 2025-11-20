@@ -8,8 +8,9 @@ const MainLayout = () => {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [location, setLocation] = useState("");
-  const [star, setStar] = useState(5);
+  const [star, setStar] = useState(null);
   const [imageUrl, setImageUrl] = useState("");
+  const [shopName, setShopName] = useState("");
 
   const postHandler = async (e) => {
     e.preventDefault();
@@ -30,8 +31,9 @@ const MainLayout = () => {
       setTitle("");
       setContent("");
       setLocation("");
-      setStar(5);
+      setStar(null);
       setImageUrl("");
+      setShopName("");
 
     } catch (err) {
       console.error("fetch error", err);
@@ -45,8 +47,9 @@ const MainLayout = () => {
     setTitle("");
     setContent("");
     setLocation("");
-    setStar(5);
+    setStar(null);
     setImageUrl("");
+    setShopName("");
   };
   return (
     <div className="flex">
@@ -58,14 +61,15 @@ const MainLayout = () => {
             <h2 className="text-2xl font-bold text-blue-600 text-center mb-6">Create new post</h2>
 
             <div className="flex flex-col sm:flex-row gap-10">
-              <input type="file" className="w-70 h-70 bg-gray-200 rounded-lg object-cover m-auto mt-2" />
+              <input value={imageUrl} type="file" name="postImg" className="w-70 h-70 bg-gray-200 rounded-lg object-cover m-auto mt-2" />
 
               <form onSubmit={postHandler} className="flex flex-col gap-4 flex-1">
-                <input className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400" type="text" placeholder="Title" />
-                <input className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400" type="text" placeholder="Location" />
-                <input className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400" type="text" placeholder="Rating (1-5)" />
+                <input value={title} className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400" type="text" placeholder="Title" />
+                <input value={shopName} className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400" type="text" placeholder="Name of shop" />
+                <input value={location} className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400" type="text" placeholder="Location" />
+                <input value={star} className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400" type="text" placeholder="Rating (1-5)" />
 
-                <textarea className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400" rows={8} placeholder="Write your review here..."></textarea>
+                <textarea value={content} className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400" rows={8} placeholder="Write your review here..."></textarea>
 
                 <button type="submit" className="w-[10em] m-auto bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition cursor-pointer">
                   Post
