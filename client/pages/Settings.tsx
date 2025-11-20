@@ -1,7 +1,7 @@
 import React, { useState } from "react";
-import CoffeeQuestionRow from "../components/CoffeeQuestionRow";
-import CoffeeQuestionPicker from "../components/CoffeeQuestionPicker";
-import DeleteAccountModal from "../components/DeleteAccountModal";
+import CoffeeQuestionRow from "../src/components/CoffeeQuestionRow";
+import CoffeeQuestionPicker from "../src/components/CoffeeQuestionPicker";
+import DeleteAccountModal from "../src/components/DeleteAccountModal";
 
 export default function Settings() {
   const [coverPhoto, setCoverPhoto] = useState<string | null>(
