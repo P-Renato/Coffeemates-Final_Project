@@ -1,5 +1,6 @@
 import express from 'express';
 import cors from 'cors';
+import path from 'path';
 import cookieParser from 'cookie-parser';
 import connectDB from './libs/db';
 import userRouter from './routes/userRoutes';
@@ -11,7 +12,10 @@ import passport from './utils/passport';
 import locationRouter from './routes/locationRoutes';
 import geocodeRouter from './routes/geocodeRoutes'
 
+
 const app = express();
+app.use(express.static(path.join(__dirname, 'public')));
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 /* ----------- middlewares ---------------------- */
 

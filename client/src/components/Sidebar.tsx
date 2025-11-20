@@ -15,9 +15,6 @@ export default function Sidebar() {
         <li><NavLink to="/profile">Profile</NavLink></li>
         <li><NavLink to="/settings">Settings</NavLink></li>
       </ul>
-
-      
-      
     </div>
   )
 }

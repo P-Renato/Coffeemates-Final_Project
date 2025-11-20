@@ -13,6 +13,7 @@ export type PostType = {
 }
 
 export type CommentType = {
+    _id: string,
     content: string,
     uid: string,
     pid: string,
