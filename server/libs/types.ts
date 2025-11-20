@@ -61,9 +61,10 @@ export interface IPost extends Document {
   location: string;
   star: number  ;
   uid: number;
+  shopName: string;
   imageUrl: string;
-  commentIds: number[];
-  likeIds: number[];
+  commentIds: string[];
+  likeIds: string[];
   createdAt: Date;
   updatedAt: Date;
 }
