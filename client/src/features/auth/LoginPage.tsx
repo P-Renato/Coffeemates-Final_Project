@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import type { FormEvent, ChangeEvent } from 'react';
-//import { useNavigate } from 'react-router-dom'; //uncomment later
-
+import { useAuth } from '../../hooks/useAuth';
 
 interface LoginFormData {
   login: string; 
@@ -24,7 +23,7 @@ const API_BASE_URL = 'http://localhost:4343/api/auth/login';
 
 
 const LoginPage: React.FC = () => {
-  //const navigate = useNavigate(); //uncomment later
+  const { login } = useAuth();
   const [formData, setFormData] = useState<LoginFormData>(initialFormData);
   const [status, setStatus] = useState<Status>({ loading: false, error: null, success: false });
 
@@ -57,12 +56,19 @@ const LoginPage: React.FC = () => {
       }
       
       const data = await response.json();
-      setStatus({ loading: false, error: null, success: true });
       console.log('Login Successful! ', data);
-      window.location.href = '/';
       
-      
-      
+      const token = data.token || data.user?.token; 
+      const user = data.user || data.userData;
+
+      if(token && user) {
+        login(token, user);
+        setStatus({loading: false, error: null, success: true });
+
+        window.location.href = '/';
+      } else {
+        throw new Error('Invalid response from server: missing token or user data');
+      }
     } catch (err) {
       const errorMessage = (err instanceof Error) ? err.message : 'A network error occurred during login.';
       console.error('Login Error:', errorMessage);

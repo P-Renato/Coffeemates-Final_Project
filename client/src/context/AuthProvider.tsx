@@ -18,10 +18,15 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       try {
         const token = localStorage.getItem('authToken');
         const userData = localStorage.getItem('userData');
+
+        console.log('AuthProvider: Checking auth status', { token, userData });
         
         if (token && userData) {
           setIsAuthenticated(true);
           setUser(JSON.parse(userData));
+          console.log('AuthProvider: User is authenticated');
+        } else {
+          console.log('AuthProvider: No auth token found');
         }
       } catch (error) {
         console.error('Error checking auth status:', error);
@@ -35,10 +40,12 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   }, []);
 
   const login = (token: string, userData: User) => {
+    console.log('AuthProvider: Login called with', { token, userData });
     localStorage.setItem('authToken', token);
     localStorage.setItem('userData', JSON.stringify(userData));
     setIsAuthenticated(true);
     setUser(userData);
+    console.log('AuthProvider: Authentication state updated');
   };
 
   const logout = () => {
