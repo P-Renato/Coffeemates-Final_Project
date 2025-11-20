@@ -40,6 +40,11 @@ connectDB();
 
 /* -------------------- routers ------------------------  */
 
+// Add this at the top of your authRouter.ts, before the Google routes
+authRouter.get('/test', (req, res) => {
+    res.json({ message: 'Auth router is working!' });
+});
+
 app.use('/api/auth/profile', profileRouter);
 app.use('/api/auth', userRouter);
 app.use('/auth', authRouter);

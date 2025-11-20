@@ -4,49 +4,81 @@ import { generateToken } from '../utils/auth';
 
 const authRouter = express.Router();
 
-// Google OAuth routes
+// Google OAuth initiation route
 authRouter.get('/google', passport.authenticate('google', {
     scope: ['profile', 'email']
 }));
 
+// Facebook OAuth initiation route  
+authRouter.get('/facebook', passport.authenticate('facebook', {
+    scope: ['email']
+}));
+
+// Google OAuth callback - REPLACE your current version with this
 authRouter.get('/google/callback', 
     passport.authenticate('google', { 
         failureRedirect: `${process.env.CLIENT_URL}/login?error=oauth_failed`,
         session: false 
     }),
-    (req, res) => {
-        // Generate JWT token for the authenticated user
-        const user = req.user as any;
-        const token = generateToken({
-            userId: user._id.toString(),
-            email: user.email
-        });
+    async (req, res) => {
+        try {
+            const user = req.user as any;
+            const token = generateToken({
+                userId: user._id.toString(),
+                email: user.email
+            });
 
-        // Redirect to frontend with token
-        res.redirect(`${process.env.CLIENT_URL}/oauth-success?token=${token}&userId=${user._id}`);
+            // Include complete user data
+            const userData = {
+                id: user._id.toString(),
+                username: user.username,
+                email: user.email
+            };
+
+            const encodedUserData = encodeURIComponent(JSON.stringify(userData));
+            
+            console.log('OAuth redirect with user data:', userData);
+            
+            // Redirect with both token AND user data
+            res.redirect(`${process.env.CLIENT_URL}/oauth-success?token=${token}&user=${encodedUserData}`);
+        } catch (error) {
+            console.error('OAuth callback error:', error);
+            res.redirect(`${process.env.CLIENT_URL}/login?error=oauth_failed`);
+        }
     }
 );
 
-// Facebook OAuth routes
-authRouter.get('/facebook', passport.authenticate('facebook', {
-    scope: ['email']
-}));
-
+// Facebook OAuth callback - REPLACE your current version with this
 authRouter.get('/facebook/callback',
     passport.authenticate('facebook', { 
         failureRedirect: `${process.env.CLIENT_URL}/login?error=oauth_failed`,
         session: false 
     }),
-    (req, res) => {
-        // Generate JWT token for the authenticated user
-        const user = req.user as any;
-        const token = generateToken({
-            userId: user._id.toString(),
-            email: user.email
-        });
+    async (req, res) => {
+        try {
+            const user = req.user as any;
+            const token = generateToken({
+                userId: user._id.toString(),
+                email: user.email
+            });
 
-        // Redirect to frontend with token
-        res.redirect(`${process.env.CLIENT_URL}/oauth-success?token=${token}&userId=${user._id}`);
+            // Include complete user data
+            const userData = {
+                id: user._id.toString(),
+                username: user.username,
+                email: user.email
+            };
+
+            const encodedUserData = encodeURIComponent(JSON.stringify(userData));
+            
+            console.log('OAuth redirect with user data:', userData);
+            
+            // Redirect with both token AND user data
+            res.redirect(`${process.env.CLIENT_URL}/oauth-success?token=${token}&user=${encodedUserData}`);
+        } catch (error) {
+            console.error('OAuth callback error:', error);
+            res.redirect(`${process.env.CLIENT_URL}/login?error=oauth_failed`);
+        }
     }
 );
 
