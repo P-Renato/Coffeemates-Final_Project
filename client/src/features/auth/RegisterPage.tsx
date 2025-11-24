@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import type { FormEvent, ChangeEvent } from 'react';
+import { useNavigate } from "react-router-dom";
 
 
 interface RegisterFormData {
@@ -26,7 +27,7 @@ const API_BASE_URL = 'http://localhost:4343/api/auth/register';
 
 const RegisterPage: React.FC = () => {
   // TODO: Use useNavigate() from react-router-dom to redirect to /login
-  // const navigate = useNavigate(); 
+  const navigate = useNavigate(); 
   
   const [formData, setFormData] = useState<RegisterFormData>(initialFormData);
   const [status, setStatus] = useState<Status>({ loading: false, error: null, success: false });
@@ -66,7 +67,7 @@ const RegisterPage: React.FC = () => {
       console.log('Registration Successful: ', result);
       
       setTimeout(() => {
-        window.location.href = '/login';
+        navigate('/login');;
       }, 2000);
 
     } catch (err) {

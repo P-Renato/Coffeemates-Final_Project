@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import type { FormEvent, ChangeEvent } from 'react';
 import { useAuth } from '../../hooks/useAuth';
+import { useNavigate } from 'react-router-dom';
 
 interface LoginFormData {
   login: string; 
@@ -26,6 +27,7 @@ const LoginPage: React.FC = () => {
   const { login } = useAuth();
   const [formData, setFormData] = useState<LoginFormData>(initialFormData);
   const [status, setStatus] = useState<Status>({ loading: false, error: null, success: false });
+  const navigate = useNavigate();
 
  
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -65,7 +67,7 @@ const LoginPage: React.FC = () => {
         login(token, user);
         setStatus({loading: false, error: null, success: true });
 
-        window.location.href = '/';
+        navigate('/home');
       } else {
         throw new Error('Invalid response from server: missing token or user data');
       }
