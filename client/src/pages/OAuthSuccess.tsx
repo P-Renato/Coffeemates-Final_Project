@@ -84,7 +84,7 @@ const OAuthSuccess = () => {
         
         // Small delay to show success message
         setTimeout(() => {
-          navigate("/");
+          navigate("/home");
         }, 1000);
 
       } catch (error) {
