@@ -6,6 +6,6 @@ export const getlocation = async(req: Request, res: Response) => {
         const locations = await Location.find();
         res.status(200).json({ success: true, locations });
       } catch (err) {
-        res.status(500).json({ success: false, msg: "Error fetching location in posts" });
+        res.status(500).json({ success: false, msg: "Error fetching location in location" });
       }
 }
