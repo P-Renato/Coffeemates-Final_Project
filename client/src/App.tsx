@@ -15,18 +15,19 @@ import OAuthSuccess from "./pages/OAuthSuccess";
 
 const App = () => {
   return (
+    <AppProvider>
+      <AuthProvider>
+        <Routes>
+          {/* Redirect root to login */}
+          <Route path="/" element={<Navigate to="/home" replace />} />
 
-    <AuthProvider>
-      <AppProvider>
-      <Routes>
-        {/* Redirect root to login */}
-        <Route path="/" element={<Navigate to="/login" replace />} />
+          {/* Public routes - accessible without authentication */}
+          <Route element={<AuthLayout />}>
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/signup" element={<RegisterPage />} />
+          </Route>
 
-        {/* Public routes - accessible without authentication */}
-        <Route element={<AuthLayout />}>
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/signup" element={<RegisterPage />} />
-        </Route>
+    
 
         {/* OAuth success route */}
         

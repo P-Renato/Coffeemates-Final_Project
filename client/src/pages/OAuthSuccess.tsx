@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from '../hooks/useAuth';
 
@@ -6,8 +6,15 @@ const OAuthSuccess = () => {
   const navigate = useNavigate();
   const { login } = useAuth();
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
+  const hasHandledOAuth = useRef(false);
 
   useEffect(() => {
+    // Prevent double execution
+    if (hasHandledOAuth.current) {
+      return;
+    }
+    hasHandledOAuth.current = true;
+
     const handleOAuthSuccess = async () => {
       try {
         const urlParams = new URLSearchParams(window.location.search);
@@ -32,18 +39,22 @@ const OAuthSuccess = () => {
           // Format 1: User data is provided in URL
           userData = JSON.parse(decodeURIComponent(userParam));
         } else if (userId) {
-          // Format 2: Only userId is provided - we need to fetch user data
+          // Format 2: Only userId is provided - we need to fetch user data WITH AUTH
           console.log('Fetching user data for userId:', userId);
-
+          
           try {
-            // Use relative URL (Vite proxy will handle it)
-            const response = await fetch(`/api/users/${userId}`);
-
+            // ✅ USE THE TOKEN FOR AUTHORIZATION
+            const response = await fetch(`/api/users/${userId}`, {
+              headers: {
+                'Authorization': `Bearer ${token}`
+              }
+            });
+            
             console.log('Fetch response status:', response.status, response.statusText);
-
+            
             if (response.ok) {
               const data = await response.json();
-              userData = data.user; // Your backend returns { user: {...} }
+              userData = data.user;
               console.log('Fetched user data:', userData);
             } else {
               const errorText = await response.text();
@@ -54,20 +65,6 @@ const OAuthSuccess = () => {
             console.error('Fetch error:', fetchError);
             throw new Error(`Network error while fetching user data: ${(fetchError as Error).message}`);
           }
-          // Fetch user data from your backend
-          const response = await fetch(`/api/users/${userId}`, {
-            headers: {
-              'Authorization': `Bearer ${token}`
-            }
-          });
-
-          if (response.ok) {
-            const data = await response.json();
-            userData = data.user;
-            console.log('Fetched user data:', userData);
-          } else {
-            throw new Error('Failed to fetch user data from server');
-          }
         } else {
           throw new Error('No user data or userId received from OAuth provider');
         }
@@ -77,23 +74,22 @@ const OAuthSuccess = () => {
         }
 
         // Call the login function from auth context
-        login(token, userData);
-
+        await login(token, userData);
+        
         setStatus('success');
         console.log('OAuthSuccess - Login successful, redirecting to home');
-
-        // Small delay to show success message
-        setTimeout(() => {
-          navigate("/home");
-        }, 1000);
+        
+        // Clear URL parameters to prevent re-triggering
+        window.history.replaceState({}, '', window.location.pathname);
+        
+        // Navigate immediately
+        navigate("/", { replace: true });
 
       } catch (error) {
         console.error('OAuthSuccess - Error:', error);
         setStatus('error');
-
-        setTimeout(() => {
-          navigate("/login");
-        }, 2000);
+        
+        navigate("/login", { replace: true, state: { error: 'OAuth login failed' } });
       }
     };
 
