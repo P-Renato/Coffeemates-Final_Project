@@ -1,5 +1,6 @@
 import { NavLink } from "react-router-dom";
-import { useAppContext } from "../context/AppContext";
+import { useAppContext } from "../context/LocationPostContext";
+import { useAuth } from "../hooks/useAuth";
 
 interface SidebarProps {
     user?: {
@@ -8,15 +9,12 @@ interface SidebarProps {
     };
 }
 
-export default function Sidebar({ user }: SidebarProps) {
+export default function Sidebar() {
     const { postPopup, setPostPopup } = useAppContext();
-
-    // Temporary user mock
-    const tempUser = { name: "Test User", photoURL: "" };
-    user = user || tempUser;
+    const { user, logout } = useAuth();
 
     const navItems = [
-        { label: 'Home', icon: '🏠', url: '/' },
+        { label: 'Home', icon: '🏠', url: '/home' },
         { label: 'Search', icon: '🔍', url: '/search' },
         { label: 'Messages', icon: '💬', url: '/messages' },
         { label: 'Post', icon: '➕' },
@@ -45,11 +43,12 @@ export default function Sidebar({ user }: SidebarProps) {
                 <div className="flex flex-col items-center w-full">
                     <img
                         src={user.photoURL || '/default-avatar.png'}
-                        alt={user.name}
+                        alt={user.username}
                         className="w-20 h-20 rounded-full object-cover"
                     />
                     <p className="mt-3 text-profile">
-                        Hello <span className="font-bold text-2xl">{user.name}</span>
+                        Hello <span className="font-bold text-2xl">{user.username}</span>
+                        <button className="cursor-pointer w-full bg-blue-400 text-white"  onClick={() => logout()}>Logout</button>
                     </p>
 
                     {/* horizontal */}
