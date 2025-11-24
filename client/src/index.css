@@ -1,7 +1,10 @@
+/* from Yuki, if using postcss + tailwind
 @tailwind base;
 @tailwind components;
-@tailwind utilities;
+@tailwind utilities;*/
 
-/* your custom styles */
+/* this code lin 7 using tailwind + vite */
+ @import "tailwindcss";  
+
 .border-greyline { border-color: #C4C4C4 !important; }
 .bg-noBtn { background-color: #C4C4C4 !important; }

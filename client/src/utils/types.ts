@@ -10,6 +10,7 @@ export type PostType = {
     likeIds: number[],
     imageUrl: string,
     pid: string,
+    createdAt: string,
 }
 
 export type CommentType = {
@@ -18,4 +19,12 @@ export type CommentType = {
     uid: string,
     pid: string,
     parentCommentId: string,
+    createdAt: string,
+}
+
+export interface Location {
+  id: string;
+  name: string;
+  lat: number;
+  lng: number;
 }
