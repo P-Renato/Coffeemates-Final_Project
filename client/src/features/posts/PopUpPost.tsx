@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { useAppContext } from "../../context/AppContext";
+import { useAppContext } from "../../context/LocationPostContext.tsx";
 import LocationPicker from "../map/LocationPicker";
 import { geocodeAddress } from "../../utils/geocode.ts";
+import { useAuth } from "../../hooks/useAuth.ts";
 
 export default function PopUpPost() {
+    const { user } = useAuth();
+
     const { setPostPopup } = useAppContext();
     const { setLocationList } = useAppContext();
 
@@ -55,11 +58,16 @@ export default function PopUpPost() {
             return alert("Invalid coordinates. Please pick a location again.");
         }
 
+        if (!user || !user._id) {
+            return alert("User is not authenticated.");
+        }
+
         const formData = new FormData();
         formData.append("title", title);
         formData.append("content", content);
         formData.append("shopName", shopName);
         formData.append("star", star);
+        formData.append("uid", user._id);
         formData.append("postImg", imageFile);
         formData.append("location", location);
         formData.append("lat", finalLat.toString());

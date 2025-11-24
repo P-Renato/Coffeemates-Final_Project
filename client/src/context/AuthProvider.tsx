@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import type { ReactNode } from 'react';
 import type { User, AuthContextType } from '../types/auth';
 import { AuthContext } from './AuthContext';
+
 
 interface AuthProviderProps {
   children: ReactNode;
@@ -12,6 +13,13 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  const logout = useCallback(() => {
+    localStorage.removeItem('authToken');
+    localStorage.removeItem('userData');
+    setIsAuthenticated(false);
+    setUser(null);
+  }, []);
+
   // Check for existing authentication on app load
   useEffect(() => {
     const checkAuthStatus = () => {
@@ -20,13 +28,14 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         const userData = localStorage.getItem('userData');
 
         console.log('AuthProvider: Checking auth status', { token, userData });
-        
+
         if (token && userData) {
           setIsAuthenticated(true);
           setUser(JSON.parse(userData));
           console.log('AuthProvider: User is authenticated');
         } else {
           console.log('AuthProvider: No auth token found');
+          logout(); // ensure clean state
         }
       } catch (error) {
         console.error('Error checking auth status:', error);
@@ -37,7 +46,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     };
 
     checkAuthStatus();
-  }, []);
+  }, [logout]);
 
   const login = (token: string, userData: User) => {
     console.log('AuthProvider: Login called with', { token, userData });
@@ -48,13 +57,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     console.log('AuthProvider: Authentication state updated');
   };
 
-  const logout = () => {
-    localStorage.removeItem('authToken');
-    localStorage.removeItem('userData');
-    setIsAuthenticated(false);
-    setUser(null);
-  };
-
   const value: AuthContextType = {
     isAuthenticated,
     user,
@@ -63,9 +65,5 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     logout,
   };
 
-  return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

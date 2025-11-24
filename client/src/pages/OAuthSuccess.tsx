@@ -97,12 +97,12 @@ const OAuthSuccess = () => {
   }, [navigate, login]);
 
   return (
-    <div style={{ 
-      display: 'flex', 
-      justifyContent: 'center', 
-      alignItems: 'center', 
+    <div style={{
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center',
       height: '100vh',
-      flexDirection: 'column' 
+      flexDirection: 'column'
     }}>
       {status === 'loading' && (
         <>
@@ -110,14 +110,14 @@ const OAuthSuccess = () => {
           <p>Please wait while we log you in.</p>
         </>
       )}
-      
+
       {status === 'success' && (
         <>
           <h2 style={{ color: 'green' }}>Login Successful!</h2>
           <p>Redirecting to home page...</p>
         </>
       )}
-      
+
       {status === 'error' && (
         <>
           <h2 style={{ color: 'red' }}>Login Failed</h2>
