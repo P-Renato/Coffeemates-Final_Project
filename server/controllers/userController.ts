@@ -47,7 +47,8 @@ export const registerUser = async (req: Request, res: Response, next: NextFuncti
             message: ' ✅ User created successfully',
             id: newUser._id,
             username: newUser.username,
-            email: newUser.email
+            email: newUser.email,
+            token: token
         })
 
         
@@ -102,7 +103,8 @@ export const loginUser = async (req: Request, res: Response) => {
             user: {
                 id: user._id,
                 username: user.username,
-                email: user.email
+                email: user.email,
+                token: token
             }
         });
 

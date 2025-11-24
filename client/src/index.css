@@ -1,2 +1,7 @@
-@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
+/* your custom styles */
+.border-greyline { border-color: #C4C4C4 !important; }
+.bg-noBtn { background-color: #C4C4C4 !important; }

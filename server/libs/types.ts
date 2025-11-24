@@ -61,9 +61,10 @@ export interface IPost extends Document {
   location: string;
   star: number  ;
   uid: number;
+  shopName: string;
   imageUrl: string;
-  commentIds: number[];
-  likeIds: number[];
+  commentIds: string[];
+  likeIds: string[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -74,6 +75,14 @@ export interface IComment extends Document {
   uid: number;
   pid: number;
   parentCommentId: number;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface ILocation extends Document {
+  address: string;
+  lat: number;
+  lng: number;
   createdAt: Date;
   updatedAt: Date;
 }

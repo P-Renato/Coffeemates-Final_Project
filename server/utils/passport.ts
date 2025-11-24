@@ -2,6 +2,8 @@ import passport from 'passport';
 import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
 import { Strategy as FacebookStrategy } from 'passport-facebook';
 import User from '../models/User';
+import bcrypt from 'bcrypt';
+
 
 // Serialize user for sessions
 passport.serializeUser((user: any, done) => {
@@ -44,7 +46,8 @@ passport.use(new GoogleStrategy({
                 googleId: profile.id,
                 email: profile.emails?.[0]?.value,
                 username: profile.displayName?.replace(/\s+/g, '').toLowerCase() || `user${Date.now()}`,
-                oauthProvider: 'google'
+                oauthProvider: 'google',
+                password: await bcrypt.hash('oauth-user-' + Date.now(), 10)
             });
             await user.save();
         }

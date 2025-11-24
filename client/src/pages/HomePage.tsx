@@ -1,11 +1,14 @@
-import Sidebar from "../components/Sidebar";
-import FeedPage from "../features/posts/FeedPage";
 
-export default function Home() {
-  return (
-    <div className="flex gap-8 ">
-        <Sidebar />
-        <FeedPage />
-    </div>
-  )
+import Map from "../components/Map";
+import PostPage from "../features/posts/PostPage";
+
+export default function HomePage() {
+   return (
+     <div className="bg-pink-300 ">
+        <b className="text-4xl">Home</b>
+        <p>Where coffee lovers connect, one cup at a time</p>
+         <Map />
+         <PostPage />
+     </div>
+   )
 }
