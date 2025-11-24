@@ -2,7 +2,7 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import AuthLayout from "./layouts/AuthLayout";
 import MainLayout from "./layouts/MainLayout";
 import { AuthProvider } from './context/AuthProvider';
-import { AppProvider } from "./context/AppContext";
+import { AppProvider } from "./context/LocationPostContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 import RegisterPage from "./features/auth/RegisterPage";
 import HomePage from "./pages/HomePage";
@@ -15,19 +15,21 @@ import OAuthSuccess from "./pages/OAuthSuccess";
 
 const App = () => {
   return (
-    <AppProvider>
-      <AuthProvider>
-        <Routes>
-          {/* Redirect root to login */}
-          <Route path="/" element={<Navigate to="/login" replace />} />
 
-          {/* Public routes - accessible without authentication */}
-          <Route element={<AuthLayout />}>
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/signup" element={<RegisterPage />} />
-          </Route>
+    <AuthProvider>
+      <AppProvider>
+      <Routes>
+        {/* Redirect root to login */}
+        <Route path="/" element={<Navigate to="/login" replace />} />
 
-          {/* OAuth success route */}
+        {/* Public routes - accessible without authentication */}
+        <Route element={<AuthLayout />}>
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/signup" element={<RegisterPage />} />
+        </Route>
+
+        {/* OAuth success route */}
+        
           <Route path="/oauth-success" element={<OAuthSuccess />} />
 
           {/* Protected routes - ONLY accessible when authenticated */}
@@ -44,12 +46,14 @@ const App = () => {
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/settings" element={<SettingPage />} />
           </Route>
+        
 
-          {/* Catch-all */}
-          <Route path="*" element={<h1>404: Not Found</h1>} />
-        </Routes>
-      </AuthProvider>
-    </AppProvider>
+        {/* Catch-all */}
+        <Route path="*" element={<h1>404: Not Found</h1>} />
+      </Routes>
+      </AppProvider>
+    </AuthProvider >
+
   );
 }
 

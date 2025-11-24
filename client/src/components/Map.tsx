@@ -1,5 +1,5 @@
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
-import { useAppContext } from "../context/AppContext";
+import { useAppContext } from "../context/LocationPostContext";
 
 export default function Map() {
   const {locationList} = useAppContext();

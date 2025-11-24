@@ -34,33 +34,33 @@ const OAuthSuccess = () => {
         } else if (userId) {
           // Format 2: Only userId is provided - we need to fetch user data
           console.log('Fetching user data for userId:', userId);
-          
-           try {
-    // Use relative URL (Vite proxy will handle it)
-    const response = await fetch(`/api/users/${userId}`);
-    
-    console.log('Fetch response status:', response.status, response.statusText);
-    
-    if (response.ok) {
-      const data = await response.json();
-      userData = data.user; // Your backend returns { user: {...} }
-      console.log('Fetched user data:', userData);
-    } else {
-        const errorText = await response.text();
-        console.error('Fetch failed with status:', response.status, 'Response:', errorText);
-        throw new Error(`Failed to fetch user data: ${response.status}`);
-      }
-    } catch (fetchError) {
-      console.error('Fetch error:', fetchError);
-      throw new Error(`Network error while fetching user data: ${(fetchError as Error).message}`);
-    }             
+
+          try {
+            // Use relative URL (Vite proxy will handle it)
+            const response = await fetch(`/api/users/${userId}`);
+
+            console.log('Fetch response status:', response.status, response.statusText);
+
+            if (response.ok) {
+              const data = await response.json();
+              userData = data.user; // Your backend returns { user: {...} }
+              console.log('Fetched user data:', userData);
+            } else {
+              const errorText = await response.text();
+              console.error('Fetch failed with status:', response.status, 'Response:', errorText);
+              throw new Error(`Failed to fetch user data: ${response.status}`);
+            }
+          } catch (fetchError) {
+            console.error('Fetch error:', fetchError);
+            throw new Error(`Network error while fetching user data: ${(fetchError as Error).message}`);
+          }
           // Fetch user data from your backend
           const response = await fetch(`/api/users/${userId}`, {
             headers: {
               'Authorization': `Bearer ${token}`
             }
           });
-          
+
           if (response.ok) {
             const data = await response.json();
             userData = data.user;
@@ -78,19 +78,19 @@ const OAuthSuccess = () => {
 
         // Call the login function from auth context
         login(token, userData);
-        
+
         setStatus('success');
         console.log('OAuthSuccess - Login successful, redirecting to home');
-        
+
         // Small delay to show success message
         setTimeout(() => {
-          navigate("/");
+          navigate("/home");
         }, 1000);
 
       } catch (error) {
         console.error('OAuthSuccess - Error:', error);
         setStatus('error');
-        
+
         setTimeout(() => {
           navigate("/login");
         }, 2000);
@@ -101,12 +101,12 @@ const OAuthSuccess = () => {
   }, [navigate, login]);
 
   return (
-    <div style={{ 
-      display: 'flex', 
-      justifyContent: 'center', 
-      alignItems: 'center', 
+    <div style={{
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center',
       height: '100vh',
-      flexDirection: 'column' 
+      flexDirection: 'column'
     }}>
       {status === 'loading' && (
         <>
@@ -114,14 +114,14 @@ const OAuthSuccess = () => {
           <p>Please wait while we log you in.</p>
         </>
       )}
-      
+
       {status === 'success' && (
         <>
           <h2 style={{ color: 'green' }}>Login Successful!</h2>
           <p>Redirecting to home page...</p>
         </>
       )}
-      
+
       {status === 'error' && (
         <>
           <h2 style={{ color: 'red' }}>Login Failed</h2>

@@ -65,7 +65,7 @@ const LoginPage: React.FC = () => {
         login(token, user);
         setStatus({loading: false, error: null, success: true });
 
-        window.location.href = '/';
+        window.location.href = '/home';
       } else {
         throw new Error('Invalid response from server: missing token or user data');
       }
