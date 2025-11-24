@@ -1,20 +1,20 @@
 import React, { useState } from 'react';
 import type { FormEvent, ChangeEvent } from 'react';
-import { useNavigate } from 'react-router-dom'; //uncomment later
-
+import { useAuth } from '../../hooks/useAuth';
 
 interface LoginFormData {
-  identifier: string; 
+  login: string; 
   password: string;
 }
 
 interface Status {
   loading: boolean;
   error: string | null;
+  success: boolean;
 }
 
 const initialFormData: LoginFormData = {
-  identifier: '',
+  login: '',
   password: '',
 };
 
@@ -23,9 +23,9 @@ const API_BASE_URL = 'http://localhost:4343/api/auth/login';
 
 
 const LoginPage: React.FC = () => {
-  const navigate = useNavigate(); //uncomment later
+  const { login } = useAuth();
   const [formData, setFormData] = useState<LoginFormData>(initialFormData);
-  const [status, setStatus] = useState<Status>({ loading: false, error: null });
+  const [status, setStatus] = useState<Status>({ loading: false, error: null, success: false });
 
  
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -40,12 +40,13 @@ const LoginPage: React.FC = () => {
     e.preventDefault();
     if (status.loading) return;
 
-    setStatus({ loading: true, error: null });
+    setStatus({ loading: true, error: null, success: false  });
 
     try {
       const response = await fetch(API_BASE_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify(formData),
       });
 
@@ -55,22 +56,23 @@ const LoginPage: React.FC = () => {
       }
       
       const data = await response.json();
-
-  
-      if (data.token) {
-        localStorage.setItem('coffeematesToken', data.token);
-        console.log('Login Successful! Token stored.');
-        
-       
-         navigate('/'); // Redirect to the feed page
-      } else {
-        throw new Error('Login successful but no token received.');
-      }
+      console.log('Login Successful! ', data);
       
+      const token = data.token || data.user?.token; 
+      const user = data.user || data.userData;
+
+      if(token && user) {
+        login(token, user);
+        setStatus({loading: false, error: null, success: true });
+
+        window.location.href = '/';
+      } else {
+        throw new Error('Invalid response from server: missing token or user data');
+      }
     } catch (err) {
       const errorMessage = (err instanceof Error) ? err.message : 'A network error occurred during login.';
       console.error('Login Error:', errorMessage);
-      setStatus({ loading: false, error: errorMessage });
+      setStatus({ loading: false, error: errorMessage, success: false });
     } finally {
       setStatus(s => ({ ...s, loading: false }));
     }
@@ -116,7 +118,26 @@ const LoginPage: React.FC = () => {
       
       <h3 style={{ marginTop: '30px', fontSize: '1.5rem', fontWeight: 'normal' }}>Sign-in</h3>
 
+      <div style={{ display: 'flex', gap: '10px', margin: '20px 0' }}>
+        <button 
+          type="button" 
+          onClick={() => window.location.href = "http://localhost:4343/auth/google"} 
+          style={{...buttonStyle, backgroundColor: '#fff', color: '#333', border: '1px solid #ccc'}}
+        >
+          Login with Google
+        </button>
+        <button 
+          type="button" 
+          onClick={() => window.location.href = "http://localhost:4343/auth/facebook"} 
+          style={{...buttonStyle, backgroundColor: '#fff', color: '#333', border: '1px solid #ccc'}}
+        >
+          Login with Facebook
+        </button>
+      </div>
+
+
     
+
       {status.error && <p style={{ color: '#c0392b', padding: '10px', backgroundColor: '#fbeaea', border: '1px solid #c0392b', borderRadius: '4px' }}>Error: {status.error}</p>}
       {status.loading && <p style={{ color: '#2980b9' }}>Logging in...</p>}
 
@@ -124,11 +145,11 @@ const LoginPage: React.FC = () => {
 
         
         <input
-          id="identifier"
-          name="identifier"
+          id="login"
+          name="login"
           type="text" 
           required
-          value={formData.identifier}
+          value={formData.login}
           onChange={handleChange}
           style={inputStyle}
           placeholder="Email or Username"
