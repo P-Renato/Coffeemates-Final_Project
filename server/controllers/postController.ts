@@ -1,16 +1,18 @@
 import type { Request, Response } from "express";
 import { Post } from "../models/Post";
 import { Comment } from "../models/Comment";
+import { Location } from "../models/Location";
 
 // GET: all posts
 export const allPosts = async (req: Request, res: Response) => {
   try {
-    const posts = await Post.find();
+    const posts = await Post.find().sort({ createdAt: -1 }); // newest first
     res.status(200).json({ success: true, posts });
   } catch (err) {
     res.status(500).json({ success: false, msg: "Error fetching posts" });
   }
 };
+
 
 // GET: one post by ID
 export const onePost = async (req: Request, res: Response) => {
@@ -32,7 +34,7 @@ export const onePost = async (req: Request, res: Response) => {
 // PATCH: edit a post with user authorization
 export const editPost = async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;     
+    const { id } = req.params;
     //const uid = req.body.uid;      
 
     const updateData = req.body;
@@ -40,7 +42,7 @@ export const editPost = async (req: Request, res: Response) => {
     const updatedPost = await Post.findOneAndUpdate(
       { _id: id },
       updateData,
-      { new: true }                 
+      { new: true }
     );
 
     if (!updatedPost) {
@@ -66,27 +68,46 @@ export const addNewPost = async (req: Request, res: Response) => {
       location,
       star,
       uid,
-      imageUrl,
+      shopName,
       commentIds,
       likeIds,
+      lat,
+      lng,
     } = req.body;
 
-    const newPost = await Post.create({
+    console.log("body:", req.body);
+    console.log("file:", req.file);
+
+    const fileName = req.file?.filename;
+    const imageUrl = fileName || null;
+
+    const newPostContent = await Post.create({
       title,
       content,
-      location,
-      star,
-      uid,
+      location, 
+      star: star ? Number(star) : null,
+      uid: uid ? Number(uid) : 2,
       imageUrl,
-      commentIds,
-      likeIds,
+      shopName,
+      commentIds: commentIds ? JSON.parse(commentIds) : [],
+      likeIds: likeIds ? JSON.parse(likeIds) : [],
     });
 
-    res.status(201).json({ success: true, newPost });
-  } catch (err) {
-    res.status(400).json({ success: false, msg: "addNewPost error" });
+    const newLocation = await Location.create({
+      name: shopName,
+      address: location || "",
+      lat: lat !== undefined && lat !== null ? Number(lat) : 0, // fallback 0 if missing
+      lng: lng !== undefined && lng !== null ? Number(lng) : 0, // fallback 0 if missing
+    });
+
+
+    res.status(201).json({ success: true, newPost: [newPostContent, newLocation] });
+  } catch (err: any) {
+    console.error(err);
+    res.status(400).json({ success: false, msg: err.message || "addNewPost error" });
   }
 };
+
 
 // DELETE a post and its comments
 export const deletePost = async (req: Request, res: Response) => {

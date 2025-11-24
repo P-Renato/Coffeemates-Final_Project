@@ -104,29 +104,33 @@ export default function CommentList({ pid }: { pid: string }) {
                 {comments.map((comment) => (
                     <div key={comment._id} className="bg-green-200 p-2 m-2 flex justify-between items-center">
                         <div>
-                            <b>{comment.uid}: </b>
+                            <div>
+                                <b>{comment.uid}: </b>
 
-                            {editingId === comment._id 
-                            ? (
-                                <input className="border p-1" value={editingText} onChange={(e) => setEditingText(e.target.value)}/>
-                            ) : (
-                                <span>{comment.content}</span>
-                            )}
+                                {editingId === comment._id
+                                    ? (
+                                        <input className="border p-1" value={editingText} onChange={(e) => setEditingText(e.target.value)} />
+                                    ) : (
+                                        <span>{comment.content}</span>
+                                    )}
+                            </div>
+                            <p className="text-blue-600 text-sm">posted on {new Date(comment.createdAt).toDateString()}</p>
                         </div>
 
                         <div className="flex gap-2">
-                            {editingId === comment._id 
-                            ? (
-                                <>
-                                    <button onClick={() => editComment(comment._id)} className="bg-blue-400 p-2 cursor-pointer">Save</button>
-                                    <button onClick={() => setEditingId(null)} className="bg-gray-300 p-2 cursor-pointer">Cancel</button>
-                                </>
-                            ) : (
-                                <button onClick={() => startEdit(comment)} className="bg-yellow-400 p-2 cursor-pointer">Edit</button>
-                            )}
+                            {editingId === comment._id
+                                ? (
+                                    <>
+                                        <button onClick={() => editComment(comment._id)} className="bg-blue-400 p-2 cursor-pointer">Save</button>
+                                        <button onClick={() => setEditingId(null)} className="bg-gray-300 p-2 cursor-pointer">Cancel</button>
+                                    </>
+                                ) : (
+                                    <button onClick={() => startEdit(comment)} className="bg-yellow-400 p-2 cursor-pointer">Edit</button>
+                                )}
 
                             <button onClick={() => deleteComment(comment._id)} className="bg-red-300 p-2 cursor-pointer">Delete</button>
                         </div>
+
                     </div>
                 ))}
             </div>
@@ -139,7 +143,7 @@ export default function CommentList({ pid }: { pid: string }) {
                     rows={4}
                     placeholder="Add a comment..."
                 />
-                <button className="bg-blue-600 text-white px-4 py-2 rounded cursor-pointer">Add</button>
+                <button className="bg-blue-600 w-[10em] text-white px-4 py-2 m-auto rounded cursor-pointer">Add</button>
             </form>
         </div>
     );

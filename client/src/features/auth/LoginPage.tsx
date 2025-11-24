@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import type { FormEvent, ChangeEvent } from 'react';
-//import { useNavigate } from 'react-router-dom'; //uncomment later
+import { useNavigate } from 'react-router-dom'; //uncomment later
 
 
 interface LoginFormData {
@@ -19,11 +19,11 @@ const initialFormData: LoginFormData = {
 };
 
 // Change to actual backend URL when deployed or running locally
-const API_BASE_URL = 'http://localhost:3000/api/auth/login';
+const API_BASE_URL = 'http://localhost:4343/api/auth/login';
 
 
 const LoginPage: React.FC = () => {
-  //const navigate = useNavigate(); //uncomment later
+  const navigate = useNavigate(); //uncomment later
   const [formData, setFormData] = useState<LoginFormData>(initialFormData);
   const [status, setStatus] = useState<Status>({ loading: false, error: null });
 
@@ -62,7 +62,7 @@ const LoginPage: React.FC = () => {
         console.log('Login Successful! Token stored.');
         
        
-        // navigate('/'); // Redirect to the feed page
+         navigate('/'); // Redirect to the feed page
       } else {
         throw new Error('Login successful but no token received.');
       }

@@ -12,15 +12,9 @@ import passport from './utils/passport';
 import locationRouter from './routes/locationRoutes';
 import geocodeRouter from './routes/geocodeRoutes'
 
-
 const app = express();
-app.use(express.static(path.join(__dirname, 'public')));
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 /* ----------- middlewares ---------------------- */
-
-
-
 app.use(cors({
     origin: process.env.CLIENT_URL || 'http://localhost:5173' || 'http://localhost:5174',
     credentials: true,
@@ -32,9 +26,9 @@ app.use(cookieParser());
 app.use(express.json());
 app.use(passport.initialize());
 app.use(express.urlencoded({extended:true}));
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
-
-/* --------------- database ------------------------ */
+/* --------------- connect database ------------------------ */
 
 connectDB();
 
@@ -61,19 +55,11 @@ app.use("/api/location", locationRouter);
 app.use("/api/geocode", geocodeRouter);
 
 
-
 /* ---------------------- error handlers ---------------------- */
-
-
-
-
-
 
 app.get('/', (req, res, next) => {
     console.log(req.params)
 })
-
-
 
 const port = process.env.PORT || 4343;
 

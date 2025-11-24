@@ -1,8 +1,10 @@
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useState, useEffect } from "react";
 
 type AppContextType = {
   postPopup: boolean;
   setPostPopup: React.Dispatch<React.SetStateAction<boolean>>;
+  locationList: Location[];
+  setLocationList: React.Dispatch<React.SetStateAction<Location[]>>;
 };
 
 const AppContext = createContext<AppContextType | null>(null);
@@ -15,9 +17,23 @@ export const useAppContext = () => {
 
 export const AppProvider = ({ children }: { children: React.ReactNode }) => {
   const [postPopup, setPostPopup] = useState(false);
+    const [locationList, setLocationList] = useState<Location[]>([]);
+  
+    useEffect(() => {
+    fetch("http://localhost:4343/api/location")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success && Array.isArray(data.locations)) {
+          setLocationList(data.locations);
+        } else {
+          setLocationList([]);
+        }
+      })
+      .catch(() => setLocationList([]));
+  }, []);
 
   return (
-    <AppContext.Provider value={{ postPopup, setPostPopup }}>
+    <AppContext.Provider value={{ postPopup, setPostPopup, locationList, setLocationList }}>
       {children}
     </AppContext.Provider>
   );
