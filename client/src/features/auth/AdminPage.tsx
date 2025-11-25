@@ -50,14 +50,11 @@ const AdminPageContent: React.FC = () => {
   const [activeTab, setActiveTab] = useState('accounts');
 
   // Simple function to handle logout
-  const handleLogout = () => {
-    // 1. Clear the JWT from localStorage
-    localStorage.removeItem('coffeematesToken');
-    console.log('User logged out. Redirecting to login.');
-    
-    // 2. Redirect the user to the login page
-    navigate('/login');
-  };
+ const handleLogout = () => {
+  localStorage.removeItem('coffeematesToken');
+  console.log('User logged out. Redirecting to login.');
+  navigate('/login');  // This will now use the main app's router
+};
 
   // Simplified navigation links for the sidebar matching the screenshot
   const navItems = [
@@ -268,19 +265,9 @@ const AdminPageContent: React.FC = () => {
 
 
 // Wrapper component to provide Router context for local execution
-const AdminPage: React.FC = () => (
-    <BrowserRouter>
-      {/* We use Routes/Route to catch the /login navigation call from the logout button */}
-      <Routes>
-        <Route path="/login" element={
-          <div className="p-10 text-center text-xl bg-gray-200 h-screen">
-            Redirecting to login... (Actual login component missing in this file)
-          </div>
-        } />
-        {/* Catch-all route to display the admin page */}
-        <Route path="*" element={<AdminPageContent />} />
-      </Routes>
-    </BrowserRouter>
-);
+
+const AdminPage: React.FC = () => {
+  return <AdminPageContent />;
+};
 
 export default AdminPage;

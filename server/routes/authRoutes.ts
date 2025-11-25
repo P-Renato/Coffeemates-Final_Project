@@ -1,8 +1,11 @@
 import express from 'express';
 import passport from '../utils/passport';
 import { generateToken } from '../utils/auth';
+import { login, register } from '../controllers/authController';
 
 const authRouter = express.Router();
+authRouter.post('/login', login);
+authRouter.post('/register', register);
 
 // Google OAuth initiation route
 authRouter.get('/google', passport.authenticate('google', {
