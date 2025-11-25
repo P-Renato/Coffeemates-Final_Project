@@ -12,6 +12,7 @@ import ProfilePage from "./features/profile/ProfilePage";
 import SettingPage from "./features/settings/SettingPage";
 import LoginPage from "./features/auth/LoginPage";
 import OAuthSuccess from "./pages/OAuthSuccess";
+import AdminPage from "./features/auth/AdminPage"
 
 const App = () => {
   return (
@@ -30,6 +31,8 @@ const App = () => {
           {/* OAuth success route */}
           <Route path="/oauth-success" element={<OAuthSuccess />} />
 
+          
+
           {/* Protected routes - ONLY accessible when authenticated */}
           <Route
             element={
@@ -44,6 +47,15 @@ const App = () => {
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/settings" element={<SettingPage />} />
           </Route>
+
+          <Route
+            path="/admin"
+            element={
+              <ProtectedRoute>
+                <AdminPage />
+              </ProtectedRoute>
+            }
+          />
 
           {/* Catch-all */}
           <Route path="*" element={<h1>404: Not Found</h1>} />

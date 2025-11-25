@@ -41,7 +41,7 @@ authRouter.get('/test', (req, res) => {
 
 app.use('/api/auth/profile', profileRouter);
 app.use('/api/auth', userRouter);
-app.use('/auth', authRouter);
+app.use('api//auth', authRouter);
 
 app.get('/api/test', (req, res) => {
     res.json({ message: 'Server is working!' });

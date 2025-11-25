@@ -63,11 +63,23 @@ const LoginPage: React.FC = () => {
       const token = data.token || data.user?.token; 
       const user = data.user || data.userData;
 
+      console.log('Login Successful! ', data);
+console.log('User object received:', user);
+console.log('User role:', user.role);
+
       if(token && user) {
         login(token, user);
         setStatus({loading: false, error: null, success: true });
 
-        navigate('/home');
+        console.log('Checking role for redirect...', user.role); // Debug
+
+        if (user.email === "example@admin.com") {
+          console.log('Redirecting to admin page');
+        navigate('/admin');  
+      } else {
+        console.log('Redirecting to home page - user is not admin');
+        navigate('/home');  
+      }
       } else {
         throw new Error('Invalid response from server: missing token or user data');
       }

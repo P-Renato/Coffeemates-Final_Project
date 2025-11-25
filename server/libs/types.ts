@@ -14,6 +14,7 @@ export interface IUser extends Document {
   _id: string;
   username: string;
   email: string;
+  role: 'user' | 'admin';
   password: string;
   googleId?: string;
   facebookId?: string;
