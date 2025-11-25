@@ -1,9 +1,11 @@
 import { useState, useEffect } from "react"
 import type { CommentType } from "../../utils/types";
+import { useAuth } from "../../hooks/useAuth";
 
 export default function CommentList({ pid }: { pid: string }) {
     const [comments, setComments] = useState<CommentType[]>([]);
     const [newComment, setNewComment] = useState("");
+    const { user } = useAuth();
 
     // Editing state
     const [editingId, setEditingId] = useState<string | null>(null);
@@ -24,11 +26,14 @@ export default function CommentList({ pid }: { pid: string }) {
     // Add a comment
     const commentHandler = async (e) => {
         e.preventDefault();
+        if (!user || !user.id) {
+            return alert("User is not authenticated.");
+        }
         try {
             const res = await fetch(`http://localhost:4343/api/comment`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ content: newComment, uid: 2, pid }),
+                body: JSON.stringify({ content: newComment, uid: user.id, pid }),
             });
 
             const data = await res.json();
