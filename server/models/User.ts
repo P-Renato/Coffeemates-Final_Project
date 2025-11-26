@@ -123,6 +123,10 @@ const userSchemaFields: mongoose.SchemaDefinition<IUser> = {
         },
         minlength: [6, '❌ Password must be at least 6 characters']
     },
+    photoURL: {
+        type: String,
+        required: false,
+    },
     googleId: {
         type: String,
         sparse: true

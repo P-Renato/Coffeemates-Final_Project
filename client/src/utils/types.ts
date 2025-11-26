@@ -22,6 +22,23 @@ export type CommentType = {
     createdAt: string,
 }
 
+export type ChatType = {
+    _id: string,
+    content: string,
+    senderId: string,
+    receiverId: string,
+    senderUsername: string,
+    createdAt: string,
+}
+
+export interface UserType {
+  _id: string;
+  email: string;
+  username: string;
+  photoURL: string;
+  // Add other user properties as needed
+}
+
 export interface Location {
   id: string;
   name: string;

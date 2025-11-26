@@ -2,13 +2,6 @@ import { NavLink } from "react-router-dom";
 import { useAppContext } from "../context/LocationPostContext";
 import { useAuth } from "../hooks/useAuth";
 
-interface SidebarProps {
-    user?: {
-        name: string;
-        photoURL?: string;
-    };
-}
-
 export default function Sidebar() {
     const { postPopup, setPostPopup } = useAppContext();
     const { user, logout } = useAuth();
@@ -16,7 +9,7 @@ export default function Sidebar() {
     const navItems = [
         { label: 'Home', icon: '🏠', url: '/home' },
         { label: 'Search', icon: '🔍', url: '/search' },
-        { label: 'Messages', icon: '💬', url: '/messages' },
+        { label: 'Messages', icon: '💬', url: '/chat' },
         { label: 'Post', icon: '➕' },
         { label: 'Profile', icon: '👤', url: '/profile' },
         { label: 'Settings', icon: '⚙️', url: '/settings' },

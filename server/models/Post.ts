@@ -6,12 +6,12 @@ import mongoose from "mongoose";
 const postSchema = new mongoose.Schema(
   {
     pid: { type: Number, unique: true },
-    title: {type: String, require: false },
+    title: {type: String, required: false },
     content: { type: String, required: true },
-    location: {type: String, require: true },
-    star: {type: Number, require: false },
+    location: {type: String, required: true },
+    star: {type: Number, required: false },
     uid: { type: String, required: true },
-    shopName: {type: String, require: true},
+    shopName: {type: String, required: true},
     imageUrl: { type: String }, 
     commentIds: { type: [String], default: [] }, 
     likeIds: { type: [String], default: [] },  

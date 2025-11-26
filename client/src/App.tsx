@@ -7,7 +7,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import RegisterPage from "./features/auth/RegisterPage";
 import HomePage from "./pages/HomePage";
 import SearchPage from "./features/search/SearchPage";
-import MessagePage from "./features/messages/MessagePage";
+import ChatPage from "./features/Chat/ChatPage";
 import ProfilePage from "./features/profile/ProfilePage";
 import SettingPage from "./features/settings/SettingPage";
 import LoginPage from "./features/auth/LoginPage";
@@ -43,7 +43,7 @@ const App = () => {
           >
             <Route path="/home" element={<HomePage />} />
             <Route path="/search" element={<SearchPage />} />
-            <Route path="/messages" element={<MessagePage />} />
+            <Route path="/chat" element={<ChatPage />} />
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/settings" element={<SettingPage />} />
           </Route>
