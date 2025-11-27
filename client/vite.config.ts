@@ -7,6 +7,14 @@ export default defineConfig({
     react(),
     tailwindcss(),  
   ],
+  // Ensure only one copy of React/ReactDOM/React Router is bundled to avoid
+  // invalid hook call errors when dependencies resolve their own copies.
+  resolve: {
+    dedupe: ['react', 'react-dom', 'react-router-dom'],
+  },
+  optimizeDeps: {
+    include: ['react', 'react-dom', 'react-router-dom'],
+  },
   server: {
     host: true,
     port: 5173,
