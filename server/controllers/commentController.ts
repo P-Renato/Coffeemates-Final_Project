@@ -1,8 +1,13 @@
 import type { Request, Response } from "express";
 import { Comment } from "../models/Comment";
 
-// Get all comments for a post, including nested replies
+// Get all comments
 export const allComments = async (req: Request, res: Response) => {
+
+}
+  
+// Get all comments for a post, including nested replies
+export const commentsOfPost = async (req: Request, res: Response) => {
   try {
     const { postId } = req.params;
 
@@ -83,9 +88,9 @@ export const addNewComment = async (req: Request, res: Response) => {
   try {
     const { content, uid, pid, parentCommentId}  = req.body;
 
-    const newPost = await Comment.create({ content, uid, pid, parentCommentId: parentCommentId || null});
+    const newComment = await Comment.create({ content, uid, pid, parentCommentId: parentCommentId || null});
 
-    res.status(201).json({ success: true, newPost });
+    res.status(201).json({ success: true, newComment });
   } catch (err) {
     res.status(400).json({ success: false, msg: "addNewComment error" });
   }

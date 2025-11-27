@@ -14,7 +14,9 @@ export interface IUser extends Document {
   _id: string;
   username: string;
   email: string;
+  role: 'user' | 'admin';
   password: string;
+  photoURL?: string;
   googleId?: string;
   facebookId?: string;
   oauthProvider?: 'google' | 'facebook' | 'local';
@@ -61,9 +63,10 @@ export interface IPost extends Document {
   location: string;
   star: number  ;
   uid: number;
+  shopName: string;
   imageUrl: string;
-  commentIds: number[];
-  likeIds: number[];
+  commentIds: string[];
+  likeIds: string[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -82,6 +85,15 @@ export interface ILocation extends Document {
   address: string;
   lat: number;
   lng: number;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface IChat extends Document {
+  content: string;
+  senderId: string;
+  receiverId: string;
+  senderUsername: string;
   createdAt: Date;
   updatedAt: Date;
 }

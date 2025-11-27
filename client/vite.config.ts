@@ -1,23 +1,30 @@
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
-import tailwindcss from '@tailwindcss/vite' 
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+import tailwindcss from '@tailwindcss/vite';
 
+// https://vite.dev/config/
 export default defineConfig({
-  plugins: [
-    react(),
-    tailwindcss(),  
-  ],
-  // Ensure only one copy of React/ReactDOM/React Router is bundled to avoid
-  // invalid hook call errors when dependencies resolve their own copies.
-  resolve: {
-    dedupe: ['react', 'react-dom', 'react-router-dom'],
-  },
-  optimizeDeps: {
-    include: ['react', 'react-dom', 'react-router-dom'],
-  },
+  plugins: [react(), tailwindcss(),],
   server: {
-    host: true,
     port: 5173,
-    strictPort: true,
+    host: true,
+    proxy: {
+      // Proxy API calls to your backend
+      '/api': {
+        target: 'http://localhost:4343',
+        changeOrigin: true,
+      },
+      '/auth': {
+        target: 'http://localhost:4343',
+        changeOrigin: true,
+      }
+    }
   },
+  build: {
+    outDir: 'dist',
+    assetsDir: 'assets',
+    rollupOptions: {
+      // Ensure proper handling of entry points
+    }
+  }
 })

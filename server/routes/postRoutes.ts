@@ -1,13 +1,37 @@
 import express from 'express';
+import multer from "multer";
+import path from "path";
 import { allPosts, addNewPost, onePost, editPost, deletePost } from '../controllers/postController';
 
 const posts = express.Router();
 
+// configuration for file upload
+const storage = multer.diskStorage({
+  destination: path.join(__dirname, "../uploads/posts"), 
+  filename: (req, file, cb) => {
+    const fileExt = file.originalname.split(".").pop();
+    const fileName = file.originalname.split(".")[0];
+    const newFileName = `${fileName}-${Date.now()}.${fileExt}`;
+    cb(null, newFileName);
+  },
+});
+
+const upload = multer({
+  storage: storage,
+  limits: { fileSize: 2 * 1024 * 1024 }, // 2 MB 
+  fileFilter: function (req, file, cb) {
+    if (!file.mimetype.startsWith("image/")) {
+      return cb(new Error("Only image files are allowed!"));
+    }
+    cb(null, true);
+  }
+});
+
 // Routes
-posts.get("/:id", onePost);      // Get single post by ID
-posts.patch("/:id", editPost);   // Edit a post by ID
-posts.get("/", allPosts);        // Get all posts
-posts.post("/", addNewPost);     // Add a new post
-posts.delete("/:id", deletePost) // Delete a post and its comments
+posts.get("/:id", onePost);      
+posts.patch("/:id", editPost);   
+posts.get("/", allPosts);        
+posts.post("/", upload.single("postImg"), addNewPost);     
+posts.delete("/:id", deletePost);
 
 export default posts;
