@@ -8,6 +8,7 @@ import MessagePage from "./features/messages/MessagePage";
 import ProfilePage from "./features/profile/ProfilePage";
 import SettingPage from "./features/settings/SettingPage";
 import OAuthSuccess from "./pages/OAuthSuccess";
+import EditProfil from "./features/profile/EditProfil";
 
 const LoginPage = () => <div>Login Page Coming Soon!</div>;
 
@@ -19,6 +20,7 @@ const App = () => {
         <Route path="/search" element={<SearchPage />} />
         <Route path="/messages" element={<MessagePage />} />
         <Route path="/profile" element={<ProfilePage />} />
+        <Route path="/profile/edit" element={<EditProfil />} />
         <Route path="/settings" element={<SettingPage />} />
       </Route>
 
