@@ -58,7 +58,7 @@ export default function ChatBox({ id }: { id: string }) {
         return () => socket.off("newMessage");
     }, [auth.id, otherId]);
 
-    // --- initial fetch ---
+    // get messages between users at the beginning
     useEffect(() => {
         const fetchInitial = async () => {
             const res = await fetch(
@@ -106,23 +106,16 @@ export default function ChatBox({ id }: { id: string }) {
         const socket = socketRef.current;
         if (!socket) return;
 
-        const msg = {
+        socket.emit("sendMessage", {
             content: input,
             senderId: auth.id,
             receiverId: otherId,
             senderUsername: auth.username,
-        };
-
-        socket.emit("sendMessage", msg);
-
-        // immediately show in UI
-        setMessages((prev) => [
-            ...prev,
-            { ...msg, _id: Date.now().toString(), createdAt: new Date().toISOString() },
-        ]);
+        });
 
         setInput("");
     };
+
 
     // --- search messages ---
     const searchMessages = async () => {
@@ -132,7 +125,8 @@ export default function ChatBox({ id }: { id: string }) {
             `${apiUrl}/api/chat/search/${auth.id}/${otherId}?q=${encodeURIComponent(searchQuery)}`
         );
         const data = await res.json();
-        setSearchResults(data);
+        setSearchResults(data.messages);
+        console.log("Search results:", data);
     };
 
     // --- auto-scroll when messages change ---
@@ -230,9 +224,8 @@ function Message({ m, auth }: { m: ChatType; auth: { id: string; username: strin
             className={`flex ${m.senderId === auth.id ? "justify-end" : "justify-start"}`}
         >
             <div
-                className={`p-3 rounded-lg max-w-xs ${
-                    m.senderId === auth.id ? "bg-green-100" : "bg-gray-100"
-                }`}
+                className={`p-3 rounded-lg max-w-xs ${m.senderId === auth.id ? "bg-green-100" : "bg-gray-100"
+                    }`}
             >
                 <div className="text-sm font-medium text-green-600">{m.senderUsername}</div>
                 <div className="text-sm text-gray-800">{m.content}</div>

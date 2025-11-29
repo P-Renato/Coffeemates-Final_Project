@@ -1,6 +1,6 @@
 import express from 'express';
 
-import { registerUser, loginUser, getCurrentUser, getUserById, getAllUsers, updateUser, changePassword } from '../controllers/userController';
+import { registerUser, loginUser, getCurrentUser, getUserById, getAllUsers, updateUser, changePassword, searchUsers } from '../controllers/userController';
 import { authenticateToken } from '../middlewares/authMiddleware';
 
 
@@ -10,6 +10,7 @@ const userRouter = express.Router();
 
 userRouter.post('/login', loginUser);
 userRouter.post('/register', registerUser);
+userRouter.get('/search', searchUsers)
 userRouter.get('/:id', getUserById); 
 userRouter.get('/', getAllUsers);
 
