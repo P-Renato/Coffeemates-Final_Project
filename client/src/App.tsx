@@ -10,6 +10,10 @@ import SearchPage from "./features/search/SearchPage";
 import ChatPage from "./features/Chat/ChatPage";
 import ProfilePage from "./features/profile/ProfilePage";
 import SettingPage from "./features/settings/SettingPage";
+import OAuthSuccess from "./pages/OAuthSuccess";
+import EditProfil from "./features/profile/EditProfil";
+
+const LoginPage = () => <div>Login Page Coming Soon!</div>;
 import LoginPage from "./features/auth/LoginPage";
 import OAuthSuccess from "./pages/OAuthSuccess";
 import AdminPage from "./features/auth/AdminPage"
