@@ -1,6 +1,9 @@
 import { NavLink } from "react-router-dom";
 import { useAppContext } from "../context/LocationPostContext";
 import { useAuth } from "../hooks/useAuth";
+import '../styles/_global.css';
+import styles from './sidebar.module.css';
+
 
 export default function Sidebar() {
     const { postPopup, setPostPopup } = useAppContext();
@@ -18,7 +21,7 @@ export default function Sidebar() {
     return (
         <aside className="w-[244px] min-h-screen bg-white flex flex-col items-center border-r border-greyline px-sidebarX py-sidebarY font-base text-text">
             {/* Logo */}
-            <h1 className="text-xl font-bold mb-6">Coffeemates</h1>
+            <h1 className={`${styles.courier} text-xl font-bold mb-6`}>Coffeemates</h1>
 
             {/* No login */}
             {!user && (
@@ -39,8 +42,8 @@ export default function Sidebar() {
                         alt={user.username}
                         className="w-20 h-20 rounded-full object-cover"
                     />
-                    <p className="mt-3 text-profile">
-                        Hello <span className="font-bold text-2xl">{user.username}</span>
+                    <p className={`${styles.roboto} mt-3 text-profile`}>
+                        Hello <span className={`${styles.roboto} font-bold text-2xl`}>{user.username}</span>
                         <button className="cursor-pointer w-full bg-blue-400 text-white"  onClick={() => logout()}>Logout</button>
                     </p>
 
@@ -48,7 +51,7 @@ export default function Sidebar() {
                     <div className="w-full border-t border-greyline mt-3 mb-4"></div>
 
                     {/* Notification */}
-                    <div className="w-full bg-[#FFFDEE] rounded-md p-4 mb-10 text-sm">
+                    <div className="w-[14em] bg-[#FFFDEE] rounded-md  p-4 mb-10 text-sm">
                         <div className="flex items-center gap-2 font-semibold">
                             <span>🔔</span> Notification
                         </div>

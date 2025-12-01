@@ -1,5 +1,4 @@
-// src/pages/EditProfil.tsx
-// client/src/features/profile/EditProfil.tsx
+
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import CoffeeProfile from "../../components/CoffeeProfile";
@@ -104,7 +103,7 @@ const EditProfil: React.FC = () => {
     });
   };
 
-  const isEnabled = (_index: number) => true; // now all rows are enabled
+  const isEnabled = () => true; // now all rows are enabled
 
   const handleSave = () => {
     const coffeeProfile: CoffeeProfileItem[] = COFFEE_LABELS.map(

@@ -23,7 +23,7 @@ passport.deserializeUser(async (id: string, done) => {
 passport.use(new GoogleStrategy({
     clientID: process.env.GOOGLE_CLIENT_ID!,
     clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-    callbackURL: `${process.env.BASE_URL}/auth/google/callback`
+    callbackURL: `${process.env.BASE_URL}/api/auth/google/callback`
 }, async (accessToken, refreshToken, profile, done) => {
     try {
         let user = await User.findOne({ 
@@ -62,10 +62,10 @@ passport.use(new GoogleStrategy({
 passport.use(new FacebookStrategy({
     clientID: process.env.FACEBOOK_APP_ID!,
     clientSecret: process.env.FACEBOOK_APP_SECRET!,
-    callbackURL: `${process.env.BASE_URL}/auth/facebook/callback`,
+    callbackURL: `${process.env.BASE_URL}/api/auth/facebook/callback`,
     profileFields: ['id', 'emails', 'name', 'displayName'],
-    scope: ['email'], // Add this line
-    enableProof: true // Add this line for extra security
+    scope: ['email'], 
+    enableProof: true 
 }, async (accessToken, refreshToken, profile, done) => {
     try {
         if (!profile.emails || !profile.emails[0] || !profile.emails[0].value) {

@@ -20,7 +20,7 @@ export const authenticateToken = (req: Request, res: Response, next: NextFunctio
 
     const decoded = verifyToken(token);
     
-    req.user = {
+    (req as AuthRequest).user = {
       userId: decoded.userId,
       email: decoded.email
     };

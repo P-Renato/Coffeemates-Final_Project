@@ -8,7 +8,7 @@ interface NominatimResult {
   lat: string;
   lon: string;
   display_name: string;
-  [key: string]: any; // optional other properties
+  [key: string]: unknown; // optional other properties
 }
 
 export async function geocodeAddress(address: string): Promise<Coordinates | null> {

@@ -44,7 +44,7 @@ const ProfilePage: React.FC = () => {
   const isOwnProfile = true;
 
   const handleEdit = () => {
-    navigate("/profile/edit");
+    navigate("/edit-profile");
   };
 
   const handleFollow = () => {

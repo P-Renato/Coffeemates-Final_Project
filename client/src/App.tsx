@@ -2,7 +2,7 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import AuthLayout from "./layouts/AuthLayout";
 import MainLayout from "./layouts/MainLayout";
 import { AuthProvider } from './context/AuthProvider';
-import { AppProvider } from "./context/LocationPostContext";
+import { AppProvider } from "./context/LocationPostProvider";
 import ProtectedRoute from "./components/ProtectedRoute";
 import RegisterPage from "./features/auth/RegisterPage";
 import HomePage from "./pages/HomePage";
@@ -11,13 +11,10 @@ import ChatPage from "./features/Chat/ChatPage";
 import ProfilePage from "./features/profile/ProfilePage";
 import SettingPage from "./features/settings/SettingPage";
 import OAuthSuccess from "./pages/OAuthSuccess";
-import EditProfil from "./features/profile/EditProfil";
-
-const LoginPage = () => <div>Login Page Coming Soon!</div>;
 import LoginPage from "./features/auth/LoginPage";
-import OAuthSuccess from "./pages/OAuthSuccess";
 import AdminPage from "./features/auth/AdminPage"
 import EditProfil from "./features/profile/EditProfil";
+
 
 const App = () => {
   return (
@@ -50,6 +47,7 @@ const App = () => {
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/profile/edit" element={<EditProfil />} />
             <Route path="/settings" element={<SettingPage />} />
+            <Route path="/edit-profile" element={<EditProfil />} />
           </Route>
 
           {/* Admin route */}

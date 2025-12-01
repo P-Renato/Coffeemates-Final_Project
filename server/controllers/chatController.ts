@@ -11,7 +11,7 @@ export function initChatSocket(io: SocketIOServer) {
     io.on("connection", (socket) => {
         console.log("User connected:", socket.id);
 
-        socket.on("register", (userId: number) => {
+        socket.on("register", (userId: string) => {
             socket.data.userId = userId;
         });
 
@@ -69,8 +69,8 @@ export const getMessagesBetweenUsers = async (req: Request, res: Response) => {
 
 export const getLastMessagesForUser = async (req: Request, res: Response) => {
     try {
-        const userId = req.params.userId; 
-
+        const userId = req.params.userId;
+        if (!userId) return res.status(400).json({ error: "Invalid userId" });
 
         if (!userId) {
             return res.status(400).json({ error: "Invalid userId" });
@@ -84,6 +84,7 @@ export const getLastMessagesForUser = async (req: Request, res: Response) => {
             ]
         }).sort({ createdAt: -1 });
 
+        // Step 2: Build a map of last message per partner
         const lastMessagesMap = new Map<string, any>();
 
         for (const msg of messages) {
