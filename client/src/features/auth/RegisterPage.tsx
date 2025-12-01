@@ -124,7 +124,7 @@ const RegisterPage: React.FC = () => {
     color: 'white',
     border: 'none',
     cursor: status.loading ? 'not-allowed' : 'pointer',
-    width: '20%',
+    width: '20em',
     margin: '1.2em',
     borderRadius: '8px',
     height: '4.5em'
@@ -155,8 +155,8 @@ const RegisterPage: React.FC = () => {
         </div>
         
           <div style={{ display: 'flex',  justifyContent: 'space-around', width: '80%', gap: '10px', margin: '1.1em auto' }}>
-              <button type="button" onClick={() => window.location.href = "http://localhost:4343/auth/google"} style={{...buttonStyle,  display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '18px' , backgroundColor: '#fff',  fontWeight: 'lighter', fontSize: '12', color: '#333', border: '1px solid var(--color-primary)'}}>Sign up with Google <FcGoogle size={24} /></button>
-              <button type="button" onClick={() => window.location.href = "http://localhost:4343/auth/facebook"} style={{...buttonStyle,  display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '18px' , backgroundColor: '#fff',  fontWeight: 'lighter', fontSize: '12', color: '#333', border: '1px solid var(--color-primary)'}}>Sign up with Facebook <FaFacebook size={24} color="#1877F2" /></button>
+              <button type="button" onClick={() => window.location.href = "http://localhost:4343/api/auth/google"} style={{...buttonStyle,  display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '18px' , backgroundColor: '#fff',  fontWeight: 'lighter', fontSize: '12', color: '#333', border: '1px solid var(--color-primary)'}}>Sign up with Google <FcGoogle size={24} /></button>
+              <button type="button" onClick={() => window.location.href = "http://localhost:4343/api/auth/facebook"} style={{...buttonStyle,  display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '18px' , backgroundColor: '#fff',  fontWeight: 'lighter', fontSize: '12', color: '#333', border: '1px solid var(--color-primary)'}}>Sign up with Facebook <FaFacebook size={24} color="#1877F2" /></button>
           </div>
 
           <div style={{ margin: '20px 0', color: '#888' }}>— OR —</div>

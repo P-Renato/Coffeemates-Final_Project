@@ -88,6 +88,7 @@ export default function PopUpPost() {
 
             // data.newPost = [newPostContent, newLocation]
             const [newPostContent, newLocation] = data.newPost;
+            console.log("New Post Content: ", newPostContent)
 
             alert("Post created successfully!");
             setLocationList(prev => [...prev, newLocation]);

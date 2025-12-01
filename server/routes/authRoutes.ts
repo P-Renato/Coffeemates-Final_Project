@@ -8,13 +8,19 @@ authRouter.post('/login', login);
 authRouter.post('/register', register);
 
 // Google OAuth initiation route
-authRouter.get('/google', passport.authenticate('google', {
-    scope: ['profile', 'email']
+authRouter.get('/google', (req, res, next) => {
+    console.log('🎯 GOOGLE OAUTH - Before passport.authenticate');
+    console.log('🎯 Session exists:', !!(req as any).session);
+    next();
+}, passport.authenticate('google', {
+    scope: ['profile', 'email'],
+    session: false // This should prevent serialization
 }));
 
 // Facebook OAuth initiation route  
 authRouter.get('/facebook', passport.authenticate('facebook', {
-    scope: ['email']
+    scope: ['email'],
+    session: false
 }));
 
 // Google OAuth callback - REPLACE your current version with this
@@ -84,5 +90,17 @@ authRouter.get('/facebook/callback',
         }
     }
 );
+
+// Test OAuth configuration
+authRouter.get('/config', (req, res) => {
+    res.json({
+        google: {
+            clientId: process.env.GOOGLE_CLIENT_ID ? '✅ Set' : '❌ Missing',
+            clientSecret: process.env.GOOGLE_CLIENT_SECRET ? '✅ Set' : '❌ Missing',
+            callbackUrl: `${process.env.BASE_URL}/api/auth/google/callback`
+        },
+        baseUrl: process.env.BASE_URL
+    });
+});
 
 export default authRouter;

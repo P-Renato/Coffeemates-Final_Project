@@ -3,6 +3,7 @@ export interface User {
   email: string;
   username: string;
   photoURL: string;
+  _id: string;
   // Add other user properties as needed
 }
 

@@ -29,6 +29,8 @@ app.use(cors({
 app.use(cookieParser());
 app.use(express.json());
 app.use(passport.initialize());
+
+
 app.use(express.urlencoded({extended:true}));
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
@@ -42,14 +44,9 @@ connectDB();
 
 /* -------------------- routers ------------------------  */
 
-// Add this at the top of your authRouter.ts, before the Google routes
-authRouter.get('/test', (req, res) => {
-    res.json({ message: 'Auth router is working!' });
-});
-
 app.use('/api/auth/profile', profileRouter);
+app.use('/api/auth', authRouter);
 app.use('/api/auth', userRouter);
-app.use('api//auth', authRouter);
 
 app.get('/api/test', (req, res) => {
     res.json({ message: 'Server is working!' });
@@ -72,10 +69,6 @@ initChatSocket(io);  // Initialize chat sockets
 app.use("/api/chat", chatRouter);
 
 /* ---------------------- error handlers ---------------------- */
-
-app.get('/', (req, res, next) => {
-    console.log(req.params)
-})
 
 const port = process.env.PORT || 4343;
 

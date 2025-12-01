@@ -21,8 +21,8 @@ export default function PostPage() {
 
   console.log(posts)
   return (
-    <div className="m-4 p-2">
-      <h2 className="text-center p-2 font-bold text-xl">Others Post</h2>
+    <div className="">
+      <h2 className="text-left p-2 font-bold border-b border-[#8E8E8E] text-xl">Suggestions for you</h2>
       <div className="flex flex-col p-2 gap-4">
         {
           posts.map((post) => (

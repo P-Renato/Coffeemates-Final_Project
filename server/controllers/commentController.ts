@@ -1,5 +1,6 @@
 import type { Request, Response } from "express";
 import { Comment } from "../models/Comment";
+import type { CommentWithReplies } from "../libs/types";
 
 // Get all comments
 export const allComments = async (req: Request, res: Response) => {
@@ -11,6 +12,11 @@ export const commentsOfPost = async (req: Request, res: Response) => {
   try {
     const { postId } = req.params;
 
+    // Local interface that includes replies
+    interface CommentWithReplies extends Omit<any, 'replies'> {
+      replies: CommentWithReplies[];
+    }
+
     // Fetch all comments for the post
     const comments = await Comment.find({ pid: postId }).lean();
 
@@ -19,8 +25,9 @@ export const commentsOfPost = async (req: Request, res: Response) => {
     const roots: any[] = [];
 
     comments.forEach((comment) => {
-      comment.replies = [];
-      map[comment._id.toString()] = comment;
+      const commentWithReplies = comment as any as CommentWithReplies;
+      commentWithReplies.replies = [];
+      map[commentWithReplies._id.toString()] = commentWithReplies;
     });
 
     comments.forEach((comment) => {
