@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   LogOut, LayoutDashboard, Users, MessageSquare, AlertTriangle, 
-  Trash2, CheckCircle, ChevronDown, ChevronUp, Search, 
+  Trash2, CheckCircle,  Search, 
   SlidersHorizontal, UserCircle, Settings 
 } from 'lucide-react';
 import { getAllUsers, deleteUserById } from '../../api/adminApi';

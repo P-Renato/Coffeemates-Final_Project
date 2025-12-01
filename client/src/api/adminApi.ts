@@ -97,8 +97,13 @@ export const deleteUserById = async (userId: string) => {
   console.log('🗑️ deleteUserById called for:', userId);
   
   try {
+    const token = localStorage.getItem('authToken')?.replace(/['"]+/g, '').trim();
+    
     const response = await fetch(`http://localhost:4343/api/auth/${userId}`, {
       method: 'DELETE',
+      headers: token ? {
+        'Authorization': `Bearer ${token}`
+      } : {}
     });
     
     console.log('🗑️ Response status:', response.status);
