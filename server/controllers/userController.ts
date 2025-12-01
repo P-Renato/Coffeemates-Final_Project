@@ -335,3 +335,71 @@ export const searchUsers = async (req: Request, res: Response) => {
     res.status(500).json({ error: "❌ Server error searching users" });
   }
 };
+
+
+// Add these to your existing userController.ts
+
+// Delete user
+export const deleteUser = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    
+   console.log('DELETE called for user ID:', id);
+    
+    const deletedUser = await User.findByIdAndDelete(id);
+    
+    if (!deletedUser) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    
+    res.json({ 
+      message: 'User deleted successfully',
+      deletedUser: {
+        id: deletedUser._id,
+        username: deletedUser.username,
+        email: deletedUser.email
+      }
+    });
+    
+  } catch (error) {
+    console.error('Delete user error:', error);
+    res.status(500).json({ error: 'Failed to delete user' });
+  }
+};
+
+
+export const updateUserStatus = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { status, isActive } = req.body;
+   
+    console.log('UPDATE STATUS called:', { id, status, isActive });
+   
+    const user = await User.findById(id);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    
+   
+    const updates: any = {};
+    if (status !== undefined) updates.status = status;
+    if (isActive !== undefined) updates.isActive = isActive;
+    
+    const updatedUser = await User.findByIdAndUpdate(
+      id,
+      updates,
+      { new: true, runValidators: true }
+    ).select('-password');
+    console.log('✅ Status updated:', updatedUser.username);
+    
+    res.json({
+      success: true,
+      message: 'User status updated successfully',
+      user: updatedUser
+    });
+    
+  } catch (error) {
+    console.error('Update user status error:', error);
+    res.status(500).json({ error: 'Failed to update user status' });
+  }
+};
