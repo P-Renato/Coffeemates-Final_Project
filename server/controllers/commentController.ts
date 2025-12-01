@@ -1,5 +1,7 @@
 import type { Request, Response } from "express";
 import { Comment } from "../models/Comment";
+import  User  from "../models/User";
+import { Post } from "../models/Post";
 
 // Get all comments
 export const allComments = async (req: Request, res: Response) => {
@@ -11,11 +13,33 @@ export const commentsOfPost = async (req: Request, res: Response) => {
   try {
     const { postId } = req.params;
 
-    // Fetch all comments for the post
-    const comments = await Comment.find({ pid: postId }).lean();
+    const comments = await Comment.aggregate([
+      { $match: { pid: postId } },               
+      { $sort: { createdAt: 1 } },             
 
-    // Build a nested tree
-    const map: { [key: string]: any } = {};
+      {
+        $lookup: {
+          from: "users",
+          let: { userId: "$uid" },               
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $eq: ["$_id", { $toObjectId: "$$userId" }]
+                }
+              }
+            },
+            { $project: { username: 1 } }
+          ],
+          as: "user"
+        }
+      },
+
+      { $unwind: "$user" }                       
+    ]);
+
+    // Build nested comment tree
+    const map: Record<string, any> = {};
     const roots: any[] = [];
 
     comments.forEach((comment) => {
@@ -35,10 +59,13 @@ export const commentsOfPost = async (req: Request, res: Response) => {
     });
 
     res.status(200).json({ success: true, comments: roots });
+
   } catch (err) {
+    console.error("Comments Error:", err);
     res.status(500).json({ success: false, msg: "allComments error" });
   }
 };
+
 
 // GET: one comment by ID
 export const oneComment = async (req: Request, res: Response) => {
@@ -59,8 +86,7 @@ export const oneComment = async (req: Request, res: Response) => {
 // PATCH: edit a comment with user authorization
 export const editComment = async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;     
-    //const uid = req.body.uid;      
+    const { id } = req.params;      
 
     const updateComment = req.body;
     const updatedComment = await Comment.findOneAndUpdate(
@@ -75,8 +101,12 @@ export const editComment = async (req: Request, res: Response) => {
         msg: "Comment not found or unauthorized",
       });
     }
-
-    res.status(200).json({ success: true, updatedComment });
+    const user = await User.findById(updatedComment.uid).select("username");         // Fetch the user info
+    const populatedComment = {
+      ...updatedComment.toObject(),
+      user
+    };
+    res.status(200).json({ success: true, updatedComment: populatedComment });
   } catch (err) {
     res.status(400).json({ success: false, msg: "editPost error" });
   }
@@ -87,10 +117,27 @@ export const editComment = async (req: Request, res: Response) => {
 export const addNewComment = async (req: Request, res: Response) => {
   try {
     const { content, uid, pid, parentCommentId}  = req.body;
-
     const newComment = await Comment.create({ content, uid, pid, parentCommentId: parentCommentId || null});
 
-    res.status(201).json({ success: true, newComment });
+    // update Post to include this comment's ID
+    const newCommentId = newComment._id ? newComment._id.toString() : (newComment.id ?? null);
+    if (!newCommentId) {
+      return res.status(500).json({ success: false, msg: "Failed to create comment id" });
+    }
+    await Post.findByIdAndUpdate(
+      pid,
+      { $push: { commentIds: newCommentId } },
+      { new: true }
+    );
+    
+    // populate user info
+    const user = await User.findById(uid).select("username");         // Fetch the user info
+    const populatedComment = {
+      ...newComment.toObject(),
+      user
+    };
+
+    res.status(201).json({ success: true, newComment: populatedComment });
   } catch (err) {
     res.status(400).json({ success: false, msg: "addNewComment error" });
   }

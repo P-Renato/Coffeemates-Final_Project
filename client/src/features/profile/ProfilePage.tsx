@@ -1,6 +1,6 @@
 // src/pages/ProfilePage.tsx
 import React from "react";
-import { useNavigate } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import "./ProfilePage.css"; 
 
 type CoffeeProfileItem = {
@@ -99,9 +99,14 @@ const ProfilePage: React.FC = () => {
 
           <div className="profile-actions">
             {isOwnProfile ? (
+              <>
               <button className="btn btn-secondary" onClick={handleEdit}>
                 Edit Profile
               </button>
+              <p className="btn btn-secondary">
+                <NavLink to={"/admin"}>Admin Page</NavLink>
+              </p>
+              </>
             ) : (
               <>
                 <button className="btn btn-primary" onClick={handleFollow}>

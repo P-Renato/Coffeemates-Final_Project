@@ -2,12 +2,12 @@ import { useEffect, useState } from "react"
 import PostCard from "../../components/PostCard";
 import type { PostType } from "../../utils/types";
 
-
+const apiUrl = import.meta.env.VITE_API_URL;
 export default function PostPage() {
   const [posts, setPosts] = useState<PostType[]>([]);
 
   useEffect(() => {
-    fetch("http://localhost:4343/api/post")
+    fetch(`${apiUrl}/api/post`)
       .then((res) => res.json())
       .then((data) => {
         console.log("API DATA:", data);

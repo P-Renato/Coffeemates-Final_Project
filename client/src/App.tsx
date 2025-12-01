@@ -17,6 +17,7 @@ const LoginPage = () => <div>Login Page Coming Soon!</div>;
 import LoginPage from "./features/auth/LoginPage";
 import OAuthSuccess from "./pages/OAuthSuccess";
 import AdminPage from "./features/auth/AdminPage"
+import EditProfil from "./features/profile/EditProfil";
 
 const App = () => {
   return (
@@ -47,6 +48,7 @@ const App = () => {
             <Route path="/search" element={<SearchPage />} />
             <Route path="/chat" element={<ChatPage />} />
             <Route path="/profile" element={<ProfilePage />} />
+            <Route path="/profile/edit" element={<EditProfil />} />
             <Route path="/settings" element={<SettingPage />} />
           </Route>
 

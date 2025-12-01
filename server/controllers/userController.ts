@@ -5,114 +5,114 @@ import type { AuthRequest } from "../middlewares/authMiddleware";
 
 
 export const registerUser = async (req: Request, res: Response, next: NextFunction) => {
-    try {
-        const { username, password, email } = req.body;
+  try {
+    const { username, password, email } = req.body;
 
-        if(!username || !password || !email) {
-            res.status(401).send('❌ Missing credential');
-            return;
-        }
-
-        const existingUser = await User.findOne({
-            $or: [{ email }, { username }]
-        });
-
-        if(existingUser) {
-            return res.status(400).json({
-                error: "❌ User already exists"
-            });
-        }
-
-        const newUser = new User({
-            username,
-            email,
-            password
-        });
-
-        await newUser.save();
-
-        const token = generateToken({
-            userId: newUser._id.toString(),
-            email: newUser.email
-        });
-
-        res.cookie('token', token, {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: 'strict',
-            maxAge: 7 * 24 * 60 * 60 * 1000
-        });
-
-        res.status(201).json({
-            message: ' ✅ User created successfully',
-            id: newUser._id,
-            username: newUser.username,
-            email: newUser.email,
-            token: token
-        })
-
-        
-    } catch (error: any) {
-        if (error.name === 'ValidationError') {
-            const errors = Object.values(error.errors).map((err: any) => err.message);
-            return res.status(400).json({ error: errors.join(', ') });
-        }
-        res.status(500).json({ error: 'Server error ❌  during registration'})
+    if (!username || !password || !email) {
+      res.status(401).send('❌ Missing credential');
+      return;
     }
+
+    const existingUser = await User.findOne({
+      $or: [{ email }, { username }]
+    });
+
+    if (existingUser) {
+      return res.status(400).json({
+        error: "❌ User already exists"
+      });
+    }
+
+    const newUser = new User({
+      username,
+      email,
+      password
+    });
+
+    await newUser.save();
+
+    const token = generateToken({
+      userId: newUser._id.toString(),
+      email: newUser.email
+    });
+
+    res.cookie('token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 7 * 24 * 60 * 60 * 1000
+    });
+
+    res.status(201).json({
+      message: ' ✅ User created successfully',
+      id: newUser._id,
+      username: newUser.username,
+      email: newUser.email,
+      token: token
+    })
+
+
+  } catch (error: any) {
+    if (error.name === 'ValidationError') {
+      const errors = Object.values(error.errors).map((err: any) => err.message);
+      return res.status(400).json({ error: errors.join(', ') });
+    }
+    res.status(500).json({ error: 'Server error ❌  during registration' })
+  }
 };
 
 export const loginUser = async (req: Request, res: Response) => {
-    try {
-        const { login, password } = req.body;
+  try {
+    const { login, password } = req.body;
 
-        if (!login || !password) {
-            return res.status(400).json({ 
-                error: 'Username/email and password are required' 
-            });
-        }
-
-        const user = await User.findOne({
-            $or: [
-                { email: login.toLowerCase() },
-                { username: login }
-            ]
-        });
-
-        
-        if(!user) {
-            res.status(400).json({ error: 'Invalid credentials'})
-            return
-        }
-
-        const isPasswordValid = await user.comparePassword(password);
-        
-        const token = generateToken({
-            userId: user._id.toString(),
-            email: user.email
-        });
-
-        res.cookie('token', token, {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: 'strict',
-            maxAge: 7 * 24 * 60 * 60 * 1000
-        });
-
-        res.json({
-            message: '✅ Login successful',
-            user: {
-                id: user._id,
-                username: user.username,
-                email: user.email,
-                token: token
-            }
-        });
-
-
-    } catch (error) {
-        console.error(' ❌  Login error:', error);
-        res.status(500).json({ error: ' ❌  Server error during login' });
+    if (!login || !password) {
+      return res.status(400).json({
+        error: 'Username/email and password are required'
+      });
     }
+
+    const user = await User.findOne({
+      $or: [
+        { email: login.toLowerCase() },
+        { username: login }
+      ]
+    });
+
+
+    if (!user) {
+      res.status(400).json({ error: 'Invalid credentials' })
+      return
+    }
+
+    const isPasswordValid = await user.comparePassword(password);
+
+    const token = generateToken({
+      userId: user._id.toString(),
+      email: user.email
+    });
+
+    res.cookie('token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 7 * 24 * 60 * 60 * 1000
+    });
+
+    res.json({
+      message: '✅ Login successful',
+      user: {
+        id: user._id,
+        username: user.username,
+        email: user.email,
+        token: token
+      }
+    });
+
+
+  } catch (error) {
+    console.error(' ❌  Login error:', error);
+    res.status(500).json({ error: ' ❌  Server error during login' });
+  }
 }
 
 
@@ -121,9 +121,9 @@ export const getCurrentUser = async (req: Request, res: Response) => {
   try {
     const authReq = req as AuthRequest;
     const userId = authReq.user?.userId;
-    
+
     const user = await User.findById(userId).select('-password');
-    
+
     if (!user) {
       return res.status(404).json({ error: '❌ User not found' });
     }
@@ -150,9 +150,9 @@ export const getCurrentUser = async (req: Request, res: Response) => {
 export const getUserById = async (req: Request, res: Response) => {
   try {
     const userId = req.params.id;
-    
+
     const user = await User.findById(userId).select('-password -email');
-    
+
     if (!user) {
       return res.status(404).json({ error: '❌ User not found' });
     }
@@ -225,8 +225,8 @@ export const updateUser = async (req: Request, res: Response) => {
       });
 
       if (existingUser) {
-        return res.status(400).json({ 
-          error: '❌ Username or email already taken' 
+        return res.status(400).json({
+          error: '❌ Username or email already taken'
         });
       }
     }
@@ -280,14 +280,14 @@ export const changePassword = async (req: Request, res: Response) => {
     }
 
     if (!currentPassword || !newPassword) {
-      return res.status(400).json({ 
-        error: '❌ Current password and new password are required' 
+      return res.status(400).json({
+        error: '❌ Current password and new password are required'
       });
     }
 
     if (newPassword.length < 6) {
-      return res.status(400).json({ 
-        error: '❌ New password must be at least 6 characters' 
+      return res.status(400).json({
+        error: '❌ New password must be at least 6 characters'
       });
     }
 
@@ -311,5 +311,27 @@ export const changePassword = async (req: Request, res: Response) => {
   } catch (error) {
     console.error('❌ Change password error:', error);
     res.status(500).json({ error: '❌ Server error changing password' });
+  }
+};
+
+// search users by username
+export const searchUsers = async (req: Request, res: Response) => {
+  try {
+    const { q } = req.query;
+
+    if (!q || typeof q !== "string") {
+      return res.status(400).json({ error: "Missing search query" });
+    }
+
+    const users = await User.find(
+      { username: { $regex: q, $options: "i" } }, // case-insensitive contains
+      { _id: 1, username: 1 }                      // select only needed fields
+    );
+
+    res.json({ users });
+
+  } catch (error) {
+    console.error("❌ Search users error:", error);
+    res.status(500).json({ error: "❌ Server error searching users" });
   }
 };

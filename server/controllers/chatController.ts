@@ -64,35 +64,38 @@ export const getMessagesBetweenUsers = async (req: Request, res: Response) => {
         .skip(offset)
         .limit(limit);
 
-    console.log("userid: ", userId, " otherId: ", otherId, " msgs: ", msgs);
     res.json({ msgs }); 
 }
 
-
 export const getLastMessagesForUser = async (req: Request, res: Response) => {
     try {
-        const userId = req.params.userId;
-        if (userId) return res.status(400).json({ error: "Invalid userId" });
+        const userId = req.params.userId; 
 
-        // Step 1: Find all messages involving this user
+
+        if (!userId) {
+            return res.status(400).json({ error: "Invalid userId" });
+        }
+
+        // Find all messages where this user is sender or receiver
         const messages = await Chat.find({
-            $or: [{ senderId: userId }, { receiverId: userId }],
-        }).sort({ createdAt: -1 }); // newest first
+            $or: [
+                { senderId: userId },
+                { receiverId: userId }
+            ]
+        }).sort({ createdAt: -1 });
 
-        // Step 2: Build a map of last message per partner
-        const lastMessagesMap = new Map<number, any>();
+        const lastMessagesMap = new Map<string, any>();
 
         for (const msg of messages) {
-            const partnerId = msg.senderId === userId ? msg.receiverId : msg.senderId;
+            const partnerId =
+                msg.senderId === userId ? msg.receiverId : msg.senderId;
+
             if (!lastMessagesMap.has(partnerId)) {
                 lastMessagesMap.set(partnerId, msg);
             }
         }
-
-        // Convert map values to array
         const lastMessages = Array.from(lastMessagesMap.values());
-
-        res.json({lastMessages});
+        res.json({ lastMessages });
     } catch (err: any) {
         console.error("Mongoose Error:", err.message);
         res.status(500).json({ error: err.message });
@@ -101,11 +104,11 @@ export const getLastMessagesForUser = async (req: Request, res: Response) => {
 
 export const searchMessages = async (req: Request, res: Response) => {
     try {
-        const userId = Number(req.params.userId);
-        const otherId = Number(req.params.otherId);
+        const userId = req.params.userId;
+        const otherId = req.params.otherId;
         const q = req.query.q as string;
-
-        if (isNaN(userId) || isNaN(otherId)) {
+        
+        if (!userId || !otherId) {
             return res.status(400).json({ error: "Invalid userId or partnerId" });
         }
 
@@ -120,8 +123,8 @@ export const searchMessages = async (req: Request, res: Response) => {
                 { senderId: otherId, receiverId: userId },
             ],
         }).sort({ createdAt: 1 }); // oldest first
-
-        res.json(messages);
+        console.log("Search query:", q, "Found messages:", messages.length);
+        res.json({messages}); 
     } catch (err: any) {
         console.error(err);
         res.status(500).json({ error: err.message });
