@@ -45,6 +45,7 @@ const App = () => {
             <Route path="/search" element={<SearchPage />} />
             <Route path="/chat" element={<ChatPage />} />
             <Route path="/profile" element={<ProfilePage />} />
+            <Route path="/profile/edit" element={<EditProfil />} />
             <Route path="/settings" element={<SettingPage />} />
             <Route path="/edit-profile" element={<EditProfil />} />
           </Route>

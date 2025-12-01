@@ -11,6 +11,10 @@ export type PostType = {
     imageUrl: string,
     pid: string,
     createdAt: string,
+    user: {             
+        _id: string,
+        username: string,
+    }
 }
 
 export type CommentType = {
@@ -20,6 +24,10 @@ export type CommentType = {
     pid: string,
     parentCommentId: string,
     createdAt: string,
+    user: {             
+        _id: string,
+        username: string,
+    }
 }
 
 export type ChatType = {

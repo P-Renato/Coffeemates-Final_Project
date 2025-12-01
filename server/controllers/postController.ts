@@ -6,7 +6,28 @@ import { Location } from "../models/Location";
 // GET: all posts
 export const allPosts = async (req: Request, res: Response) => {
   try {
-    const posts = await Post.find().sort({ createdAt: -1 }); // newest first
+    const posts = await Post.aggregate([
+      { $sort: { createdAt: -1 } },
+      {
+        $lookup: {
+          from: "users",
+          let: { userId: "$uid" },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $eq: ["$_id", { $toObjectId: "$$userId" }]
+                }
+              }
+            },
+            { $project: { username: 1 } }
+          ],
+          as: "user"
+        }
+      },
+      { $unwind: "$user" }
+    ]);
+
     res.status(200).json({ success: true, posts });
   } catch (err) {
     res.status(500).json({ success: false, msg: "Error fetching posts" });
@@ -84,7 +105,7 @@ export const addNewPost = async (req: Request, res: Response) => {
     const newPostContent = await Post.create({
       title,
       content,
-      location, 
+      location,
       star: star ? Number(star) : null,
       uid: uid ? Number(uid) : 2,
       imageUrl,
@@ -129,3 +150,31 @@ export const deletePost = async (req: Request, res: Response) => {
     res.status(500).json({ success: false, msg: "deletePost error" });
   }
 };
+
+// POST: like a post
+export const likePost = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { uid } = req.body; // user ID from request body
+
+    const post = await Post.findById(id);
+    if (!post) {
+      return res.status(404).json({ success: false, msg: "Post not found" });
+    }
+
+    const uidIndex = post.likeIds.indexOf(uid);
+    if (uidIndex === -1) {
+      // User has not liked the post yet, add like
+      post.likeIds.push(uid);
+    } else {
+      // User has already liked the post, remove like
+      post.likeIds.splice(uidIndex, 1);
+    }
+
+    await post.save();
+
+    res.status(200).json({ success: true, likeCount: post.likeIds.length });
+  } catch (err) {
+    res.status(500).json({ success: false, msg: "likePost error" });
+  }
+}

@@ -2,6 +2,7 @@ import { useState, useEffect, type FormEvent } from "react"
 import type { CommentType } from "../../utils/types";
 import { useAuth } from "../../hooks/useAuth";
 
+const apiUrl = import.meta.env.VITE_API_URL;
 export default function CommentList({ pid }: { pid: string }) {
     const [comments, setComments] = useState<CommentType[]>([]);
     const [newComment, setNewComment] = useState("");
@@ -13,7 +14,7 @@ export default function CommentList({ pid }: { pid: string }) {
 
     // Load all comments
     useEffect(() => {
-        fetch(`http://localhost:4343/api/comment/post/${pid}`)
+        fetch(`${apiUrl}/api/comment/post/${pid}`)
             .then((res) => res.json())
             .then((data) => {
                 if (data.success && Array.isArray(data.comments)) {
@@ -30,7 +31,7 @@ export default function CommentList({ pid }: { pid: string }) {
             return alert("User is not authenticated.");
         }
         try {
-            const res = await fetch(`http://localhost:4343/api/comment`, {
+            const res = await fetch(`${apiUrl}/api/comment`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ content: newComment, uid: user.id, pid }),
@@ -58,7 +59,7 @@ export default function CommentList({ pid }: { pid: string }) {
     // Save edited comment
     const editComment = async (id: string) => {
         try {
-            const res = await fetch(`http://localhost:4343/api/comment/${id}`, {
+            const res = await fetch(`${apiUrl}/api/comment/${id}`, {
                 method: "PATCH",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ content: editingText }),
@@ -82,10 +83,13 @@ export default function CommentList({ pid }: { pid: string }) {
         }
     };
 
-    // Delete
+    // Delete with confirmation
     const deleteComment = async (id: string) => {
+        const confirmed = window.confirm("Are you sure you want to delete this comment?");
+        if (!confirmed) return; // Stop if user cancels
+
         try {
-            const res = await fetch(`http://localhost:4343/api/comment/${id}`, {
+            const res = await fetch(`${apiUrl}/api/comment/${id}`, {
                 method: "DELETE",
             });
 
@@ -101,6 +105,7 @@ export default function CommentList({ pid }: { pid: string }) {
         }
     };
 
+
     return (
         <div>
             <h3 className="font-bold">Comments</h3>
@@ -110,7 +115,7 @@ export default function CommentList({ pid }: { pid: string }) {
                     <div key={comment._id} className="bg-green-200 p-2 m-2 flex justify-between items-center">
                         <div>
                             <div>
-                                <b>{comment.uid}: </b>
+                                <b>{comment.user ? comment.user.username : "Unknown User"}: </b>
 
                                 {editingId === comment._id
                                     ? (
@@ -121,21 +126,23 @@ export default function CommentList({ pid }: { pid: string }) {
                             </div>
                             <p className="text-blue-600 text-sm">posted on {new Date(comment.createdAt).toDateString()}</p>
                         </div>
+                        {
+                            user && user.id === comment.uid && (
+                                <div className="flex gap-2">
+                                    {editingId === comment._id
+                                        ? (
+                                            <>
+                                                <button onClick={() => editComment(comment._id)} className="bg-blue-400 p-2 cursor-pointer">Save</button>
+                                                <button onClick={() => setEditingId(null)} className="bg-gray-300 p-2 cursor-pointer">Cancel</button>
+                                            </>
+                                        ) : (
+                                            <button onClick={() => startEdit(comment)} className="bg-yellow-400 p-2 cursor-pointer">Edit</button>
+                                        )}
 
-                        <div className="flex gap-2">
-                            {editingId === comment._id
-                                ? (
-                                    <>
-                                        <button onClick={() => editComment(comment._id)} className="bg-blue-400 p-2 cursor-pointer">Save</button>
-                                        <button onClick={() => setEditingId(null)} className="bg-gray-300 p-2 cursor-pointer">Cancel</button>
-                                    </>
-                                ) : (
-                                    <button onClick={() => startEdit(comment)} className="bg-yellow-400 p-2 cursor-pointer">Edit</button>
-                                )}
-
-                            <button onClick={() => deleteComment(comment._id)} className="bg-red-300 p-2 cursor-pointer">Delete</button>
-                        </div>
-
+                                    <button onClick={() => deleteComment(comment._id)} className="bg-red-300 p-2 cursor-pointer">Delete</button>
+                                </div>
+                            )
+                        }
                     </div>
                 ))}
             </div>

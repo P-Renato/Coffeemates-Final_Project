@@ -1,8 +1,9 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { io, Socket } from "socket.io-client";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import debounce from "lodash.debounce";
 import type { ChatType, UserType } from "../../utils/types";
 import ChatBox from "./ChatBox";
 
@@ -25,7 +26,7 @@ export default function ChatPage() {
     const id = userData ? JSON.parse(userData).id : null;
     const username = userData ? JSON.parse(userData).username : null;
 
-    // Load auth
+    /*************  Load auth user  ******************/
     useEffect(() => {
         if (!id || !username) {
             navigate("/login");
@@ -34,7 +35,7 @@ export default function ChatPage() {
         }
     }, [id, username, navigate]);
 
-    // Load users + setup socket
+    /***************  Load users + setup socket  ******************/
     useEffect(() => {
         if (!auth) return;
 
@@ -90,7 +91,7 @@ export default function ChatPage() {
         };
     }, [auth, chatUserId, navigate]);
 
-    // Load last messages
+    /****************  Load last messages   ******************/
     useEffect(() => {
         if (!auth) return;
 
@@ -112,8 +113,9 @@ export default function ChatPage() {
         setNotifications((prev) => ({ ...prev, [userId]: 0 }));
     };
 
-    // Search users
-    const searchUser = async () => {
+    /*********************** Search users with live search using debounce  ************/
+    // Search users with live search using debounce
+    const searchUser = useCallback(async (searchQuery: string) => {
         if (!searchQuery.trim()) {
             setSearchResults([]);
             return;
@@ -124,11 +126,30 @@ export default function ChatPage() {
                 `${apiUrl}/api/auth/search?q=${encodeURIComponent(searchQuery)}`
             );
             const data = await res.json();
-            setSearchResults(data);
+            setSearchResults(data.users);
         } catch (err) {
             console.error("Search error:", err);
         }
+    }, []);
+
+    // Debounced version (runs 300ms AFTER user stops typing)
+    const debouncedSearch = useMemo(
+        () => debounce((value: string) => searchUser(value), 300),
+        [searchUser]
+    );
+
+    useEffect(() => {
+        return () => {
+            debouncedSearch.cancel();
+        };
+    }, [debouncedSearch]);
+
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const value = e.target.value;
+        setSearchQuery(value);
+        debouncedSearch(value);
     };
+
 
     if (!auth) return <div>Loading...</div>;
 
@@ -144,7 +165,7 @@ export default function ChatPage() {
                 <input
                     type="text"
                     value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onChange={handleChange}
                     onKeyDown={(e) => e.key === "Enter" && searchUser()}
                     placeholder="Type a name here"
                     className="border border-gray-300 p-2 m-2 w-full rounded-md"
