@@ -2,6 +2,9 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth"; // Adjust path as needed
 import "./ProfilePage.css";
+import { getPostsByUserId } from '../../api/postApi';
+import PostCard from '../../components/PostCard';
+import type { PostType } from '../../utils/types';
 
 type CoffeeProfileData = {
   basics?: {
@@ -85,77 +88,108 @@ const ProfilePage: React.FC = () => {
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [userPosts, setUserPosts] = useState<PostType[]>([]);
+  const [postsLoading, setPostsLoading] = useState(true);
+  
 
   // Fetch profile data from backend
-  useEffect(() => {
-    const fetchProfile = async () => {
-      try {
-        setLoading(true);
-        setError(null);
+ useEffect(() => {
+  const fetchProfile = async () => {
+    try {
+      setLoading(true);
+      setPostsLoading(true);
+      setError(null);
 
-
-        if (!token) {
-          throw new Error('No authentication token available');
-        }
-        console.log('🔵 Using token from localStorage:', token.substring(0, 20) + '...');
-
-        // Fetch user profile data
-        const userResponse = await fetch(`http://localhost:4343/api/auth/${user?.id}`, {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-        });
-
-        if (!userResponse.ok) {
-          throw new Error('Failed to fetch user data');
-        }
-
-        const userData = await userResponse.json();
-
-        // Fetch coffee profile questions and answers
-        const profileResponse = await fetch('http://localhost:4343/api/auth/profile/questions', {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-        });
-
-        console.log('🔵 Profile response status:', profileResponse.status);
-
-        if (!profileResponse.ok) {
-          throw new Error('Failed to fetch profile questions');
-        }
-
-        const profileData = await profileResponse.json();
-
-        // Transform the API responses to match your ProfileData type
-        const transformedProfile: ProfileData = {
-          id: userData.user?.username || userData.user?.id || 'unknown',
-          name: userData.user?.username || 'Unknown User',
-          place: userData.user?.place || "Unknown location", // You might need to add this to your user model
-          avatarUrl: userData.user?.photoURL || "/images/default-avatar.png",
-          coverImageUrl: "/images/default-cover.png", // Add this to your user model if needed
-          coffeematesCount: 0, // You'll need to implement followers/following
-          postCount: 0, // You'll need to implement post count
-          coffeeProfile: profileData.answers || {},
-        };
-
-        setProfile(transformedProfile);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'An error occurred');
-        console.error('Error fetching profile:', err);
-      } finally {
-        setLoading(false);
+      if (!token) {
+        throw new Error('No authentication token available');
       }
-    };
+      
+      if (!user || !user.id) {
+        throw new Error('User not authenticated');
+      }
 
-    if (user) {
-      fetchProfile();
-    } else {
+      console.log('🔵 Fetching profile for user:', user.id);
+
+      // Fetch user profile data
+      const userResponse = await fetch(`http://localhost:4343/api/auth/${user.id}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!userResponse.ok) {
+        throw new Error('Failed to fetch user data');
+      }
+
+      const userData = await userResponse.json();
+
+      // Fetch coffee profile
+      const profileResponse = await fetch('http://localhost:4343/api/auth/profile/questions', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      console.log('🔵 Profile response status:', profileResponse.status);
+
+      if (!profileResponse.ok) {
+        throw new Error('Failed to fetch profile questions');
+      }
+
+      const profileData = await profileResponse.json();
+
+      // Transform the API responses
+      const transformedProfile: ProfileData = {
+        id: userData.user?.username || userData.user?.id || 'unknown',
+        name: userData.user?.username || 'Unknown User',
+        place: userData.user?.place || "Unknown location",
+        avatarUrl: userData.user?.photoURL || "/images/default-avatar.png",
+        coverImageUrl: "/images/default-cover.png",
+        coffeematesCount: 0,
+        postCount: 0, // Will update after fetching posts
+        coffeeProfile: profileData.answers || {},
+      };
+
+      setProfile(transformedProfile);
+
+      // ✅ NEW: Fetch user posts
+      console.log('📱 Fetching posts for user:', user.id);
+      try {
+        const posts = await getPostsByUserId(user.id);
+        console.log('✅ Fetched posts:', posts.length);
+        setUserPosts(posts);
+        // Update post count in profile
+        transformedProfile.postCount = posts.length;
+        setProfile(transformedProfile);
+      } catch (postError) {
+        console.error('❌ Error fetching posts:', postError);
+        // Don't fail the whole profile if posts fail
+      }
+
+      // In ProfilePage.tsx, after fetching posts:
+console.log('First post data structure:', userPosts[0]);
+console.log('User object in post:', userPosts[0]?.user);
+
+
+
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred');
+      console.error('Error fetching profile:', err);
+    } finally {
       setLoading(false);
+      setPostsLoading(false);
     }
-  }, [user, navigate]);
+  };
+
+  if (user && token) {
+    fetchProfile();
+  } else {
+    setLoading(false);
+    setPostsLoading(false);
+  }
+}, [user, token, navigate]);
 
   // Helper function to convert coffee profile data to display format
   const getCoffeeProfileDisplay = (coffeeProfile: CoffeeProfileData) => {
@@ -318,15 +352,35 @@ const ProfilePage: React.FC = () => {
           </div>
         </section>
 
-        {/* Posts (placeholder) */}
-        <section className="profile-section">
-          <h2 className="section-title">Post</h2>
-          <div className="post-list">
-            <div className="post-card placeholder" />
-            <div className="post-card placeholder" />
-            <div className="post-card placeholder" />
-          </div>
-        </section>
+        {/* Posts Section - REPLACE THIS */}
+<section className="profile-section">
+  <h2 className="section-title">Posts ({userPosts.length})</h2>
+  
+  {postsLoading ? (
+    <div className="loading-posts">Loading posts...</div>
+  ) : userPosts.length === 0 ? (
+    <div className="no-posts-message">
+      <div className="no-posts-icon">☕</div>
+      <p>No posts yet. Share your coffee experiences!</p>
+      {isOwnProfile && (
+        <button 
+          onClick={() => navigate('/create-post')} // Adjust to your post creation route
+          className="btn btn-primary"
+        >
+          Create Your First Post
+        </button>
+      )}
+    </div>
+  ) : (
+    <div className="posts-grid">
+      {userPosts.map((post) => (
+        <div key={post._id || post.pid} className="post-item">
+          <PostCard post={post} />
+        </div>
+      ))}
+    </div>
+  )}
+</section>
       </div>
     </div>
   );

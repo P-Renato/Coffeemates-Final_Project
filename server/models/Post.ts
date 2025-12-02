@@ -34,4 +34,6 @@ postSchema.pre("save", async function (next) {
 });
 
 
+
+
 export const Post = model<IPost>("Post", postSchema);

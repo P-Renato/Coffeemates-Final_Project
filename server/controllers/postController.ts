@@ -2,35 +2,44 @@ import type { Request, Response } from "express";
 import { Post } from "../models/Post";
 import { Comment } from "../models/Comment";
 import { Location } from "../models/Location";
+import User from '../models/User';
 
 // GET: all posts
 export const allPosts = async (req: Request, res: Response) => {
   try {
-    const posts = await Post.aggregate([
-      { $sort: { createdAt: -1 } },
-      {
-        $lookup: {
-          from: "users",
-          let: { userId: "$uid" },
-          pipeline: [
-            {
-              $match: {
-                $expr: {
-                  $eq: ["$_id", { $toObjectId: "$$userId" }]
-                }
-              }
-            },
-            { $project: { username: 1 } }
-          ],
-          as: "user"
+    console.log('🔄 Fetching all posts with populate...');
+    
+    // Since uid is String, we need to convert for populate
+    const posts = await Post.find()
+      .sort({ createdAt: -1 })
+      .lean(); // Get plain objects
+    
+    // Manually populate user data
+    const postsWithUsers = await Promise.all(
+      posts.map(async (post) => {
+        try {
+          // Find user by _id (ObjectId) converted from uid string
+          const user = await User.findById(post.uid).select('username profileImage').lean();
+          return {
+            ...post,
+            user: user || { username: 'Unknown' }
+          };
+        } catch (error) {
+          console.error(`Error fetching user for post ${post._id}:`, error);
+          return {
+            ...post,
+            user: { username: 'Unknown' }
+          };
         }
-      },
-      { $unwind: "$user" }
-    ]);
+      })
+    );
 
-    res.status(200).json({ success: true, posts });
+    console.log(`✅ Found ${postsWithUsers.length} posts`);
+    
+    res.status(200).json({ success: true, posts: postsWithUsers });
   } catch (err) {
-    res.status(500).json({ success: false, msg: "Error fetching posts" });
+    console.error('❌ Error in allPosts:', err);
+    res.status(500).json({ success: false, msg: "Error fetching posts", error: err.message });
   }
 };
 
@@ -107,7 +116,7 @@ export const addNewPost = async (req: Request, res: Response) => {
       content,
       location,
       star: star ? Number(star) : null,
-      uid: uid ? Number(uid) : 2,
+      uid: uid ? String(uid) : "2",
       imageUrl,
       shopName,
       commentIds: commentIds ? JSON.parse(commentIds) : [],
@@ -173,8 +182,37 @@ export const likePost = async (req: Request, res: Response) => {
 
     await post.save();
 
-    res.status(200).json({ success: true, likeCount: post.likeIds.length });
+    res.status(200).json({ success: true, likeCount: post.likeIds.length,  liked: uidIndex === -1 });
   } catch (err) {
     res.status(500).json({ success: false, msg: "likePost error" });
   }
 }
+
+// GET: Get posts by user ID
+export const getPostsByUserId = async (req: Request, res: Response) => {
+  try {
+    const { userId } = req.params;
+    console.log('📱 Fetching posts for user:', userId);
+    
+    // Find posts where uid matches userId
+    const posts = await Post.find({ uid: userId })
+      .sort({ createdAt: -1 }) // Newest first
+      .lean();
+    
+    console.log(`✅ Found ${posts.length} posts for user ${userId}`);
+    
+    res.status(200).json({ 
+      success: true, 
+      posts: posts,
+      count: posts.length
+    });
+    
+  } catch (err) {
+    console.error('❌ Error fetching user posts:', err);
+    res.status(500).json({ 
+      success: false, 
+      msg: "Error fetching user posts" 
+    });
+  }
+};
+
