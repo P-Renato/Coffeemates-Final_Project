@@ -4,8 +4,6 @@ import type { AuthRequest } from "../middlewares/authMiddleware";
 
 export const getProfileQuestions = async (req: AuthRequest, res: Response) => {
   try {
-    console.log('✅ GET /api/auth/profile/questions - Request received');
-
     const user = await User.findById(req.user?.userId).select('coffeeProfile');
     
     console.log(user)
@@ -73,16 +71,11 @@ export const getProfileQuestions = async (req: AuthRequest, res: Response) => {
 // Update profile answers
 export const updateProfileAnswers = async (req: AuthRequest, res: Response) => {
   try {
-    console.log('✅ PATCH /api/auth/profile/answers - Request received');
-    console.log('📦 Request body:', req.body);
-    
     const { category, field, answer } = req.body; // Changed from 'question' to 'field'
 
     if (!req.user?.userId) {
       return res.status(401).json({ error: '❌ Not authenticated' });
     }
-
-    console.log('💾 Saving to:', category, field, answer);
 
     // Build the update object based on your schema structure
     const updateQuery: any = {};
@@ -98,8 +91,6 @@ export const updateProfileAnswers = async (req: AuthRequest, res: Response) => {
       return res.status(404).json({ error: '❌ User not found' });
     }
 
-    console.log('✅ Updated user:', user.coffeeProfile);
-
     res.json({ 
       message: "✅ Answer saved successfully", 
       answers: user.coffeeProfile 
@@ -108,5 +99,82 @@ export const updateProfileAnswers = async (req: AuthRequest, res: Response) => {
   } catch (error) {
     console.error('❌ Update profile answers error:', error);
     res.status(500).json({ error: '❌ Server error saving answer' });
+  }
+};
+
+// Update user profile (username, place, etc.)
+export const updateUserProfile = async (req: AuthRequest, res: Response) => {
+  try {
+    const { username, place } = req.body; 
+
+    if (!req.user?.userId) {
+      return res.status(401).json({ error: '❌ Not authenticated' });
+    }
+
+    // Build update object with only provided fields
+    const updateData: any = {};
+    if (username !== undefined) updateData.username = username;
+    if (place !== undefined) updateData.place = place;
+
+    console.log('📝 Update data to save:', updateData);
+    // Check if username already exists (if updating username)
+
+    // DEBUG: Check current user data
+    const currentUser = await User.findById(req.user.userId);
+    
+
+    if (username) {
+      const existingUser = await User.findOne({ 
+        username, 
+        _id: { $ne: req.user.userId } 
+      });
+      
+      if (existingUser) {
+        return res.status(400).json({ error: '❌ Username already taken' });
+      }
+    }
+    const userBefore = await User.findById(req.user.userId).select('username place');
+    console.log('👤 User before update:', userBefore?.toObject());
+
+    const user = await User.findByIdAndUpdate(
+      req.user.userId,
+      { $set: updateData },
+      { new: true, runValidators: true } // runValidators ensures schema validation
+    ).select('+place'); 
+
+    if (!user) {
+      return res.status(404).json({ error: '❌ User not found' });
+    }
+
+    res.json({ 
+      message: "✅ Profile updated successfully", 
+      user: {
+        id: user._id,
+        username: user.username,
+        place: user.place || "Unknown location",
+        email: user.email,
+        photoURL: user.photoURL
+      }
+    });
+
+  } catch (error: any) {
+    console.error('❌ Update user profile error:', error);
+    
+    // Handle Mongoose validation errors
+    if (error.name === 'ValidationError') {
+      return res.status(400).json({ 
+        error: '❌ Validation error', 
+        details: error.message 
+      });
+    }
+    
+    // Handle duplicate key errors
+    if (error.code === 11000) {
+      return res.status(400).json({ 
+        error: '❌ Username or email already exists' 
+      });
+    }
+    
+    res.status(500).json({ error: '❌ Server error updating profile' });
   }
 };
