@@ -1,5 +1,5 @@
 import express from 'express';
-import { registerUser, loginUser, getCurrentUser, getUserById, getAllUsers, updateUser, changePassword } from '../controllers/userController';
+import { registerUser, loginUser, getCurrentUser, getUserById, getAllUsers, updateUser, changePassword, deleteUser, updateUserStatus } from '../controllers/userController';
 import { authenticateToken } from '../middlewares/authMiddleware';
 
 const userRouter = express.Router();
@@ -14,5 +14,8 @@ userRouter.patch('/profile/update', authenticateToken, updateUser);
 userRouter.patch('/password/change', authenticateToken, changePassword);
 
 userRouter.get('/:id', getUserById); 
+
+userRouter.delete('/:id', deleteUser)
+userRouter.patch('/:id/status', updateUserStatus);
 
 export default userRouter;

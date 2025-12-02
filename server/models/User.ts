@@ -30,6 +30,15 @@ const userSchemaFields: mongoose.SchemaDefinition<IUser> = {
         enum: ['user', 'admin'],
         default: 'user'
     },
+    status: { 
+    type: String, 
+    enum: ['active', 'pending', 'banned', 'inactive'],
+    default: 'active' 
+  },
+  isActive: { 
+    type: Boolean, 
+    default: true 
+  },
     password: {
         type: String,
         required: function(this: IUser) {
