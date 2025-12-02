@@ -11,6 +11,7 @@ interface AuthProviderProps {
 export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [user, setUser] = useState<User | null>(null);
+  const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   const logout = useCallback(() => {
@@ -18,20 +19,22 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     localStorage.removeItem('userData');
     setIsAuthenticated(false);
     setUser(null);
+    setToken(null);
   }, []);
 
   // Check for existing authentication on app load
   useEffect(() => {
     const checkAuthStatus = () => {
       try {
-        const token = localStorage.getItem('authToken');
+        const storedToken = localStorage.getItem('authToken');
         const userData = localStorage.getItem('userData');
 
-        console.log('AuthProvider: Checking auth status', { token, userData });
+        console.log('AuthProvider: Checking auth status', { storedToken, userData });
 
-        if (token && userData) {
+        if (storedToken && userData) {
           setIsAuthenticated(true);
           setUser(JSON.parse(userData));
+          setToken(storedToken);
           console.log('AuthProvider: User is authenticated');
         } else {
           console.log('AuthProvider: No auth token found');
@@ -48,18 +51,20 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     checkAuthStatus();
   }, [logout]);
 
-  const login = (token: string, userData: User) => {
-    console.log('AuthProvider: Login called with', { token, userData });
-    localStorage.setItem('authToken', token);
+  const login = (newToken: string, userData: User) => {
+    console.log('AuthProvider: Login called with', { newToken, userData });
+    localStorage.setItem('authToken', newToken);
     localStorage.setItem('userData', JSON.stringify(userData));
     setIsAuthenticated(true);
     setUser(userData);
+    setToken(newToken);
     console.log('AuthProvider: Authentication state updated');
   };
 
   const value: AuthContextType = {
     isAuthenticated,
     user,
+    token,
     isLoading,
     login,
     logout,

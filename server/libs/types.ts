@@ -14,6 +14,7 @@ export interface IUser extends Document {
   _id: string;
   username: string;
   email: string;
+  place?: string;
   role: 'user' | 'admin';
   password: string;
   photoURL?: string;

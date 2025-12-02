@@ -1,21 +1,20 @@
-//criant/compornents/CoffeeProfile.tsx
-import CoffeeQuestionRow from "./CoffeeQuestionRow";
-import CoffeeQuestionPicker from "./CoffeeQuestionPicker";
+import React from 'react';
 
-type Props = {
+interface CoffeeProfileProps {
   labels: string[];
   questions: (string | null)[];
   answers: string[];
   showPicker: boolean;
   activeIndex: number | null;
-  isEnabled: (i: number) => boolean;
-  openPicker: (i: number) => void;
-  selectQuestion: (q: string) => void;
+  isEnabled: (index: number) => boolean;
+  openPicker: (index: number) => void;
+  selectQuestion: (question: string) => void;
   closePicker: () => void;
-  setAnswer: (i: number, v: string) => void;
-};
+  setAnswer: (index: number, value: string) => void;
+  questionOptions?: string[];
+}
 
-export default function CoffeeProfile({
+const CoffeeProfile: React.FC<CoffeeProfileProps> = ({
   labels,
   questions,
   answers,
@@ -26,36 +25,67 @@ export default function CoffeeProfile({
   selectQuestion,
   closePicker,
   setAnswer,
-}: Props) {
+  questionOptions = []
+}) => {
   return (
-    <div className="mt-10 w-full">
-      <h2 className="text-2xl font-bold mb-3">
-        Coffee profile
-        <span className="ml-2 text-sm text-gray-600">
-          Tell us up to five things you love about coffee.
-        </span>
-      </h2>
+    <div className="coffee-profile-section">
+      <h2 className="section-title">Coffee profile</h2>
+      <div className="section-subtitle">
+        Tell us up to five things you love about coffee.
+      </div>
 
-      {/* rows */}
-      {labels.map((label, i) => (
-        <CoffeeQuestionRow
-          key={i}
-          label={label}
-          value={questions[i]}
-          answer={answers[i]}
-          disabled={!isEnabled(i)}
-          onSelectClick={() => openPicker(i)}
-          onAnswerChange={(v) => setAnswer(i, v)}
-        />
-      ))}
-
-      {/* picker modal */}
-      {showPicker && (
-        <CoffeeQuestionPicker
-          onSelect={selectQuestion}
-          onClose={closePicker}
-        />
-      )}
+      <div className="coffee-profile-rows">
+        {labels.map((label, index) => (
+          <div
+            key={index}
+            className={`coffee-profile-row ${isEnabled(index) ? '' : 'disabled'}`}
+          >
+            <div className="row-label">{label}</div>
+            
+            <div className="row-content">
+              <div className="question-selector">
+                <div
+                  className="question-display"
+                  onClick={() => isEnabled(index) && openPicker(index)}
+                >
+                  {questions[index] || 'Select a question'}
+                </div>
+                
+                {showPicker && activeIndex === index && (
+                  <div className="question-picker">
+                    <div className="picker-header">
+                      <span>Choose a question</span>
+                      <button onClick={closePicker} className="close-picker">×</button>
+                    </div>
+                    <div className="picker-options">
+                      {questionOptions.map((option, i) => (
+                        <div
+                          key={i}
+                          className="picker-option"
+                          onClick={() => selectQuestion(option)}
+                        >
+                          {option}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+              
+              <input
+                type="text"
+                className="answer-input"
+                placeholder="Your answer..."
+                value={answers[index]}
+                onChange={(e) => setAnswer(index, e.target.value)}
+                disabled={!isEnabled(index)}
+              />
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   );
-}
+};
+
+export default CoffeeProfile;

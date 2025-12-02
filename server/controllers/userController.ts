@@ -122,7 +122,7 @@ export const getCurrentUser = async (req: Request, res: Response) => {
     const authReq = req as AuthRequest;
     const userId = authReq.user?.userId;
 
-    const user = await User.findById(userId).select('-password');
+    const user = await User.findById(userId).select('username email place photoURL createdAt updatedAt');
 
     if (!user) {
       return res.status(404).json({ error: '❌ User not found' });
@@ -135,6 +135,8 @@ export const getCurrentUser = async (req: Request, res: Response) => {
         id: userObj._id,
         username: userObj.username,
         email: userObj.email,
+        place: userObj.place || "Unknown location",
+        photoURL: userObj.photoURL, 
         createdAt: userObj.createdAt,
         updatedAt: userObj.updatedAt
       }
@@ -151,7 +153,7 @@ export const getUserById = async (req: Request, res: Response) => {
   try {
     const userId = req.params.id;
 
-    const user = await User.findById(userId).select('-password -email');
+    const user = await User.findById(userId).select('username photoURL place createdAt');
 
     if (!user) {
       return res.status(404).json({ error: '❌ User not found' });
@@ -164,6 +166,8 @@ export const getUserById = async (req: Request, res: Response) => {
       user: {
         id: userObj._id,
         username: userObj.username,
+        place: userObj.place || "Unknown location",
+        photoURL: userObj.photoURL,
         createdAt: userObj.createdAt
       }
     });
@@ -209,7 +213,7 @@ export const updateUser = async (req: Request, res: Response) => {
   try {
     const authReq = req as AuthRequest;
     const userId = authReq.user?.userId;
-    const { username, email } = req.body;
+    const { username, email, place } = req.body;
 
     if (!userId) {
       return res.status(401).json({ error: '❌ Not authenticated' });
@@ -234,6 +238,7 @@ export const updateUser = async (req: Request, res: Response) => {
     const updateData: any = {};
     if (username) updateData.username = username;
     if (email) updateData.email = email;
+    if (place !== undefined) updateData.place = place;
 
     const updatedUser = await User.findByIdAndUpdate(
       userId,
@@ -254,6 +259,7 @@ export const updateUser = async (req: Request, res: Response) => {
         id: userObj._id,
         username: userObj.username,
         email: userObj.email,
+        place: userObj.place || "Unknown location",
         updatedAt: userObj.updatedAt
       }
     });
