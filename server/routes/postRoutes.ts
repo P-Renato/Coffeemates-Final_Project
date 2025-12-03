@@ -1,7 +1,7 @@
 import express from 'express';
 import multer from "multer";
 import path from "path";
-import { allPosts, addNewPost, onePost, editPost, deletePost, likePost } from '../controllers/postController';
+import { allPosts, addNewPost, onePost, editPost, deletePost, likePost, getPostsByUserId } from '../controllers/postController';
 
 const posts = express.Router();
 
@@ -28,11 +28,13 @@ const upload = multer({
 });
 
 // Routes
+posts.get("/user/:userId", getPostsByUserId);
 posts.patch("/like/:id", likePost);
 posts.get("/:id", onePost);      
 posts.patch("/:id", editPost);   
 posts.get("/", allPosts);        
 posts.post("/", upload.single("postImg"), addNewPost);     
 posts.delete("/:id", deletePost);
+
 
 export default posts;

@@ -15,6 +15,7 @@ import locationRouter from './routes/locationRoutes';
 import geocodeRouter from './routes/geocodeRoutes'
 import chatRouter from './routes/chatRoutes';
 import { initChatSocket } from './controllers/chatController';
+import { getPostsByUserId } from './controllers/postController';
 
 const app = express();
 
@@ -55,6 +56,7 @@ app.get('/api/test', (req, res) => {
 
 // post route
 app.use("/api/post", postRouter); 
+app.get('/api/post/user/:userId', getPostsByUserId);
 
 // comment route
 app.use("/api/comment", commentRouter);

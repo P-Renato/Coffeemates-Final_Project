@@ -1,27 +1,27 @@
 import React, { useState, useEffect } from "react";
-import { useAppContext } from "../../context/LocationPostContext.tsx";
+import { useAppContext } from "../../context/LocationPostContext";
 import LocationPicker from "../map/LocationPicker";
-import { geocodeAddress } from "../../utils/geocode.ts";
-import { useAuth } from "../../hooks/useAuth.ts";
+import { geocodeAddress } from "../../utils/geocode";
+import { useAuth } from "../../hooks/useAuth";
+import { createPost } from "../../api/postApi";
 
 export default function PopUpPost() {
     const { user } = useAuth();
-
-    const { setPostPopup } = useAppContext();
-    const { setLocationList } = useAppContext();
-
+    const { setPostPopup, setLocationList } = useAppContext();
+    
+    // Debug logging INSIDE component
+    console.log('🔐 PopUpPost - Current user:', user);
+    console.log('🔐 PopUpPost - User ID:', user?._id || user?.id);
+    console.log('🔐 PopUpPost - Is authenticated:', !!user);
+    
     const [title, setTitle] = useState("");
     const [content, setContent] = useState("");
     const [shopName, setShopName] = useState("");
     const [star, setStar] = useState("");
-
-    // location
     const [location, setLocation] = useState("");
     const [lat, setLat] = useState<number | null>(null);
     const [lng, setLng] = useState<number | null>(null);
     const [showLocationPicker, setShowLocationPicker] = useState(false);
-
-    // image upload
     const [imageFile, setImageFile] = useState<File | null>(null);
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
@@ -37,6 +37,14 @@ export default function PopUpPost() {
 
     const postHandler = async (e: React.FormEvent) => {
         e.preventDefault();
+        
+        // Get user ID from any possible field
+        const userId = user?._id || user?.id || user?.userId;
+        if (!user || !userId) {
+            console.log('No user ID found:', { user, userId });
+            return alert("Please log in to create a post.");
+        }
+
         if (!imageFile) return alert("Please select an image.");
         if (!location) return alert("Please pick a location.");
 
@@ -58,41 +66,24 @@ export default function PopUpPost() {
             return alert("Invalid coordinates. Please pick a location again.");
         }
 
-        if (!user || !user._id) {
-            return alert("User is not authenticated.");
-        }
-
         const formData = new FormData();
         formData.append("title", title);
         formData.append("content", content);
         formData.append("shopName", shopName);
         formData.append("star", star);
-        formData.append("uid", user._id);
+        formData.append("uid", userId);
         formData.append("postImg", imageFile);
         formData.append("location", location);
         formData.append("lat", finalLat.toString());
         formData.append("lng", finalLng.toString());
 
         try {
-            const res = await fetch("http://localhost:4343/api/post", {
-                method: "POST",
-                body: formData,
-            });
-
-            const data = await res.json().catch(() => ({}));
-
-            if (!res.ok) {
-                const error = await res.json().catch(() => ({}));
-                return alert("Adding post failed: " + (error.msg || "Unknown error"));
-            }
-
-            // data.newPost = [newPostContent, newLocation]
-            const [newPostContent, newLocation] = data.newPost;
-            console.log("New Post Content: ", newPostContent)
-
+            const data = await createPost(formData);
             alert("Post created successfully!");
-            setLocationList(prev => [...prev, newLocation]);
+            setLocationList(prev => [...prev, data.newPost?.[1]]);
             setPostPopup(false);
+            
+            // Reset form
             setTitle("");
             setContent("");
             setShopName("");
@@ -101,13 +92,11 @@ export default function PopUpPost() {
             setLat(null);
             setLng(null);
             setImageFile(null);
-
-        } catch (err) {
-            console.error(err);
-            alert("Something went wrong. Please try again.");
+        } catch (error: any) {
+            console.error('Post creation error:', error);
+            alert(`Failed to create post: ${error.message || 'Please try again.'}`);
         }
     };
-
 
     const handleCancel = () => {
         setPostPopup(false);
@@ -129,7 +118,6 @@ export default function PopUpPost() {
                 </h2>
 
                 <div className="flex flex-col sm:flex-row gap-8">
-                    {/* Image Upload */}
                     <label className="cursor-pointer w-full sm:w-72 h-72 bg-gray-100 border-2 border-dashed border-gray-300 rounded-xl flex items-center justify-center text-gray-400 hover:border-gray-500 hover:text-gray-600 transition-colors duration-200 relative overflow-hidden">
                         {!previewUrl && <span className="text-center px-2">Click to upload or drag image</span>}
                         {previewUrl && (
@@ -145,7 +133,6 @@ export default function PopUpPost() {
                         />
                     </label>
 
-                    {/* Form */}
                     <form onSubmit={postHandler} className="flex flex-col gap-4 flex-1">
                         <input
                             value={title}
@@ -164,7 +151,6 @@ export default function PopUpPost() {
                             required
                         />
 
-                        {/* Location */}
                         <input
                             value={location}
                             onClick={() => setShowLocationPicker(true)}
@@ -213,7 +199,6 @@ export default function PopUpPost() {
                     </form>
                 </div>
 
-                {/* Close */}
                 <button
                     onClick={handleCancel}
                     className="absolute top-4 right-4 text-gray-500 hover:text-gray-800 text-2xl cursor-pointer"
