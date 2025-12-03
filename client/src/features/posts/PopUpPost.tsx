@@ -1,30 +1,31 @@
 import React, { useState, useEffect } from "react";
 import { useAppContext } from "../../context/LocationPostContext.tsx";
 import LocationPicker from "../map/LocationPicker";
-import { geocodeAddress } from "../../utils/geocode.ts";
+import { geocodeAddress, reverseGeocode } from "../../utils/geocode.ts";
 import { useAuth } from "../../hooks/useAuth.ts";
 
+const apiUrl = import.meta.env.VITE_API_URL;
 export default function PopUpPost() {
     const { user } = useAuth();
+    const { setPostPopup, setLocationList, setPosts } = useAppContext();
 
-    const { setPostPopup } = useAppContext();
-    const { setLocationList } = useAppContext();
-
+    // Form fields
     const [title, setTitle] = useState("");
     const [content, setContent] = useState("");
     const [shopName, setShopName] = useState("");
-    const [star, setStar] = useState("");
+    const [star, setStar] = useState<number | "">("");
 
-    // location
+    // Location
     const [location, setLocation] = useState("");
     const [lat, setLat] = useState<number | null>(null);
     const [lng, setLng] = useState<number | null>(null);
     const [showLocationPicker, setShowLocationPicker] = useState(false);
 
-    // image upload
+    // Image upload
     const [imageFile, setImageFile] = useState<File | null>(null);
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
+    // Preview image
     useEffect(() => {
         if (imageFile) {
             const url = URL.createObjectURL(imageFile);
@@ -35,81 +36,7 @@ export default function PopUpPost() {
         }
     }, [imageFile]);
 
-    const postHandler = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!imageFile) return alert("Please select an image.");
-        if (!location) return alert("Please pick a location.");
-
-        let finalLat = lat;
-        let finalLng = lng;
-
-        if (location && (lat === null || lng === null)) {
-            const coordinates = await geocodeAddress(location);
-            if (!coordinates) {
-                return alert("Could not find coordinates for this address.");
-            }
-            finalLat = coordinates.lat;
-            finalLng = coordinates.lng;
-            setLat(finalLat);
-            setLng(finalLng);
-        }
-
-        if (finalLat === null || finalLng === null) {
-            return alert("Invalid coordinates. Please pick a location again.");
-        }
-
-        if (!user || !user._id) {
-            return alert("User is not authenticated.");
-        }
-
-        const formData = new FormData();
-        formData.append("title", title);
-        formData.append("content", content);
-        formData.append("shopName", shopName);
-        formData.append("star", star);
-        formData.append("uid", user._id);
-        formData.append("postImg", imageFile);
-        formData.append("location", location);
-        formData.append("lat", finalLat.toString());
-        formData.append("lng", finalLng.toString());
-
-        try {
-            const res = await fetch("http://localhost:4343/api/post", {
-                method: "POST",
-                body: formData,
-            });
-
-            const data = await res.json().catch(() => ({}));
-
-            if (!res.ok) {
-                const error = await res.json().catch(() => ({}));
-                return alert("Adding post failed: " + (error.msg || "Unknown error"));
-            }
-
-            // data.newPost = [newPostContent, newLocation]
-            const [newPostContent, newLocation] = data.newPost;
-
-            alert("Post created successfully!");
-            setLocationList(prev => [...prev, newLocation]);
-            setPostPopup(false);
-            setTitle("");
-            setContent("");
-            setShopName("");
-            setStar("");
-            setLocation("");
-            setLat(null);
-            setLng(null);
-            setImageFile(null);
-
-        } catch (err) {
-            console.error(err);
-            alert("Something went wrong. Please try again.");
-        }
-    };
-
-
-    const handleCancel = () => {
-        setPostPopup(false);
+    const resetForm = () => {
         setTitle("");
         setContent("");
         setShopName("");
@@ -118,6 +45,78 @@ export default function PopUpPost() {
         setLat(null);
         setLng(null);
         setImageFile(null);
+    };
+
+    const postHandler = async (e: React.FormEvent) => {
+        e.preventDefault();
+
+        if (!imageFile) return alert("Please select an image.");
+        if (!location && (lat === null || lng === null)) return alert("Please pick a location.");
+        if (!user || !user.id) return alert("User is not authenticated.");
+
+        let finalLat = lat;
+        let finalLng = lng;
+
+        // Geocode if lat/lng missing
+        if ((lat === null || lng === null) && location) {
+            const coordinates = await geocodeAddress(location);
+            if (!coordinates) return alert("Could not find coordinates for this address.");
+            finalLat = coordinates.lat;
+            finalLng = coordinates.lng;
+            setLat(finalLat);
+            setLng(finalLng);
+        }
+
+        // Reverse geocode if location missing
+        if ((lat !== null && lng !== null) && !location) {
+            const name = await reverseGeocode(lat, lng);
+            if (name) setLocation(name);
+        }
+
+        const formData = new FormData();
+        formData.append("title", title);
+        formData.append("content", content);
+        formData.append("shopName", shopName);
+        formData.append("star", star.toString());
+        formData.append("uid", user.id); // <-- must be MongoDB ObjectId
+        formData.append("postImg", imageFile);
+        formData.append("location", location);
+        formData.append("lat", finalLat.toString());
+        formData.append("lng", finalLng.toString());
+
+        try {
+            const res = await fetch(`${apiUrl}/api/post`, {
+                method: "POST",
+                body: formData,
+            });
+
+            const data = await res.json();
+
+            if (!res.ok || !data.success) {
+                return alert("Adding post failed: " + (data.msg || "Unknown error"));
+            }
+
+            // after successful POST request
+            const [newPostContent, newLocation] = data.newPost;
+
+            // Map uid to user for PostCard compatibility
+            const postWithUser = { ...newPostContent, user: newPostContent.uid };
+
+            setPosts(prev => [...prev, postWithUser]);
+            setLocationList(prev => [...prev, newLocation]);
+            setPostPopup(false);
+            resetForm();
+            alert("Post created successfully!");
+
+        } catch (err) {
+            console.error(err);
+            alert("Something went wrong. Please try again.");
+        }
+    };
+
+    const handleCancel = () => {
+        setPostPopup(false);
+        resetForm();
     };
 
     return (
@@ -186,7 +185,7 @@ export default function PopUpPost() {
 
                         <input
                             value={star}
-                            onChange={(e) => setStar(e.target.value)}
+                            onChange={(e) => setStar(Number(e.target.value))}
                             className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400"
                             type="number"
                             placeholder="Rating (1-5)"

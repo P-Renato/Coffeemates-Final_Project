@@ -50,7 +50,7 @@ export default function PostCard({ post }: { post: PostType }) {
   return (
     <div className="flex flex-col">
       <div className="bg-blue-200">
-        <b>{post.user.username}</b> 
+        <p>{post.user?.username ?? "Unknown user"}</p>
         
         <span className="cursor-pointer" onClick={likeHandler}>
           {like ? " ❤️" : " 🤍"} {likeCount}

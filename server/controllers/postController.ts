@@ -2,6 +2,7 @@ import type { Request, Response } from "express";
 import { Post } from "../models/Post";
 import { Comment } from "../models/Comment";
 import { Location } from "../models/Location";
+import mongoose from "mongoose";
 
 // GET: all posts
 export const allPosts = async (req: Request, res: Response) => {
@@ -16,7 +17,10 @@ export const allPosts = async (req: Request, res: Response) => {
             {
               $match: {
                 $expr: {
-                  $eq: ["$_id", { $toObjectId: "$$userId" }]
+                  $eq: [
+                    "$_id",
+                    { $toObjectId: "$$userId" }  // ok if uid is string
+                  ]
                 }
               }
             },
@@ -25,7 +29,12 @@ export const allPosts = async (req: Request, res: Response) => {
           as: "user"
         }
       },
-      { $unwind: "$user" }
+      {
+        $unwind: {
+          path: "$user",
+          preserveNullAndEmptyArrays: true
+        }
+      }
     ]);
 
     res.status(200).json({ success: true, posts });
@@ -79,7 +88,6 @@ export const editPost = async (req: Request, res: Response) => {
   }
 };
 
-
 // POST: add new post
 export const addNewPost = async (req: Request, res: Response) => {
   try {
@@ -96,33 +104,48 @@ export const addNewPost = async (req: Request, res: Response) => {
       lng,
     } = req.body;
 
-    console.log("body:", req.body);
-    console.log("file:", req.file);
+    if (!uid) {
+      return res.status(400).json({ success: false, msg: "User ID is required" });
+    }
+
+    // validate ObjectId
+    if (!mongoose.isValidObjectId(uid)) {
+      return res.status(400).json({ success: false, msg: "Invalid user ID" });
+    }
 
     const fileName = req.file?.filename;
     const imageUrl = fileName || null;
 
-    const newPostContent = await Post.create({
+    const starValue =
+      star !== undefined && star !== null && !Number.isNaN(Number(star))
+        ? Number(star)
+        : null;
+
+    // Create post
+    let newPost = await Post.create({
       title,
       content,
       location,
-      star: star ? Number(star) : null,
-      uid: uid ? Number(uid) : 2,
+      star: starValue,
+      uid: new mongoose.Types.ObjectId(uid), 
       imageUrl,
       shopName,
       commentIds: commentIds ? JSON.parse(commentIds) : [],
       likeIds: likeIds ? JSON.parse(likeIds) : [],
     });
 
+    // Populate user field (Mongoose 6+)
+    newPost = await newPost.populate({ path: "uid", select: "username" });
+
+    // Create location
     const newLocation = await Location.create({
       name: shopName,
       address: location || "",
-      lat: lat !== undefined && lat !== null ? Number(lat) : 0, // fallback 0 if missing
-      lng: lng !== undefined && lng !== null ? Number(lng) : 0, // fallback 0 if missing
+      lat: lat !== undefined && lat !== null ? Number(lat) : 0,
+      lng: lng !== undefined && lng !== null ? Number(lng) : 0,
     });
 
-
-    res.status(201).json({ success: true, newPost: [newPostContent, newLocation] });
+    res.status(201).json({ success: true, newPost: [newPost, newLocation] });
   } catch (err: any) {
     console.error(err);
     res.status(400).json({ success: false, msg: err.message || "addNewPost error" });
