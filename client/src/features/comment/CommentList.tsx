@@ -2,6 +2,7 @@ import { useState, useEffect, type FormEvent } from "react"
 import type { CommentType } from "../../utils/types";
 import { useAuth } from "../../hooks/useAuth";
 
+// create a .env file in client with VITE_API_URL=http://localhost:4343
 const apiUrl = import.meta.env.VITE_API_URL;
 export default function CommentList({ pid }: { pid: string }) {
     const [comments, setComments] = useState<CommentType[]>([]);

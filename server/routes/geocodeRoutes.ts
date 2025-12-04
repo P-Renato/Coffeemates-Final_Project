@@ -1,9 +1,9 @@
 import express from 'express'
-import { getGeoCode } from '../controllers/geocodeController';
+import { getGeoCode, getReverseGeoCode } from '../controllers/geocodeController';
 
 const geocode = express.Router();
 
-// Routes
 geocode.get("/", getGeoCode);
+geocode.get("/reverse", getReverseGeoCode);
 
 export default geocode

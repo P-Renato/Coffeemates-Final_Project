@@ -7,6 +7,7 @@ const userRouter = express.Router();
 userRouter.post('/login', loginUser);
 userRouter.post('/register', registerUser);
 userRouter.get('/', getAllUsers);
+userRouter.get('/search', searchUsers)
 
 
 userRouter.get('/profile/me', authenticateToken, getCurrentUser);

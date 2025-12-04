@@ -11,7 +11,7 @@ export type PostType = {
     imageUrl: string,
     pid: string,
     createdAt: string,
-    user: {             
+    user: {
         _id: string,
         username: string,
     }
@@ -24,7 +24,7 @@ export type CommentType = {
     pid: string,
     parentCommentId: string,
     createdAt: string,
-    user: {             
+    user: {
         _id: string,
         username: string,
     }
@@ -40,16 +40,27 @@ export type ChatType = {
 }
 
 export interface UserType {
-  _id: string;
-  email: string;
-  username: string;
-  photoURL: string;
-  // Add other user properties as needed
+    _id: string;
+    email: string;
+    username: string;
+    photoURL: string;
+    // Add other user properties as needed
 }
 
 export interface Location {
-  id: string;
-  name: string;
-  lat: number;
-  lng: number;
+    id: string;
+    name: string;
+    lat: number;
+    lng: number;
 }
+
+export type AppContextType = {
+    postPopup: boolean;
+    setPostPopup: React.Dispatch<React.SetStateAction<boolean>>;
+    locationList: Location[];
+    setLocationList: React.Dispatch<React.SetStateAction<Location[]>>;
+    posts: PostType[];
+    setPosts: React.Dispatch<React.SetStateAction<PostType[]>>;
+    loading: boolean;
+    error: string | null;
+};
