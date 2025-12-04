@@ -2,7 +2,7 @@ import PostCard from "../../components/PostCard";
 import { useAppContext } from "../../context/LocationPostContext";
 
 export default function PostPage() {
-  const { posts = [], error, loading } = useAppContext();
+  const { posts, error, loading } = useAppContext();
 
   if (loading) return <div className="p-4">Loading posts...</div>;
   if (error) return <div className="p-4 text-red-600">{error}</div>;

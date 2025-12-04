@@ -4,14 +4,14 @@ import { useAppContext } from "../context/LocationPostContext";
 import PopUpPost from "../features/posts/PopUpPost";
 
 const MainLayout = () => {
-   const { postPopup } = useAppContext();
+   const { postPopup, editingPost } = useAppContext();
 
   return (
     <div className="flex">
       <Sidebar />
 
       {postPopup && (
-          <PopUpPost />
+          <PopUpPost postToEdit={editingPost} />
       )}
 
       <div className="flex-1 ">

@@ -3,32 +3,31 @@ import { useAppContext } from "../../context/LocationPostContext";
 import LocationPicker from "../map/LocationPicker";
 import { geocodeAddress, reverseGeocode } from "../../utils/geocode";
 import { useAuth } from "../../hooks/useAuth";
-import { createPost } from "../../api/postApi";
+import { createPost, updatePost } from "../../api/postApi";
 
-const apiUrl = import.meta.env.VITE_API_URL; // create a .env file in client with VITE_API_URL=http://localhost:4343
-export default function PopUpPost() {
+interface PopUpPostProps {
+    postToEdit?: any; // optional, for edit mode
+}
+
+export default function PopUpPost({ postToEdit }: PopUpPostProps) {
     const { user } = useAuth();
-    const { setPostPopup, setLocationList } = useAppContext();
-    
-    // Debug logging INSIDE component
-    console.log('🔐 PopUpPost - Current user:', user);
-    console.log('🔐 PopUpPost - User ID:', user?._id || user?.id);
-    console.log('🔐 PopUpPost - Is authenticated:', !!user);
-    
-    const [title, setTitle] = useState("");
-    const [content, setContent] = useState("");
-    const [shopName, setShopName] = useState("");
-    const [star, setStar] = useState<number | "">("");
+    const { setPostPopup, setLocationList, posts, setPosts, editingPost, setEditingPost } = useAppContext();
+
+    // Form states
+    const [title, setTitle] = useState(postToEdit?.title || "");
+    const [content, setContent] = useState(postToEdit?.content || "");
+    const [shopName, setShopName] = useState(postToEdit?.shopName || "");
+    const [star, setStar] = useState<number | "">(postToEdit?.star || "");
 
     // Location
-    const [location, setLocation] = useState("");
-    const [lat, setLat] = useState<number | null>(null);
-    const [lng, setLng] = useState<number | null>(null);
+    const [location, setLocation] = useState(postToEdit?.location || "");
+    const [lat, setLat] = useState<number | null>(postToEdit?.lat || null);
+    const [lng, setLng] = useState<number | null>(postToEdit?.lng || null);
     const [showLocationPicker, setShowLocationPicker] = useState(false);
 
-    // image upload
+    // Image upload
     const [imageFile, setImageFile] = useState<File | null>(null);
-    const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+    const [previewUrl, setPreviewUrl] = useState<string | null>(postToEdit?.postImg || null);
 
     // Preview image
     useEffect(() => {
@@ -36,8 +35,6 @@ export default function PopUpPost() {
             const url = URL.createObjectURL(imageFile);
             setPreviewUrl(url);
             return () => URL.revokeObjectURL(url);
-        } else {
-            setPreviewUrl(null);
         }
     }, [imageFile]);
 
@@ -50,21 +47,15 @@ export default function PopUpPost() {
         setLat(null);
         setLng(null);
         setImageFile(null);
+        setPreviewUrl(null);
     };
 
-    const postHandler = async (e: React.FormEvent) => {
+    const submitHandler = async (e: React.FormEvent) => {
         e.preventDefault();
-        
-        // Get user ID from any possible field
-        const userId = user?._id || user?.id || user?.userId;
-        if (!user || !userId) {
-            console.log('No user ID found:', { user, userId });
-            return alert("Please log in to create a post.");
-        }
 
-        if (!imageFile) return alert("Please select an image.");
+        if (!user?.id) return alert("Please log in to create a post.");
         if (!location && (lat === null || lng === null)) return alert("Please pick a location.");
-        if (!user || !user.id) return alert("User is not authenticated.");
+        if (!postToEdit && !imageFile) return alert("Please select an image."); // image required only for new post
 
         let finalLat = lat;
         let finalLng = lng;
@@ -90,30 +81,36 @@ export default function PopUpPost() {
         formData.append("content", content);
         formData.append("shopName", shopName);
         formData.append("star", star.toString());
-        formData.append("uid", user.id); // <-- must be MongoDB ObjectId
-        formData.append("postImg", imageFile);
+        formData.append("uid", user.id); // MongoDB ObjectId
         formData.append("location", location);
         formData.append("lat", finalLat.toString());
         formData.append("lng", finalLng.toString());
+        if (imageFile) formData.append("postImg", imageFile);
+
+        console.log("before update data: ", title);
 
         try {
-            const data = await createPost(formData);
-            alert("Post created successfully!");
-            setLocationList(prev => [...prev, data.newPost?.[1]]);
+            let data;
+            if (postToEdit) {
+                // Edit mode
+                data = await updatePost(postToEdit._id, formData);
+                alert("Post updated successfully!");
+                setPosts(posts.map(p => (p._id === postToEdit._id ? data.updatedPost : p)));
+                setEditingPost(null);
+            } else {
+                // Add mode
+                data = await createPost(formData);
+                alert("Post created successfully!");
+                setPosts(prev => [...prev, data.newPost]);
+                setLocationList(prev => [...prev, data.newLocation]);
+
+            }
+
             setPostPopup(false);
-            
-            // Reset form
-            setTitle("");
-            setContent("");
-            setShopName("");
-            setStar("");
-            setLocation("");
-            setLat(null);
-            setLng(null);
-            setImageFile(null);
+            resetForm();
         } catch (error: any) {
-            console.error('Post creation error:', error);
-            alert(`Failed to create post: ${error.message || 'Please try again.'}`);
+            console.error("Post error:", error);
+            alert(`Failed to submit post: ${error.message || "Please try again."}`);
         }
     };
 
@@ -126,7 +123,7 @@ export default function PopUpPost() {
         <div className="fixed inset-0 backdrop-blur-sm flex justify-center items-center z-500 p-4">
             <div className="bg-white rounded-2xl shadow-xl p-8 w-full sm:w-[800px] relative">
                 <h2 className="text-2xl font-bold text-blue-600 text-center mb-6">
-                    Create New Post
+                    {postToEdit ? "Edit Post" : "Create New Post"}
                 </h2>
 
                 <div className="flex flex-col sm:flex-row gap-8">
@@ -145,7 +142,7 @@ export default function PopUpPost() {
                         />
                     </label>
 
-                    <form onSubmit={postHandler} className="flex flex-col gap-4 flex-1">
+                    <form onSubmit={submitHandler} className="flex flex-col gap-4 flex-1">
                         <input
                             value={title}
                             onChange={(e) => setTitle(e.target.value)}
@@ -206,7 +203,7 @@ export default function PopUpPost() {
                             type="submit"
                             className="w-full sm:w-[10em] m-auto bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition cursor-pointer"
                         >
-                            Post
+                            {postToEdit ? "Update" : "Post"}
                         </button>
                     </form>
                 </div>

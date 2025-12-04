@@ -63,4 +63,6 @@ export type AppContextType = {
     setPosts: React.Dispatch<React.SetStateAction<PostType[]>>;
     loading: boolean;
     error: string | null;
+    editingPost: any | null;
+    setEditingPost: React.Dispatch<React.SetStateAction<any | null>>;
 };
