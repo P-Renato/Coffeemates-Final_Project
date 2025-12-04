@@ -188,9 +188,12 @@ export default function ChatPage() {
                                 <span className="flex items-center space-x-2 text-gray-800">
                                     <img
                                         onClick={() => openChat(u._id)}
-                                        src="hoian.jpg"
-                                        alt="User Avatar"
+                                        src={u.photoURL ? `http://localhost:4343${u.photoURL}` : '/default-avatar.png'} 
+                                        alt={u.username}
                                         className="w-12 h-12 rounded-full cursor-pointer"
+                                        onError={(e) => {
+                                            e.currentTarget.src = '/default-avatar.png'; // Fallback if image fails to load
+                                        }}
                                     />
 
                                     <span
