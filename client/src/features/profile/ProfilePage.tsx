@@ -6,6 +6,9 @@ import { getPostsByUserId } from '../../api/postApi';
 import PostCard from '../../components/PostCard';
 import type { PostType } from '../../utils/types';
 import { FaUserCircle, FaImage } from "react-icons/fa";
+import UserAvatar from "../../components/UserAvatar";
+import { useAppContext } from "../../context/LocationPostContext";
+
 
 type CoffeeProfileData = {
   basics?: {
@@ -91,6 +94,7 @@ const ProfilePage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [userPosts, setUserPosts] = useState<PostType[]>([]);
   const [postsLoading, setPostsLoading] = useState(true);
+  const { postPopup, setPostPopup, posts, setPosts } = useAppContext();
 
   const location = useLocation();
   
@@ -386,7 +390,7 @@ const ProfilePage: React.FC = () => {
               <p>No posts yet. Share your coffee experiences!</p>
               {isOwnProfile && (
                 <button
-                  onClick={() => navigate("/create-post")} // Adjust to your post creation route
+                  onClick={() => setPostPopup(true)} // Adjust to your post creation route
                   className="btn btn-primary"
                 >
                   Create Your First Post

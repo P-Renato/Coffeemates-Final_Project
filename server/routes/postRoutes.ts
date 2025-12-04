@@ -33,7 +33,7 @@ posts.post("/", upload.single("postImg"), addNewPost);
 posts.get("/user/:userId", getPostsByUserId);
 posts.patch("/like/:id", likePost); 
 posts.get("/:id", onePost);      
-posts.patch("/:id", editPost);     
+posts.patch("/:id", upload.single("postImg"), editPost);  
 posts.delete("/:id", deletePost);
 
 export default posts;

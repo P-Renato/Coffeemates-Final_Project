@@ -2,32 +2,66 @@ import type { Request, Response } from "express";
 import { Comment } from "../models/Comment";
 import { Post } from "../models/Post";
 import User from '../models/User';
+import mongoose from "mongoose";
+
+interface CommentWithReplies extends Omit<any, 'replies'> {
+  replies: CommentWithReplies[];
+}
 
 // Get all comments
 export const allComments = async (req: Request, res: Response) => {
 
 }
-  
+
 // Get all comments for a post, including nested replies
 export const commentsOfPost = async (req: Request, res: Response) => {
   try {
     const { postId } = req.params;
 
-    // Local interface that includes replies
-    interface CommentWithReplies extends Omit<any, 'replies'> {
-      replies: CommentWithReplies[];
+    if (!mongoose.Types.ObjectId.isValid(postId)) {
+      return res.status(400).json({ success: false, msg: "Invalid postId" });
     }
 
-    // Fetch all comments for the post
-    const comments = await Comment.find({ pid: postId }).lean();
+    // Fetch all comments for the post with user info
+    const comments = await Comment.aggregate([
+      {
+        $match: { pid: new mongoose.Types.ObjectId(postId) } // filter by postId
+      },
+   
+      {
+        $lookup: {
+          from: "users",
+          let: { userId: "$uid" },
+          pipeline: [
+            {
+              $match: {
+                $expr: { $eq: ["$_id", "$$userId"] }
+              }
+            },
+            { $project: { username: 1 } }
+          ],
+          as: "user"
+        }
+      },
+      { $unwind: { path: "$user", preserveNullAndEmptyArrays: true } },
+      {
+        $project: {
+          content: 1,
+          uid: 1,
+          pid: 1,
+          parentCommentId: 1,
+          createdAt: 1,
+          "user.username": 1
+        }
+      }
+    ]);
 
     // Build nested comment tree
     const map: Record<string, any> = {};
     const roots: any[] = [];
 
     comments.forEach((comment) => {
-      const commentWithReplies = comment as any as CommentWithReplies;
-      commentWithReplies.replies = [];
+      const commentWithReplies = { ...comment, replies: [] };
       map[commentWithReplies._id.toString()] = commentWithReplies;
     });
 
@@ -35,10 +69,10 @@ export const commentsOfPost = async (req: Request, res: Response) => {
       if (comment.parentCommentId) {
         const parent = map[comment.parentCommentId.toString()];
         if (parent) {
-          parent.replies.push(comment);
+          parent.replies.push(map[comment._id.toString()]);
         }
       } else {
-        roots.push(comment);
+        roots.push(map[comment._id.toString()]);
       }
     });
 
@@ -70,13 +104,13 @@ export const oneComment = async (req: Request, res: Response) => {
 // PATCH: edit a comment with user authorization
 export const editComment = async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;      
+    const { id } = req.params;
 
     const updateComment = req.body;
     const updatedComment = await Comment.findOneAndUpdate(
       { _id: id },
       updateComment,
-      { new: true }                 
+      { new: true }
     );
 
     if (!updatedComment) {
@@ -100,8 +134,8 @@ export const editComment = async (req: Request, res: Response) => {
 // POST: add new comment
 export const addNewComment = async (req: Request, res: Response) => {
   try {
-    const { content, uid, pid, parentCommentId}  = req.body;
-    const newComment = await Comment.create({ content, uid, pid, parentCommentId: parentCommentId || null});
+    const { content, uid, pid, parentCommentId } = req.body;
+    const newComment = await Comment.create({ content, uid, pid, parentCommentId: parentCommentId || null });
 
     // update Post to include this comment's ID
     const newCommentId = newComment._id ? newComment._id.toString() : (newComment.id ?? null);
@@ -113,7 +147,7 @@ export const addNewComment = async (req: Request, res: Response) => {
       { $push: { commentIds: newCommentId } },
       { new: true }
     );
-    
+
     // populate user info
     const user = await User.findById(uid).select("username");         // Fetch the user info
     const populatedComment = {
@@ -130,7 +164,7 @@ export const addNewComment = async (req: Request, res: Response) => {
 // DELETE
 export const deleteComment = async (req: Request, res: Response) => {
   try {
-    const { id } = req.params; 
+    const { id } = req.params;
 
     // 1. Fetch all comments for the post
     const commentToDelete = await Comment.findById(id);

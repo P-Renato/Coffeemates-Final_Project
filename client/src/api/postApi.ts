@@ -122,3 +122,29 @@ export const getPostsByUserId = async (userId: string) => {
     throw error;
   }
 };
+
+// Update a post
+export const updatePost = async (postId: string, formData: FormData) => {
+  try {
+    const token = getToken(); 
+    const response = await fetch(`${API_URL}/post/${postId}`, {
+      method: 'PATCH',
+      headers: token ? {
+        'Authorization': `Bearer ${token}`
+      } : {},
+      body: formData
+    });
+
+    console.log('Edit post response:', response.status);
+
+    if (!response.ok) {
+      throw new Error(`Post edit failed: ${response.status}`);
+    }
+
+    return await response.json();
+
+  } catch (error) {
+    console.error('Edit post API error:', error);
+    throw error;
+  }
+};
