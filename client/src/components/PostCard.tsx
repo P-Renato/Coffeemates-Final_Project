@@ -4,6 +4,7 @@ import MapWithSidePanel from "../features/map/MapSidePanel";
 import CommentList from "../features/comment/CommentList";
 import { star } from "../utils/rating";
 import { useAuth } from "../hooks/useAuth";
+import UserAvatar from './UserAvatar';
 
 
 const apiUrl = import.meta.env.VITE_API_URL;
