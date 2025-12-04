@@ -40,7 +40,7 @@ export default function ChatPage() {
         if (!auth) return;
 
         // Fetch user list
-        fetch(`${apiUrl}/api/auth/`)
+        fetch(`${apiUrl}/api/users/`)
             .then((res) => res.json())
             .then((data) => {
                 setUsers(data.users.filter((u: UserType) => u._id !== auth.id));
@@ -123,7 +123,7 @@ export default function ChatPage() {
 
         try {
             const res = await fetch(
-                `${apiUrl}/api/auth/search?q=${encodeURIComponent(searchQuery)}`
+                `${apiUrl}/api/users/search?q=${encodeURIComponent(searchQuery)}`
             );
             const data = await res.json();
             setSearchResults(data.users);
