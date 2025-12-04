@@ -50,11 +50,7 @@ app.use("/uploads", express.static(path.join(__dirname, "uploads"), {
 }));
 
 // Also add this debug middleware to see what's being requested:
-app.use('/uploads', (req, res, next) => {
-  console.log('📁 Static file request:', req.path);
-  console.log('📁 Looking for:', path.join(__dirname, 'uploads', req.path));
-  next();
-}, express.static(path.join(__dirname, 'uploads')));
+app.use('/uploads', (req, res, next) => express.static(path.join(__dirname, 'uploads')));
 
 app.get('/api/debug/uploads', (req, res) => {
   const uploadsDir = path.join(__dirname, 'uploads');
@@ -90,8 +86,8 @@ connectDB();
 
 app.use('/api/auth/profile', profileRouter);
 // CHECK 2 ROUTES BELOW THAT THE SAME PATH BUT DIFFERENT FUNCTIONALITY
-//app.use('/api/auth', authRouter);
-app.use('/api/auth', userRouter);
+app.use('/api/auth', authRouter);
+app.use('/api/users', userRouter);
 app.use('/api/auth/upload', uploadRoutes);
 
 app.get('/api/test', (req, res) => {

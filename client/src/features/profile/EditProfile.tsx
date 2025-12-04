@@ -121,7 +121,7 @@ const EditProfile: React.FC = () => {
         }
 
         // 1. Fetch user data
-        const userResponse = await fetch(`http://localhost:4343/api/auth/${user.id}`, {
+        const userResponse = await fetch(`http://localhost:4343/api/users/${user.id}`, {
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json',

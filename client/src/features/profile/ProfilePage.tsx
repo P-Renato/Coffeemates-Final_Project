@@ -114,7 +114,7 @@ const ProfilePage: React.FC = () => {
         console.log("🔵 Fetching profile for user:", user.id);
 
       // Fetch user profile data
-      const userResponse = await fetch(`http://localhost:4343/api/auth/${user.id}?t=${Date.now()}`, {
+      const userResponse = await fetch(`http://localhost:4343/api/users/${user.id}?t=${Date.now()}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',

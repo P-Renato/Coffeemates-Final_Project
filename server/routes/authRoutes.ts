@@ -9,8 +9,6 @@ authRouter.post('/register', register);
 
 // Google OAuth initiation route
 authRouter.get('/google', (req, res, next) => {
-    console.log('🎯 GOOGLE OAUTH - Before passport.authenticate');
-    console.log('🎯 Session exists:', !!(req as any).session);
     next();
 }, passport.authenticate('google', {
     scope: ['profile', 'email'],

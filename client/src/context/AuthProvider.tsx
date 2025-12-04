@@ -37,7 +37,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     // Then, fetch fresh data from server to get latest photoURL
     const fetchFreshUserData = async () => {
       try {
-        const response = await fetch(`${apiUrl}/api/auth/${userData.id}`, {
+        const response = await fetch(`${apiUrl}/api/users/${userData.id}`, {
           headers: {
             'Authorization': `Bearer ${newToken}`,
           },
@@ -112,7 +112,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
           
           // Fetch fresh user data from server to get latest photoURL
           try {
-            const response = await fetch(`${apiUrl}/api/auth/${parsedUser.id}`, {
+            const response = await fetch(`${apiUrl}/api/users/${parsedUser.id}`, {
               headers: {
                 'Authorization': `Bearer ${storedToken}`,
               },
