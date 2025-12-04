@@ -31,14 +31,14 @@ const userSchemaFields: mongoose.SchemaDefinition<IUser> = {
         default: 'user'
     },
     status: { 
-    type: String, 
-    enum: ['active', 'pending', 'banned', 'inactive'],
-    default: 'active' 
-  },
-  isActive: { 
-    type: Boolean, 
-    default: true 
-  },
+        type: String, 
+        enum: ['active', 'pending', 'banned', 'inactive'],
+        default: 'active' 
+    },
+    isActive: { 
+        type: Boolean, 
+        default: true 
+    },
     password: {
         type: String,
         required: function(this: IUser) {
@@ -49,6 +49,12 @@ const userSchemaFields: mongoose.SchemaDefinition<IUser> = {
     photoURL: {
         type: String,
         required: false,
+        default: ""
+    },
+    coverImageURL: {
+        type: String,
+        required: false,
+        default: ""
     },
     googleId: {
         type: String,

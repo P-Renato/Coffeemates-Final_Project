@@ -39,7 +39,7 @@ export const allPosts = async (req: Request, res: Response) => {
     res.status(200).json({ success: true, posts: postsWithUsers });
   } catch (err) {
     console.error('❌ Error in allPosts:', err);
-    res.status(500).json({ success: false, msg: "Error fetching posts", error: err.message });
+    res.status(500).json({ success: false, msg: "Error fetching posts", error: (err as Error).message });
   }
 };
 

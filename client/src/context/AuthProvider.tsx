@@ -61,6 +61,60 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     console.log('AuthProvider: Authentication state updated');
   };
 
+  const updateUser = useCallback((updates: Partial<User>) => {
+    setUser(prevUser => {
+      if (!prevUser) return prevUser;
+      
+      const updatedUser = { ...prevUser, ...updates };
+      
+      // Also update localStorage
+      const storedUserData = localStorage.getItem('userData');
+    console.log('📝 Current localStorage userData:', storedUserData);
+    
+    if (storedUserData) {
+      const parsedUserData = JSON.parse(storedUserData);
+      console.log('📝 Parsed userData:', parsedUserData);
+      
+      const newUserData = { ...parsedUserData, ...updates };
+      console.log('📝 New userData to save:', newUserData);
+      
+      localStorage.setItem('userData', JSON.stringify(newUserData));
+      console.log('✅ Updated localStorage');
+    }
+      
+      console.log('AuthProvider: User updated with', updates);
+      return updatedUser;
+    });
+  }, []);
+
+  useEffect(() => {
+    const checkAuthStatus = () => {
+      try {
+        const storedToken = localStorage.getItem('authToken');
+        const userData = localStorage.getItem('userData');
+
+        console.log('AuthProvider: Checking auth status', { storedToken, userData });
+
+        if (storedToken && userData) {
+          setIsAuthenticated(true);
+          setUser(JSON.parse(userData));
+          setToken(storedToken);
+          console.log('AuthProvider: User is authenticated');
+        } else {
+          console.log('AuthProvider: No auth token found');
+          logout(); // ensure clean state
+        }
+      } catch (error) {
+        console.error('Error checking auth status:', error);
+        logout();
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    checkAuthStatus();
+  }, [logout]);
+  
   const value: AuthContextType = {
     isAuthenticated,
     user,
@@ -68,6 +122,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     isLoading,
     login,
     logout,
+    updateUser,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

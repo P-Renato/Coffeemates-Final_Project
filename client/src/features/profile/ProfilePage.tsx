@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth"; // Adjust path as needed
 import "./ProfilePage.css";
 import { getPostsByUserId } from '../../api/postApi';
 import PostCard from '../../components/PostCard';
 import type { PostType } from '../../utils/types';
+import { FaUserCircle, FaImage } from "react-icons/fa";
 
 type CoffeeProfileData = {
   basics?: {
@@ -90,6 +91,8 @@ const ProfilePage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [userPosts, setUserPosts] = useState<PostType[]>([]);
   const [postsLoading, setPostsLoading] = useState(true);
+
+  const location = useLocation();
   
 
   // Fetch profile data from backend
@@ -111,11 +114,12 @@ const ProfilePage: React.FC = () => {
       console.log('🔵 Fetching profile for user:', user.id);
 
       // Fetch user profile data
-      const userResponse = await fetch(`http://localhost:4343/api/auth/${user.id}`, {
+      const userResponse = await fetch(`http://localhost:4343/api/auth/${user.id}?t=${Date.now()}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
+        cache: 'no-store'
       });
 
       if (!userResponse.ok) {
@@ -145,8 +149,12 @@ const ProfilePage: React.FC = () => {
         id: userData.user?.username || userData.user?.id || 'unknown',
         name: userData.user?.username || 'Unknown User',
         place: userData.user?.place || "Unknown location",
-        avatarUrl: userData.user?.photoURL || "/images/default-avatar.png",
-        coverImageUrl: "/images/default-cover.png",
+        avatarUrl: userData.user?.photoURL 
+          ? `http://localhost:4343${userData.user.photoURL}`
+          : "/images/default-avatar.png",
+        coverImageUrl: userData.user?.coverImageURL 
+          ? `http://localhost:4343${userData.user.coverImageURL}`
+          : "/images/default-cover.png",
         coffeematesCount: 0,
         postCount: 0, // Will update after fetching posts
         coffeeProfile: profileData.answers || {},
@@ -189,7 +197,7 @@ console.log('User object in post:', userPosts[0]?.user);
     setLoading(false);
     setPostsLoading(false);
   }
-}, [user, token, navigate]);
+}, [user, token, navigate, location.state?.refresh]);
 
   // Helper function to convert coffee profile data to display format
   const getCoffeeProfileDisplay = (coffeeProfile: CoffeeProfileData) => {
@@ -260,19 +268,31 @@ console.log('User object in post:', userPosts[0]?.user);
     <div className="profile-page">
       {/* Cover */}
       <div className="profile-cover">
+      {profile.coverImageUrl ? (
         <img
           src={profile.coverImageUrl}
           alt="Cover"
           className="profile-cover-image"
         />
-        <div className="profile-avatar-wrapper">
+      ) : (
+        <div className="profile-cover-placeholder">
+          <FaImage className="cover-icon" />
+          <span>No cover image</span>
+        </div>
+      )}
+      
+      <div className="profile-avatar-wrapper">
+        {profile.avatarUrl ? (
           <img
             src={profile.avatarUrl}
             alt={profile.name}
             className="profile-avatar"
           />
-        </div>
+        ) : (
+          <FaUserCircle className="profile-avatar-icon" />
+        )}
       </div>
+    </div>
 
       <div className="profile-content">
         {/* Header */}

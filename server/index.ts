@@ -16,6 +16,8 @@ import geocodeRouter from './routes/geocodeRoutes'
 import chatRouter from './routes/chatRoutes';
 import { initChatSocket } from './controllers/chatController';
 import { getPostsByUserId } from './controllers/postController';
+import uploadRoutes from './routes/auth';
+import fs from 'fs';
 
 const app = express();
 
@@ -34,7 +36,45 @@ app.use(passport.initialize());
 
 
 app.use(express.urlencoded({extended:true}));
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+app.use("/uploads", express.static(path.join(__dirname, "uploads"), {
+  fallthrough: false, // Don't fall through to other routes
+  index: false, // Don't serve index files
+  redirect: false, // Don't redirect
+  setHeaders: (res, filePath) => {
+    // Set cache headers for images
+    if (filePath.endsWith('.jpg') || filePath.endsWith('.jpeg') || 
+        filePath.endsWith('.png') || filePath.endsWith('.gif')) {
+      res.setHeader('Cache-Control', 'public, max-age=86400'); // Cache for 1 day
+    }
+  }
+}));
+
+// Also add this debug middleware to see what's being requested:
+app.use('/uploads', (req, res, next) => {
+  console.log('📁 Static file request:', req.path);
+  console.log('📁 Looking for:', path.join(__dirname, 'uploads', req.path));
+  next();
+}, express.static(path.join(__dirname, 'uploads')));
+
+app.get('/api/debug/uploads', (req, res) => {
+  const uploadsDir = path.join(__dirname, 'uploads');
+  const profileDir = path.join(uploadsDir, 'profile');
+  
+  try {
+    const files = {
+      uploadsDir,
+      uploadsExists: fs.existsSync(uploadsDir),
+      profileDir,
+      profileExists: fs.existsSync(profileDir),
+      profileFiles: fs.existsSync(profileDir) ? fs.readdirSync(profileDir) : []
+    };
+    
+    console.log('📁 Uploads debug:', files);
+    res.json(files);
+  } catch (error) {
+    res.json({ error: (error as Error).message });
+  }
+});
 
 // chat socket
 const httpServer = createServer(app);
@@ -46,9 +86,12 @@ connectDB();
 
 /* -------------------- routers ------------------------  */
 
+
+
 app.use('/api/auth/profile', profileRouter);
 app.use('/api/auth', authRouter);
 app.use('/api/auth', userRouter);
+app.use('/api/auth/upload', uploadRoutes);
 
 app.get('/api/test', (req, res) => {
     res.json({ message: 'Server is working!' });

@@ -13,7 +13,7 @@ import SettingPage from "./features/settings/SettingPage";
 import OAuthSuccess from "./pages/OAuthSuccess";
 import LoginPage from "./features/auth/LoginPage";
 import AdminPage from "./features/auth/AdminPage"
-import EditProfil from "./features/profile/EditProfil";
+import EditProfil from "./features/profile/EditProfile";
 
 
 const App = () => {

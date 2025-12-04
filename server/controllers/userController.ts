@@ -2,6 +2,7 @@ import type { Request, Response, NextFunction } from "express";
 import User from "../models/User";
 import { generateToken } from "../utils/auth";
 import type { AuthRequest } from "../middlewares/authMiddleware";
+import type { IUser } from "../libs/types";
 
 
 export const registerUser = async (req: Request, res: Response, next: NextFunction) => {
@@ -153,7 +154,7 @@ export const getUserById = async (req: Request, res: Response) => {
   try {
     const userId = req.params.id;
 
-    const user = await User.findById(userId).select('username photoURL place createdAt');
+    const user = await User.findById(userId).select('username photoURL coverImageURL place createdAt');
 
     if (!user) {
       return res.status(404).json({ error: '❌ User not found' });
@@ -168,6 +169,7 @@ export const getUserById = async (req: Request, res: Response) => {
         username: userObj.username,
         place: userObj.place || "Unknown location",
         photoURL: userObj.photoURL,
+        coverImageURL: userObj.coverImageURL || "",
         createdAt: userObj.createdAt
       }
     });
@@ -396,7 +398,7 @@ export const updateUserStatus = async (req: Request, res: Response) => {
       updates,
       { new: true, runValidators: true }
     ).select('-password');
-    console.log('✅ Status updated:', updatedUser.username);
+    console.log('✅ Status updated:', (updatedUser as IUser).username);
     
     res.json({
       success: true,
