@@ -107,11 +107,23 @@ const ProfilePage: React.FC = () => {
           throw new Error("No authentication token available");
         }
 
-        if (!user || !user.id) {
-          throw new Error("User not authenticated");
-        }
+  // Fetch profile data from backend
+ useEffect(() => {
+  const fetchProfile = async () => {
+    try {
+      setLoading(true);
+      setPostsLoading(true);
+      setError(null);
 
-        console.log("🔵 Fetching profile for user:", user.id);
+      if (!token) {
+        throw new Error('No authentication token available');
+      }
+      
+      if (!user || !user.id) {
+        throw new Error('User not authenticated');
+      }
+
+      console.log('🔵 Fetching profile for user:', user.id);
 
       // Fetch user profile data
       const userResponse = await fetch(`http://localhost:4343/api/users/${user.id}?t=${Date.now()}`, {
@@ -122,22 +134,19 @@ const ProfilePage: React.FC = () => {
         cache: 'no-store'
       });
 
-        if (!userResponse.ok) {
-          throw new Error("Failed to fetch user data");
-        }
+      if (!userResponse.ok) {
+        throw new Error('Failed to fetch user data');
+      }
 
-        const userData = await userResponse.json();
+      const userData = await userResponse.json();
 
-        // Fetch coffee profile
-        const profileResponse = await fetch(
-          "http://localhost:4343/api/auth/profile/questions",
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
-            },
-          }
-        );
+      // Fetch coffee profile
+      const profileResponse = await fetch('http://localhost:4343/api/auth/profile/questions', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
 
         console.log("🔵 Profile response status:", profileResponse.status);
 
