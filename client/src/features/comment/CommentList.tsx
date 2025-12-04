@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, type FormEvent } from "react"
 import type { CommentType } from "../../utils/types";
 import { useAuth } from "../../hooks/useAuth";
 
@@ -25,7 +25,7 @@ export default function CommentList({ pid }: { pid: string }) {
     }, [pid]);
 
     // Add a comment
-    const commentHandler = async (e) => {
+    const commentHandler = async (e: FormEvent) => {
         e.preventDefault();
         if (!user || !user.id) {
             return alert("User is not authenticated.");

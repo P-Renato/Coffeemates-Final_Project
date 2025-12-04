@@ -6,6 +6,11 @@ export const getGeoCode = async (req: Request, res:Response) => {
 
     if (!address) return res.status(400).send({ error: "Missing address" });
 
+    // Type guard - ensure it's a string
+    if (typeof address !== 'string' || !address.trim()) {
+        return res.status(400).send({ error: "Missing or invalid address" });
+    }
+
     const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}`;
 
     try {

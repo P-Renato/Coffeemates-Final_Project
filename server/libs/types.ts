@@ -14,6 +14,7 @@ export interface IUser extends Document {
   _id: string;
   username: string;
   email: string;
+  place?: string;
   role: 'user' | 'admin';
   password: string;
   photoURL?: string;
@@ -74,9 +75,9 @@ export interface IPost extends Document {
 export interface IComment extends Document {
   cid: number;
   content: string;
-  uid: number;
-  pid: number;
-  parentCommentId: number;
+  uid: string;
+  pid: string;
+  parentCommentId: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -98,8 +99,11 @@ export interface IChat extends Document {
   updatedAt: Date;
 }
 
-export interface CommentWithReplies extends IComment {
-  replies: CommentWithReplies[];
+export interface CommentWithReplies extends Omit<IComment, 'uid' | 'pid' | 'parentCommentId'> {
+  uid: string;
+  pid: string; 
+  parentCommentId: string | null;
+  replies?: CommentWithReplies[];
 }
 
 

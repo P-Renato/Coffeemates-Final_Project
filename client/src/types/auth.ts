@@ -3,6 +3,7 @@ export interface User {
   email: string;
   username: string;
   photoURL: string;
+  _id: string;
   // Add other user properties as needed
 }
 
@@ -10,6 +11,7 @@ export interface AuthContextType {
   isAuthenticated: boolean;
   user: User | null;
   isLoading: boolean;
+  token: string | null;
   login: (token: string, userData: User) => void;
   logout: () => void;
 }

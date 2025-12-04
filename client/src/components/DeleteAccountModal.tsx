@@ -1,3 +1,5 @@
+//cliant/components/DeleteAccountModal.tsx
+
 interface Props {
   onCancel: () => void;
   onDelete: () => void;

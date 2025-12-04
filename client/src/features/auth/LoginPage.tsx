@@ -138,7 +138,7 @@ console.log('User role:', user.role);
     color: 'white',
     border: 'none',
     cursor: status.loading ? 'not-allowed' : 'pointer',
-    width: '20%',
+    width: '20em',
     margin: '1.2em',
     borderRadius: '8px',
     height: '4.5em'
@@ -166,7 +166,7 @@ console.log('User role:', user.role);
           <div style={{ display: 'flex', justifyContent: 'space-around', width: '80%', gap: '10px', margin: '1.1em auto' }}>
             <button 
               type="button" 
-              onClick={() => window.location.href = "http://localhost:4343/auth/google"} 
+              onClick={() => window.location.href = "http://localhost:4343/api/auth/google"} 
               style={{...buttonStyle, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '18px' , backgroundColor: '#fff',  fontWeight: 'lighter', fontSize: '12', color: '#333', border: '1px solid var(--color-primary)'}}
               className={styles.roboto}
             >
@@ -177,7 +177,7 @@ console.log('User role:', user.role);
             </button>
             <button 
               type="button" 
-              onClick={() => window.location.href = "http://localhost:4343/auth/facebook"} 
+              onClick={() => window.location.href = "http://localhost:4343/api/auth/facebook"} 
               style={{...buttonStyle, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '18px' , backgroundColor: '#fff',  fontWeight: 'lighter', fontSize: '12', color: '#333', border: '1px solid var(--color-primary)'}}
               className={styles.roboto}
             >

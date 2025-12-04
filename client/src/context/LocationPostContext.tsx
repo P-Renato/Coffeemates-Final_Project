@@ -1,4 +1,5 @@
-import { createContext, useContext, useState, useEffect } from "react";
+import { createContext, useContext } from 'react';
+import type { CoffeeLocation } from './LocationPostProvider';
 import type { PostType, Location } from "../utils/types";
 
 const apiUrl = import.meta.env.VITE_API_URL;
@@ -11,8 +12,7 @@ type AppContextType = {
   posts: PostType[];
   setPosts: React.Dispatch<React.SetStateAction<PostType[]>>;
 };
-
-const AppContext = createContext<AppContextType | null>(null);
+export const AppContext = createContext<AppContextType | null>(null);
 
 export const useAppContext = () => {
   const context = useContext(AppContext);

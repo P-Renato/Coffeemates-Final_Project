@@ -122,7 +122,7 @@ export const getCurrentUser = async (req: Request, res: Response) => {
     const authReq = req as AuthRequest;
     const userId = authReq.user?.userId;
 
-    const user = await User.findById(userId).select('-password');
+    const user = await User.findById(userId).select('username email place photoURL createdAt updatedAt');
 
     if (!user) {
       return res.status(404).json({ error: '❌ User not found' });
@@ -135,6 +135,8 @@ export const getCurrentUser = async (req: Request, res: Response) => {
         id: userObj._id,
         username: userObj.username,
         email: userObj.email,
+        place: userObj.place || "Unknown location",
+        photoURL: userObj.photoURL, 
         createdAt: userObj.createdAt,
         updatedAt: userObj.updatedAt
       }
@@ -151,7 +153,7 @@ export const getUserById = async (req: Request, res: Response) => {
   try {
     const userId = req.params.id;
 
-    const user = await User.findById(userId).select('-password -email');
+    const user = await User.findById(userId).select('username photoURL place createdAt');
 
     if (!user) {
       return res.status(404).json({ error: '❌ User not found' });
@@ -164,6 +166,8 @@ export const getUserById = async (req: Request, res: Response) => {
       user: {
         id: userObj._id,
         username: userObj.username,
+        place: userObj.place || "Unknown location",
+        photoURL: userObj.photoURL,
         createdAt: userObj.createdAt
       }
     });
@@ -209,7 +213,7 @@ export const updateUser = async (req: Request, res: Response) => {
   try {
     const authReq = req as AuthRequest;
     const userId = authReq.user?.userId;
-    const { username, email } = req.body;
+    const { username, email, place } = req.body;
 
     if (!userId) {
       return res.status(401).json({ error: '❌ Not authenticated' });
@@ -234,6 +238,7 @@ export const updateUser = async (req: Request, res: Response) => {
     const updateData: any = {};
     if (username) updateData.username = username;
     if (email) updateData.email = email;
+    if (place !== undefined) updateData.place = place;
 
     const updatedUser = await User.findByIdAndUpdate(
       userId,
@@ -254,6 +259,7 @@ export const updateUser = async (req: Request, res: Response) => {
         id: userObj._id,
         username: userObj.username,
         email: userObj.email,
+        place: userObj.place || "Unknown location",
         updatedAt: userObj.updatedAt
       }
     });
@@ -333,5 +339,73 @@ export const searchUsers = async (req: Request, res: Response) => {
   } catch (error) {
     console.error("❌ Search users error:", error);
     res.status(500).json({ error: "❌ Server error searching users" });
+  }
+};
+
+
+// Add these to your existing userController.ts
+
+// Delete user
+export const deleteUser = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    
+   console.log('DELETE called for user ID:', id);
+    
+    const deletedUser = await User.findByIdAndDelete(id);
+    
+    if (!deletedUser) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    
+    res.json({ 
+      message: 'User deleted successfully',
+      deletedUser: {
+        id: deletedUser._id,
+        username: deletedUser.username,
+        email: deletedUser.email
+      }
+    });
+    
+  } catch (error) {
+    console.error('Delete user error:', error);
+    res.status(500).json({ error: 'Failed to delete user' });
+  }
+};
+
+
+export const updateUserStatus = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { status, isActive } = req.body;
+   
+    console.log('UPDATE STATUS called:', { id, status, isActive });
+   
+    const user = await User.findById(id);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    
+   
+    const updates: any = {};
+    if (status !== undefined) updates.status = status;
+    if (isActive !== undefined) updates.isActive = isActive;
+    
+    const updatedUser = await User.findByIdAndUpdate(
+      id,
+      updates,
+      { new: true, runValidators: true }
+    ).select('-password');
+    console.log('✅ Status updated:', updatedUser.username);
+    
+    res.json({
+      success: true,
+      message: 'User status updated successfully',
+      user: updatedUser
+    });
+    
+  } catch (error) {
+    console.error('Update user status error:', error);
+    res.status(500).json({ error: 'Failed to update user status' });
   }
 };

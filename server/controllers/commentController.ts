@@ -1,7 +1,6 @@
 import type { Request, Response } from "express";
 import { Comment } from "../models/Comment";
-import  User  from "../models/User";
-import { Post } from "../models/Post";
+import type { CommentWithReplies } from "../libs/types";
 
 // Get all comments
 export const allComments = async (req: Request, res: Response) => {
@@ -13,38 +12,22 @@ export const commentsOfPost = async (req: Request, res: Response) => {
   try {
     const { postId } = req.params;
 
-    const comments = await Comment.aggregate([
-      { $match: { pid: postId } },               
-      { $sort: { createdAt: 1 } },             
+    // Local interface that includes replies
+    interface CommentWithReplies extends Omit<any, 'replies'> {
+      replies: CommentWithReplies[];
+    }
 
-      {
-        $lookup: {
-          from: "users",
-          let: { userId: "$uid" },               
-          pipeline: [
-            {
-              $match: {
-                $expr: {
-                  $eq: ["$_id", { $toObjectId: "$$userId" }]
-                }
-              }
-            },
-            { $project: { username: 1 } }
-          ],
-          as: "user"
-        }
-      },
-
-      { $unwind: "$user" }                       
-    ]);
+    // Fetch all comments for the post
+    const comments = await Comment.find({ pid: postId }).lean();
 
     // Build nested comment tree
     const map: Record<string, any> = {};
     const roots: any[] = [];
 
     comments.forEach((comment) => {
-      comment.replies = [];
-      map[comment._id.toString()] = comment;
+      const commentWithReplies = comment as any as CommentWithReplies;
+      commentWithReplies.replies = [];
+      map[commentWithReplies._id.toString()] = commentWithReplies;
     });
 
     comments.forEach((comment) => {

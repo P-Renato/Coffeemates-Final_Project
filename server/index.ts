@@ -15,6 +15,7 @@ import locationRouter from './routes/locationRoutes';
 import geocodeRouter from './routes/geocodeRoutes'
 import chatRouter from './routes/chatRoutes';
 import { initChatSocket } from './controllers/chatController';
+import { getPostsByUserId } from './controllers/postController';
 
 const app = express();
 
@@ -24,11 +25,14 @@ app.use(cors({
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'Cookie']
+    
 }));
 
 app.use(cookieParser());
 app.use(express.json());
 app.use(passport.initialize());
+
+
 app.use(express.urlencoded({extended:true}));
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
@@ -42,14 +46,9 @@ connectDB();
 
 /* -------------------- routers ------------------------  */
 
-// Add this at the top of your authRouter.ts, before the Google routes
-authRouter.get('/test', (req, res) => {
-    res.json({ message: 'Auth router is working!' });
-});
-
 app.use('/api/auth/profile', profileRouter);
+app.use('/api/auth', authRouter);
 app.use('/api/auth', userRouter);
-app.use('api//auth', authRouter);
 
 app.get('/api/test', (req, res) => {
     res.json({ message: 'Server is working!' });
@@ -57,6 +56,7 @@ app.get('/api/test', (req, res) => {
 
 // post route
 app.use("/api/post", postRouter); 
+app.get('/api/post/user/:userId', getPostsByUserId);
 
 // comment route
 app.use("/api/comment", commentRouter);
@@ -72,10 +72,6 @@ initChatSocket(io);  // Initialize chat sockets
 app.use("/api/chat", chatRouter);
 
 /* ---------------------- error handlers ---------------------- */
-
-app.get('/', (req, res, next) => {
-    console.log(req.params)
-})
 
 const port = process.env.PORT || 4343;
 
