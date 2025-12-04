@@ -35,3 +35,24 @@ export async function geocodeAddress(address: string): Promise<Coordinates | nul
   }
 }
 
+export async function reverseGeocode(lat: number, lng: number): Promise<string | null> {
+  try {
+    const res = await fetch(
+      `http://localhost:4343/api/geocode/reverse?lat=${lat}&lon=${lng}`
+    );
+
+    if (!res.ok) {
+      console.error("Failed to fetch reverse geocode:", res.statusText);
+      return null;
+    }
+
+    const data = await res.json();
+    if (!data || !data.display_name) return null;
+
+    return data.display_name;
+  } catch (err) {
+    console.error("Reverse geocoding error:", err);
+    return null;
+  }
+}
+
