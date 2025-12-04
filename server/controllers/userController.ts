@@ -105,6 +105,7 @@ export const loginUser = async (req: Request, res: Response) => {
         id: user._id,
         username: user.username,
         email: user.email,
+        photoURL: user.photoURL,
         token: token
       }
     });

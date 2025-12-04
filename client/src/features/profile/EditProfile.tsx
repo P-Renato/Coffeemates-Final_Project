@@ -261,7 +261,7 @@ const EditProfile: React.FC = () => {
         updateUser({ 
           photoURL: fullUrl,
           ...(data.user.username && { username: data.user.username }),
-          ...(data.user.place && { username: data.user.place }); 
+          ...(data.user.place && { username: data.user.place }) 
         }); 
       }
       if (data.user?.coverImageURL) {
@@ -344,6 +344,16 @@ const EditProfile: React.FC = () => {
     if (!response.ok) {
       const errorData = await response.json();
       throw new Error(errorData.error || 'Failed to update profile');
+    }
+    if (responseData.user) {
+      updateUser({
+        username: responseData.user.username,
+        place: responseData.user.place,
+        // Also include photoURL if it's returned
+        ...(responseData.user.photoURL && { 
+          photoURL: `http://localhost:4343${responseData.user.photoURL}` 
+        })
+      });
     }
 
      if (responseData.user && responseData.user.place) {
