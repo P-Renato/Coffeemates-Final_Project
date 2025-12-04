@@ -18,6 +18,7 @@ export interface IUser extends Document {
   role: 'user' | 'admin';
   password: string;
   photoURL?: string;
+  coverImageURL?: string;
   googleId?: string;
   facebookId?: string;
   oauthProvider?: 'google' | 'facebook' | 'local';

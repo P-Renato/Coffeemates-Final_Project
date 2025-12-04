@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth"; // Adjust path as needed
 import "./ProfilePage.css";
-import { getPostsByUserId } from "../../api/postApi";
-import PostCard from "../../components/PostCard";
-import type { PostType } from "../../utils/types";
+import { getPostsByUserId } from '../../api/postApi';
+import PostCard from '../../components/PostCard';
+import type { PostType } from '../../utils/types';
+import { FaUserCircle, FaImage } from "react-icons/fa";
 import UserAvatar from "../../components/UserAvatar";
 import { useAppContext } from "../../context/LocationPostContext";
+
 
 type CoffeeProfileData = {
   basics?: {
@@ -94,6 +96,9 @@ const ProfilePage: React.FC = () => {
   const [postsLoading, setPostsLoading] = useState(true);
   const { postPopup, setPostPopup, posts, setPosts } = useAppContext();
 
+  const location = useLocation();
+  
+
   // Fetch profile data from backend
   useEffect(() => {
     const fetchProfile = async () => {
@@ -106,39 +111,46 @@ const ProfilePage: React.FC = () => {
           throw new Error("No authentication token available");
         }
 
-        if (!user || !user.id) {
-          throw new Error("User not authenticated");
-        }
+  // Fetch profile data from backend
+ useEffect(() => {
+  const fetchProfile = async () => {
+    try {
+      setLoading(true);
+      setPostsLoading(true);
+      setError(null);
 
-        console.log("🔵 Fetching profile for user:", user.id);
+      if (!token) {
+        throw new Error('No authentication token available');
+      }
+      
+      if (!user || !user.id) {
+        throw new Error('User not authenticated');
+      }
 
-        // Fetch user profile data
-        const userResponse = await fetch(
-          `http://localhost:4343/api/auth/${user.id}`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
-            },
-          }
-        );
+      console.log('🔵 Fetching profile for user:', user.id);
 
-        if (!userResponse.ok) {
-          throw new Error("Failed to fetch user data");
-        }
+      // Fetch user profile data
+      const userResponse = await fetch(`http://localhost:4343/api/users/${user.id}?t=${Date.now()}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        cache: 'no-store'
+      });
 
-        const userData = await userResponse.json();
+      if (!userResponse.ok) {
+        throw new Error('Failed to fetch user data');
+      }
 
-        // Fetch coffee profile
-        const profileResponse = await fetch(
-          "http://localhost:4343/api/auth/profile/questions",
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
-            },
-          }
-        );
+      const userData = await userResponse.json();
+
+      // Fetch coffee profile
+      const profileResponse = await fetch('http://localhost:4343/api/auth/profile/questions', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
 
         console.log("🔵 Profile response status:", profileResponse.status);
 
@@ -148,17 +160,21 @@ const ProfilePage: React.FC = () => {
 
         const profileData = await profileResponse.json();
 
-        // Transform the API responses
-        const transformedProfile: ProfileData = {
-          id: userData.user?.username || userData.user?.id || "unknown",
-          name: userData.user?.username || "Unknown User",
-          place: userData.user?.place || "Unknown location",
-          avatarUrl: userData.user?.photoURL || "/images/default-avatar.png",
-          coverImageUrl: "/images/default-cover.png",
-          coffeematesCount: 0,
-          postCount: 0, // Will update after fetching posts
-          coffeeProfile: profileData.answers || {},
-        };
+      // Transform the API responses
+      const transformedProfile: ProfileData = {
+        id: userData.user?.username || userData.user?.id || 'unknown',
+        name: userData.user?.username || 'Unknown User',
+        place: userData.user?.place || "Unknown location",
+        avatarUrl: userData.user?.photoURL 
+          ? `http://localhost:4343${userData.user.photoURL}`
+          : "/images/default-avatar.png",
+        coverImageUrl: userData.user?.coverImageURL 
+          ? `http://localhost:4343${userData.user.coverImageURL}`
+          : "/images/default-cover.png",
+        coffeematesCount: 0,
+        postCount: 0, // Will update after fetching posts
+        coffeeProfile: profileData.answers || {},
+      };
 
         setProfile(transformedProfile);
 
@@ -185,13 +201,13 @@ const ProfilePage: React.FC = () => {
       }
     };
 
-    if (user && token) {
-      fetchProfile();
-    } else {
-      setLoading(false);
-      setPostsLoading(false);
-    }
-  }, [user, token, navigate]);
+  if (user && token) {
+    fetchProfile();
+  } else {
+    setLoading(false);
+    setPostsLoading(false);
+  }
+}, [user, token, navigate, location.state?.refresh]);
 
   const getCoffeeProfileDisplay = (coffeeProfile: CoffeeProfileData) => {
     const displayItems: { question: string; answer: string }[] = [];
@@ -262,20 +278,31 @@ const ProfilePage: React.FC = () => {
     <div className="profile-page">
       {/* Cover */}
       <div className="profile-cover">
+      {profile.coverImageUrl ? (
         <img
           src={profile.coverImageUrl}
           alt="Cover"
           className="profile-cover-image"
         />
-        <div className="profile-avatar-wrapper">
-          <UserAvatar
-            username={profile.name}
-            profileImage={profile.avatarUrl}
-            size="xl"
+      ) : (
+        <div className="profile-cover-placeholder">
+          <FaImage className="cover-icon" />
+          <span>No cover image</span>
+        </div>
+      )}
+      
+      <div className="profile-avatar-wrapper">
+        {profile.avatarUrl ? (
+          <img
+            src={profile.avatarUrl}
+            alt={profile.name}
             className="profile-avatar"
           />
-        </div>
+        ) : (
+          <FaUserCircle className="profile-avatar-icon" />
+        )}
       </div>
+    </div>
 
       <div className="profile-content">
         {/* Header */}

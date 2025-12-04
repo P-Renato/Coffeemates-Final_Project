@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 import CoffeeProfile from "../../components/CoffeeProfile";
 import DeleteAccountModal from "../../components/DeleteAccountModal";
+import { FaUserCircle, FaImage, FaCamera } from "react-icons/fa";
 import "./ProfilePage.css";
 
 type CoffeeProfileItem = {
@@ -71,9 +72,9 @@ const questionMap: Record<string, Record<string, string>> = {
   }
 };
 
-const EditProfil: React.FC = () => {
+const EditProfile: React.FC = () => {
   const navigate = useNavigate();
-  const { user, token } = useAuth();
+  const { user, token, updateUser } = useAuth();
   
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -83,6 +84,12 @@ const EditProfil: React.FC = () => {
   const [place, setPlace] = useState("");
   const [avatarUrl, setAvatarUrl] = useState("");
   const [coverImageUrl, setCoverImageUrl] = useState("");
+  console.log("CoverImageURL: ", coverImageUrl);
+
+  const [profileImage, setProfileImage] = useState<File | null>(null);
+  const [coverImage, setCoverImage] = useState<File | null>(null);
+  const profileInputRef = useRef<HTMLInputElement>(null);
+  const coverInputRef = useRef<HTMLInputElement>(null);
 
   // Store coffee profile from API
   const [categoryAnswers, setCategoryAnswers] = useState<CategoryAnswers>({});
@@ -114,7 +121,7 @@ const EditProfil: React.FC = () => {
         }
 
         // 1. Fetch user data
-        const userResponse = await fetch(`http://localhost:4343/api/auth/${user.id}`, {
+        const userResponse = await fetch(`http://localhost:4343/api/users/${user.id}`, {
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json',
@@ -144,16 +151,15 @@ const EditProfil: React.FC = () => {
         // Set user data
         setId(userData.user?.username || userData.user?.id || '');
         setName(userData.user?.username || '');
-        setAvatarUrl(userData.user?.photoURL || '/images/default-avatar.png');
-        setCoverImageUrl('/images/default-cover.png');
-        setPlace(userData.user?.place || "Unknown location"); // You might want to add this to your user model
+        setAvatarUrl(userData.user?.photoURL ? `http://localhost:4343${userData.user.photoURL}` : '');
+        setCoverImageUrl(userData.user?.coverImageURL ? `http://localhost:4343${userData.user.coverImageURL}` : '');
+        setPlace(userData.user?.place || ""); 
 
         // Set coffee profile data
         setAvailableQuestions(profileData.categories || {});
         setCategoryAnswers(profileData.answers || {});
 
         // Convert category answers to the 5-question format for UI
-        // This is a simplified version - you might need to adjust based on your UI needs
         const flatAnswers: CoffeeProfileItem[] = [];
         Object.entries(profileData.answers || {}).forEach(([category, fields]) => {
           if (fields && typeof fields === 'object') {
@@ -190,6 +196,97 @@ const EditProfil: React.FC = () => {
 
     fetchProfileData();
   }, [user?.id, token]);
+
+  const handleProfileImageClick = () => {
+    profileInputRef.current?.click();
+  };
+
+  const handleCoverImageClick = () => {
+    coverInputRef.current?.click();
+  };
+
+  const handleProfileImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      setProfileImage(file);
+      // Create preview URL
+      const previewUrl = URL.createObjectURL(file);
+      setAvatarUrl(previewUrl);
+    }
+  };
+
+  const handleCoverImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      setCoverImage(file);
+      // Create preview URL
+      const previewUrl = URL.createObjectURL(file);
+      setCoverImageUrl(previewUrl);
+    }
+  };
+
+  const uploadImages = async () => {
+    if (!profileImage && !coverImage) return;
+
+    const formData = new FormData();
+    
+    if (profileImage) {
+      formData.append('profileImage', profileImage);
+    }
+    
+    if (coverImage) {
+      formData.append('coverImage', coverImage);
+    }
+    
+    try {
+      const response = await fetch('http://localhost:4343/api/auth/upload/images', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+        body: formData,
+      });
+      
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to upload images');
+      }
+      
+      // Update with permanent URLs from backend
+      if (data.user?.photoURL) {
+        const fullUrl = `http://localhost:4343${data.user.photoURL}`;
+        console.log('🖼️ Setting avatar URL to:', fullUrl);
+        setAvatarUrl(fullUrl);
+
+        updateUser({ 
+          photoURL: fullUrl,
+          ...(data.user.username && { username: data.user.username }),
+          ...(data.user.place && { username: data.user.place }) 
+        }); 
+      }
+      if (data.user?.coverImageURL) {
+        const fullUrl = `http://localhost:4343${data.user.coverImageURL}`;
+        console.log('🖼️ Setting cover URL to:', fullUrl);
+        setCoverImageUrl(fullUrl);
+      }
+      
+      // Clear file states
+      setProfileImage(null);
+      setCoverImage(null);
+      
+      return data;
+    } catch (error) {
+      console.error('Error uploading images:', error);
+      throw error;
+    }
+  };
+
+  // const handleRemoveProfileImage = () => {
+  //   setProfileImage(null);
+  //   setAvatarUrl('');
+  // };
+
+  
 
   const openPicker = (index: number) => {
     setActiveIndex(index);
@@ -248,6 +345,16 @@ const EditProfil: React.FC = () => {
       const errorData = await response.json();
       throw new Error(errorData.error || 'Failed to update profile');
     }
+    if (responseData.user) {
+      updateUser({
+        username: responseData.user.username,
+        place: responseData.user.place,
+        // Also include photoURL if it's returned
+        ...(responseData.user.photoURL && { 
+          photoURL: `http://localhost:4343${responseData.user.photoURL}` 
+        })
+      });
+    }
 
      if (responseData.user && responseData.user.place) {
       setPlace(responseData.user.place); // Update the local state
@@ -255,7 +362,7 @@ const EditProfil: React.FC = () => {
 
     console.log('✅ Profile updated successfully');
     
-    return responseData; 
+    return responseData.user || responseData;
   } catch (err) {
     console.error('Update user error:', err);
     throw err;
@@ -302,6 +409,10 @@ const validateForm = (): string | null => {
       if (validationError) {
         setError(validationError);
         return;
+      }
+
+       if (profileImage || coverImage) {
+        await uploadImages();
       }
 
       await handleUpdateUserProfile();
@@ -357,7 +468,9 @@ const validateForm = (): string | null => {
       }
 
       console.log("Profile saved successfully");
-      navigate("/profile");
+      navigate("/profile", {
+        state: { refresh: true }
+      });
 
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to save profile');
@@ -400,18 +513,62 @@ const validateForm = (): string | null => {
 
   return (
     <div className="edit-profile-page">
+      {/* Hidden file inputs */}
+      <input
+        type="file"
+        accept="image/*"
+        onChange={handleProfileImageChange}
+        ref={profileInputRef}
+        style={{ display: 'none' }}
+      />
+      <input
+        type="file"
+        accept="image/*"
+        onChange={handleCoverImageChange}
+        ref={coverInputRef}
+        style={{ display: 'none' }}
+      />
+
       <div className="profile-cover">
-        <img
-          src={coverImageUrl}
-          alt="Cover"
-          className="profile-cover-image"
-        />
+        {/* Cover image - click to change */}
+        <div 
+          className={`profile-cover-area ${!coverImageUrl ? 'cover-placeholder' : ''}`}
+          onClick={handleCoverImageClick}
+          style={coverImageUrl ? { backgroundImage: `url(${coverImageUrl})` } : {}}
+        >
+          {!coverImageUrl && (
+            <div className="cover-placeholder-content">
+              <FaImage className="cover-icon" />
+              <span>Click to add cover image</span>
+            </div>
+          )}
+          {coverImageUrl && (
+            <div className="cover-overlay">
+              <FaCamera className="cover-camera-icon" />
+              <span>Click to change cover</span>
+            </div>
+          )}
+        </div>
+        
+        {/* Profile avatar - click to change */}
         <div className="profile-avatar-wrapper">
-          <img
-            src={avatarUrl}
-            alt={name}
-            className="profile-avatar"
-          />
+          <div 
+            className={`profile-avatar-container ${!avatarUrl ? 'avatar-placeholder' : ''}`}
+            onClick={handleProfileImageClick}
+          >
+            {avatarUrl ? (
+              <img
+                src={avatarUrl}
+                alt={name}
+                className="profile-avatar"
+              />
+            ) : (
+              <FaUserCircle className="profile-avatar-icon" />
+            )}
+            <div className="avatar-overlay">
+              <FaCamera className="avatar-camera-icon" />
+            </div>
+          </div>
         </div>
       </div>
 
@@ -430,6 +587,7 @@ const validateForm = (): string | null => {
         {error && <div className="error-message">{error}</div>}
 
         <div className="edit-profile-form">
+          {/* Simple form fields - no extra image upload sections */}
           <div className="form-group">
             <label className="form-label">ID</label>
             <input
@@ -500,4 +658,4 @@ const validateForm = (): string | null => {
   );
 };
 
-export default EditProfil;
+export default EditProfile;
