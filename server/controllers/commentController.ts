@@ -1,6 +1,7 @@
 import type { Request, Response } from "express";
 import { Comment } from "../models/Comment";
-import type { CommentWithReplies } from "../libs/types";
+import { Post } from "../models/Post";
+import User from '../models/User';
 
 // Get all comments
 export const allComments = async (req: Request, res: Response) => {

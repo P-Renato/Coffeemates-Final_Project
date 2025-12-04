@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { useAppContext } from "../../context/LocationPostContext";
 import LocationPicker from "../map/LocationPicker";
-import { geocodeAddress } from "../../utils/geocode";
+import { geocodeAddress, reverseGeocode } from "../../utils/geocode";
 import { useAuth } from "../../hooks/useAuth";
 import { createPost } from "../../api/postApi";
 
+const apiUrl = import.meta.env.VITE_API_URL; // create a .env file in client with VITE_API_URL=http://localhost:4343
 export default function PopUpPost() {
     const { user } = useAuth();
     const { setPostPopup, setLocationList } = useAppContext();
@@ -17,14 +18,19 @@ export default function PopUpPost() {
     const [title, setTitle] = useState("");
     const [content, setContent] = useState("");
     const [shopName, setShopName] = useState("");
-    const [star, setStar] = useState("");
+    const [star, setStar] = useState<number | "">("");
+
+    // Location
     const [location, setLocation] = useState("");
     const [lat, setLat] = useState<number | null>(null);
     const [lng, setLng] = useState<number | null>(null);
     const [showLocationPicker, setShowLocationPicker] = useState(false);
+
+    // image upload
     const [imageFile, setImageFile] = useState<File | null>(null);
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
+    // Preview image
     useEffect(() => {
         if (imageFile) {
             const url = URL.createObjectURL(imageFile);
@@ -34,6 +40,17 @@ export default function PopUpPost() {
             setPreviewUrl(null);
         }
     }, [imageFile]);
+
+    const resetForm = () => {
+        setTitle("");
+        setContent("");
+        setShopName("");
+        setStar("");
+        setLocation("");
+        setLat(null);
+        setLng(null);
+        setImageFile(null);
+    };
 
     const postHandler = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -46,32 +63,34 @@ export default function PopUpPost() {
         }
 
         if (!imageFile) return alert("Please select an image.");
-        if (!location) return alert("Please pick a location.");
+        if (!location && (lat === null || lng === null)) return alert("Please pick a location.");
+        if (!user || !user.id) return alert("User is not authenticated.");
 
         let finalLat = lat;
         let finalLng = lng;
 
-        if (location && (lat === null || lng === null)) {
+        // Geocode if lat/lng missing
+        if ((lat === null || lng === null) && location) {
             const coordinates = await geocodeAddress(location);
-            if (!coordinates) {
-                return alert("Could not find coordinates for this address.");
-            }
+            if (!coordinates) return alert("Could not find coordinates for this address.");
             finalLat = coordinates.lat;
             finalLng = coordinates.lng;
             setLat(finalLat);
             setLng(finalLng);
         }
 
-        if (finalLat === null || finalLng === null) {
-            return alert("Invalid coordinates. Please pick a location again.");
+        // Reverse geocode if location missing
+        if ((lat !== null && lng !== null) && !location) {
+            const name = await reverseGeocode(lat, lng);
+            if (name) setLocation(name);
         }
 
         const formData = new FormData();
         formData.append("title", title);
         formData.append("content", content);
         formData.append("shopName", shopName);
-        formData.append("star", star);
-        formData.append("uid", userId);
+        formData.append("star", star.toString());
+        formData.append("uid", user.id); // <-- must be MongoDB ObjectId
         formData.append("postImg", imageFile);
         formData.append("location", location);
         formData.append("lat", finalLat.toString());
@@ -100,14 +119,7 @@ export default function PopUpPost() {
 
     const handleCancel = () => {
         setPostPopup(false);
-        setTitle("");
-        setContent("");
-        setShopName("");
-        setStar("");
-        setLocation("");
-        setLat(null);
-        setLng(null);
-        setImageFile(null);
+        resetForm();
     };
 
     return (
@@ -173,7 +185,7 @@ export default function PopUpPost() {
 
                         <input
                             value={star}
-                            onChange={(e) => setStar(e.target.value)}
+                            onChange={(e) => setStar(Number(e.target.value))}
                             className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400"
                             type="number"
                             placeholder="Rating (1-5)"

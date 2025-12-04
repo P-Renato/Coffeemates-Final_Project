@@ -38,7 +38,7 @@ export default function Sidebar() {
             {user && (
                 <div className="flex flex-col items-center w-full">
                     <img
-                        src={user.photoURL || '/default-avatar.png'}
+                        src={user.photoURL || 'https://st3.depositphotos.com/6672868/13701/v/450/depositphotos_137014128-stock-illustration-user-profile-icon.jpg'}
                         alt={user.username}
                         className="w-20 h-20 rounded-full object-cover"
                     />

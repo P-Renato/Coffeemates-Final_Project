@@ -28,13 +28,12 @@ const upload = multer({
 });
 
 // Routes
-posts.get("/user/:userId", getPostsByUserId);
-posts.patch("/like/:id", likePost);
-posts.get("/:id", onePost);      
-posts.patch("/:id", editPost);   
 posts.get("/", allPosts);        
-posts.post("/", upload.single("postImg"), addNewPost);     
+posts.post("/", upload.single("postImg"), addNewPost);  
+posts.get("/user/:userId", getPostsByUserId);
+posts.patch("/like/:id", likePost); 
+posts.get("/:id", onePost);      
+posts.patch("/:id", editPost);     
 posts.delete("/:id", deletePost);
-
 
 export default posts;

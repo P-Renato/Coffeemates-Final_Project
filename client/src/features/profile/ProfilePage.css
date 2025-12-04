@@ -209,3 +209,9 @@
 .delete-account-button {
   margin-left: auto;
 }
+
+
+.profile-avatar {
+  border: 4px solid white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}

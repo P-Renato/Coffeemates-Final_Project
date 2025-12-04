@@ -57,7 +57,7 @@ const questionMap: Record<string, Record<string, string>> = {
     neighborhood: "What neighborhood do you live in?",
     favoriteCafe: "What's your favorite café in your area?",
     coffeeTime: "Are you a morning or evening coffee person?",
-    goToPastry: "What's your go-to pastry or snack with coffee?"
+    goToPastry: "What's your go-to pastry or snack with coffee?",
   },
   personality: {
     usualOrder: "What's your usual coffee order?",
@@ -65,22 +65,22 @@ const questionMap: Record<string, Record<string, string>> = {
     coffeeVibe: "How would you describe your coffee vibe?",
     friendCafe: "What café would you take a friend to?",
     dateCafe: "What café would you go to on a date?",
-    coffeeStylePerson: "If your coffee style were a person, who would it be?"
+    coffeeStylePerson: "If your coffee style were a person, who would it be?",
   },
   taste: {
     beanOrigin: "What's your favorite coffee bean origin?",
     roastPreference: "What's your roast preference?",
     brewingMethod: "What's your favorite brewing method?",
     milkChoice: "What's your milk of choice?",
-    sugarSyrup: "Do you add sugar or syrup?"
+    sugarSyrup: "Do you add sugar or syrup?",
   },
   vibe: {
     coffeeMeaning: "What does coffee mean to you?",
     bestMemory: "What's your best coffee memory?",
     idealMate: "Who is your ideal coffee mate?",
     dreamCafe: "If you owned a café, what would it be like?",
-    cafeToVisit: "What café do you dream of visiting one day?"
-  }
+    cafeToVisit: "What café do you dream of visiting one day?",
+  },
 };
 
 const ProfilePage: React.FC = () => {
@@ -136,13 +136,13 @@ const ProfilePage: React.FC = () => {
         },
       });
 
-      console.log('🔵 Profile response status:', profileResponse.status);
+        console.log("🔵 Profile response status:", profileResponse.status);
 
-      if (!profileResponse.ok) {
-        throw new Error('Failed to fetch profile questions');
-      }
+        if (!profileResponse.ok) {
+          throw new Error("Failed to fetch profile questions");
+        }
 
-      const profileData = await profileResponse.json();
+        const profileData = await profileResponse.json();
 
       // Transform the API responses
       const transformedProfile: ProfileData = {
@@ -160,32 +160,34 @@ const ProfilePage: React.FC = () => {
         coffeeProfile: profileData.answers || {},
       };
 
-      setProfile(transformedProfile);
-
-      // ✅ NEW: Fetch user posts
-      console.log('📱 Fetching posts for user:', user.id);
-      try {
-        const posts = await getPostsByUserId(user.id);
-        console.log('✅ Fetched posts:', posts.length);
-        setUserPosts(posts);
-        // Update post count in profile
-        transformedProfile.postCount = posts.length;
         setProfile(transformedProfile);
-      } catch (postError) {
-        console.error('❌ Error fetching posts:', postError);
-        // Don't fail the whole profile if posts fail
+
+        console.log("📱 Fetching posts for user:", user.id);
+        try {
+          const posts = await getPostsByUserId(user.id);
+          console.log("✅ Fetched posts:", posts.length);
+          setUserPosts(posts);
+
+          transformedProfile.postCount = posts.length;
+          setProfile(transformedProfile);
+        } catch (postError) {
+          console.error("Error fetching posts:", postError);
+        }
+
+        console.log("First post data structure:", userPosts[0]);
+        console.log("User object in post:", userPosts[0]?.user);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "An error occurred");
+        console.error("Error fetching profile:", err);
+      } finally {
+        setLoading(false);
+        setPostsLoading(false);
       }
+    };
 
-      // In ProfilePage.tsx, after fetching posts:
-console.log('First post data structure:', userPosts[0]);
-console.log('User object in post:', userPosts[0]?.user);
-
-
-
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
-      console.error('Error fetching profile:', err);
-    } finally {
+    if (user && token) {
+      fetchProfile();
+    } else {
       setLoading(false);
       setPostsLoading(false);
     }
@@ -199,19 +201,19 @@ console.log('User object in post:', userPosts[0]?.user);
   }
 }, [user, token, navigate, location.state?.refresh]);
 
-  // Helper function to convert coffee profile data to display format
   const getCoffeeProfileDisplay = (coffeeProfile: CoffeeProfileData) => {
     const displayItems: { question: string; answer: string }[] = [];
 
     // Iterate through each category and field
     Object.entries(coffeeProfile).forEach(([category, fields]) => {
-      if (fields && typeof fields === 'object') {
+      if (fields && typeof fields === "object") {
         Object.entries(fields).forEach(([field, answer]) => {
-          if (answer && answer.trim() !== '') {
-            const question = questionMap[category]?.[field] || `${category} - ${field}`;
+          if (answer && answer.trim() !== "") {
+            const question =
+              questionMap[category]?.[field] || `${category} - ${field}`;
             displayItems.push({
               question,
-              answer: answer as string
+              answer: answer as string,
             });
           }
         });
@@ -311,9 +313,7 @@ console.log('User object in post:', userPosts[0]?.user);
               </div>
               <div className="profile-stat">
                 <span className="profile-stat-label">Post</span>
-                <span className="profile-stat-value">
-                  {profile.postCount}
-                </span>
+                <span className="profile-stat-value">{profile.postCount}</span>
               </div>
             </div>
           </div>
@@ -350,17 +350,15 @@ console.log('User object in post:', userPosts[0]?.user);
             {coffeeProfileDisplay.length > 0 ? (
               coffeeProfileDisplay.map((item, index) => (
                 <div className="coffee-profile-row" key={index}>
-                  <div className="coffee-profile-question">
-                    {item.question}
-                  </div>
+                  <div className="coffee-profile-question">{item.question}</div>
                   <div className="coffee-profile-answer">{item.answer}</div>
                 </div>
               ))
             ) : (
               <div className="no-coffee-profile">
-                No coffee profile information available. 
+                No coffee profile information available.
                 {isOwnProfile && (
-                  <button 
+                  <button
                     onClick={() => navigate("/edit-profile")}
                     className="btn-link"
                   >
@@ -373,34 +371,34 @@ console.log('User object in post:', userPosts[0]?.user);
         </section>
 
         {/* Posts Section - REPLACE THIS */}
-<section className="profile-section">
-  <h2 className="section-title">Posts ({userPosts.length})</h2>
-  
-  {postsLoading ? (
-    <div className="loading-posts">Loading posts...</div>
-  ) : userPosts.length === 0 ? (
-    <div className="no-posts-message">
-      <div className="no-posts-icon">☕</div>
-      <p>No posts yet. Share your coffee experiences!</p>
-      {isOwnProfile && (
-        <button 
-          onClick={() => navigate('/create-post')} // Adjust to your post creation route
-          className="btn btn-primary"
-        >
-          Create Your First Post
-        </button>
-      )}
-    </div>
-  ) : (
-    <div className="posts-grid">
-      {userPosts.map((post) => (
-        <div key={post._id || post.pid} className="post-item">
-          <PostCard post={post} />
-        </div>
-      ))}
-    </div>
-  )}
-</section>
+        <section className="profile-section">
+          <h2 className="section-title">Posts ({userPosts.length})</h2>
+
+          {postsLoading ? (
+            <div className="loading-posts">Loading posts...</div>
+          ) : userPosts.length === 0 ? (
+            <div className="no-posts-message">
+              <div className="no-posts-icon">☕</div>
+              <p>No posts yet. Share your coffee experiences!</p>
+              {isOwnProfile && (
+                <button
+                  onClick={() => navigate("/create-post")} // Adjust to your post creation route
+                  className="btn btn-primary"
+                >
+                  Create Your First Post
+                </button>
+              )}
+            </div>
+          ) : (
+            <div className="posts-grid">
+              {userPosts.map((post) => (
+                <div key={post._id || post.pid} className="post-item">
+                  <PostCard post={post} />
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
       </div>
     </div>
   );
