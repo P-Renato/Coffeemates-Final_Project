@@ -1,17 +1,10 @@
 import { createContext, useContext } from 'react';
-import type { CoffeeLocation } from './LocationPostProvider';
+import type { AppContextType } from '../utils/types';
 import type { PostType, Location } from "../utils/types";
+import { useEffect, useState } from 'react';
 
-const apiUrl = import.meta.env.VITE_API_URL;
+const apiUrl = import.meta.env.VITE_API_URL;   // create a .env file in client with VITE_API_URL=http://localhost:4343
 
-type AppContextType = {
-  postPopup: boolean;
-  setPostPopup: React.Dispatch<React.SetStateAction<boolean>>;
-  locationList: Location[];
-  setLocationList: React.Dispatch<React.SetStateAction<Location[]>>;
-  posts: PostType[];
-  setPosts: React.Dispatch<React.SetStateAction<PostType[]>>;
-};
 export const AppContext = createContext<AppContextType | null>(null);
 
 export const useAppContext = () => {
@@ -24,6 +17,8 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
   const [postPopup, setPostPopup] = useState(false);
   const [locationList, setLocationList] = useState<Location[]>([]);
   const [posts, setPosts] = useState<PostType[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     fetch(`${apiUrl}/api/post`)
@@ -33,9 +28,15 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
 
         if (data.success && Array.isArray(data.posts)) {
           setPosts(data.posts);
+          setLoading(false);
         }
       })
-      .catch((err) => console.log("Fetching post error ", err));
+      .catch((err) => {
+        console.log("Fetching post error ", err);
+        setError("Failed to load posts");
+        setLoading(false);
+      }
+    );
   }, []);
 
   useEffect(() => {
@@ -52,7 +53,7 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   return (
-    <AppContext.Provider value={{ postPopup, setPostPopup, locationList, setLocationList, posts, setPosts }}>
+    <AppContext.Provider value={{ postPopup, setPostPopup, locationList, setLocationList, posts, setPosts, loading, error }}>
       {children}
     </AppContext.Provider>
   );

@@ -2,45 +2,61 @@ import type { Request, Response } from "express";
 import { Post } from "../models/Post";
 import { Comment } from "../models/Comment";
 import { Location } from "../models/Location";
-import User from '../models/User';
 import mongoose from "mongoose";
 
-// GET: all posts
 export const allPosts = async (req: Request, res: Response) => {
   try {
-    console.log('🔄 Fetching all posts with populate...');
-    
-    // Since uid is String, we need to convert for populate
-    const posts = await Post.find()
-      .sort({ createdAt: -1 })
-      .lean(); // Get plain objects
-    
-    // Manually populate user data
-    const postsWithUsers = await Promise.all(
-      posts.map(async (post) => {
-        try {
-          // Find user by _id (ObjectId) converted from uid string
-          const user = await User.findById(post.uid).select('username profileImage').lean();
-          return {
-            ...post,
-            user: user || { username: 'Unknown' }
-          };
-        } catch (error) {
-          console.error(`Error fetching user for post ${post._id}:`, error);
-          return {
-            ...post,
-            user: { username: 'Unknown' }
-          };
+    const posts = await Post.aggregate([
+      { $sort: { createdAt: -1 } },
+      {
+        $lookup: {
+          from: "users",
+          let: { userId: "$uid" },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $eq: [
+                    "$_id",
+                    {
+                      $convert: {
+                        input: "$$userId",
+                        to: "objectId",
+                        onError: null,
+                        onNull: null
+                      }
+                    }
+                  ]
+                }
+              }
+            },
+            { $project: { username: 1 } }
+          ],
+          as: "user"
         }
-      })
-    );
+      },
+      { $unwind: { path: "$user", preserveNullAndEmptyArrays: true } },
+      {
+        $project: {
+          title: 1,
+          content: 1,
+          location: 1,
+          star: 1,
+          uid: 1,
+          imageUrl: 1,
+          shopName: 1,
+          commentIds: 1,
+          likeIds: 1,
+          createdAt: 1,
+          "user.username": 1
+        }
+      }
+    ]);
 
-    console.log(`✅ Found ${postsWithUsers.length} posts`);
-    
-    res.status(200).json({ success: true, posts: postsWithUsers });
+    res.status(200).json({ success: true, posts });
   } catch (err) {
-    console.error('❌ Error in allPosts:', err);
-    res.status(500).json({ success: false, msg: "Error fetching posts", error: err.message });
+    console.error(err);
+    res.status(500).json({ success: false, msg: "Error fetching posts" });
   }
 };
 
@@ -175,7 +191,7 @@ export const deletePost = async (req: Request, res: Response) => {
   }
 };
 
-// POST: like a post
+//  like a post
 export const likePost = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
@@ -197,7 +213,7 @@ export const likePost = async (req: Request, res: Response) => {
 
     await post.save();
 
-    res.status(200).json({ success: true, likeCount: post.likeIds.length,  liked: uidIndex === -1 });
+    res.status(200).json({ success: true, likeCount: post.likeIds.length, liked: uidIndex === -1 });
   } catch (err) {
     res.status(500).json({ success: false, msg: "likePost error" });
   }
@@ -208,25 +224,25 @@ export const getPostsByUserId = async (req: Request, res: Response) => {
   try {
     const { userId } = req.params;
     console.log('📱 Fetching posts for user:', userId);
-    
+
     // Find posts where uid matches userId
     const posts = await Post.find({ uid: userId })
       .sort({ createdAt: -1 }) // Newest first
       .lean();
-    
+
     console.log(`✅ Found ${posts.length} posts for user ${userId}`);
-    
-    res.status(200).json({ 
-      success: true, 
+
+    res.status(200).json({
+      success: true,
       posts: posts,
       count: posts.length
     });
-    
+
   } catch (err) {
     console.error('❌ Error fetching user posts:', err);
-    res.status(500).json({ 
-      success: false, 
-      msg: "Error fetching user posts" 
+    res.status(500).json({
+      success: false,
+      msg: "Error fetching user posts"
     });
   }
 };

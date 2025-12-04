@@ -166,7 +166,7 @@ export default function ChatPage() {
                     type="text"
                     value={searchQuery}
                     onChange={handleChange}
-                    onKeyDown={(e) => e.key === "Enter" && searchUser()}
+                    onKeyDown={(e) => e.key === "Enter" && searchUser(searchQuery)}
                     placeholder="Type a name here"
                     className="border border-gray-300 p-2 m-2 w-full rounded-md"
                 />

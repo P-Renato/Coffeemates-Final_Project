@@ -1,32 +1,8 @@
-import { useEffect, useState } from "react"
 import PostCard from "../../components/PostCard";
-import type { PostType } from "../../utils/types";
 import { useAppContext } from "../../context/LocationPostContext";
-import { getAllPosts } from "../../api/postApi"; // This import should work now
 
 export default function PostPage() {
-  const { posts } = useAppContext();
-
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    const fetchPosts = async () => {
-      try {
-        setLoading(true);
-        const postsData = await getAllPosts();
-        console.log('Fetched posts:', postsData);
-        setPosts(postsData);
-      } catch (err) {
-        console.error("Fetching posts error:", err);
-        setError("Failed to load posts");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchPosts();
-  }, []);
+  const { posts = [], error, loading } = useAppContext();
 
   if (loading) return <div className="p-4">Loading posts...</div>;
   if (error) return <div className="p-4 text-red-600">{error}</div>;

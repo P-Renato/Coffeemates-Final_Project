@@ -5,7 +5,7 @@ import { geocodeAddress, reverseGeocode } from "../../utils/geocode";
 import { useAuth } from "../../hooks/useAuth";
 import { createPost } from "../../api/postApi";
 
-const apiUrl = import.meta.env.VITE_API_URL;
+const apiUrl = import.meta.env.VITE_API_URL; // create a .env file in client with VITE_API_URL=http://localhost:4343
 export default function PopUpPost() {
     const { user } = useAuth();
     const { setPostPopup, setLocationList } = useAppContext();

@@ -47,7 +47,8 @@ connectDB();
 /* -------------------- routers ------------------------  */
 
 app.use('/api/auth/profile', profileRouter);
-app.use('/api/auth', authRouter);
+// CHECK 2 ROUTES BELOW THAT THE SAME PATH BUT DIFFERENT FUNCTIONALITY
+//app.use('/api/auth', authRouter);
 app.use('/api/auth', userRouter);
 
 app.get('/api/test', (req, res) => {
