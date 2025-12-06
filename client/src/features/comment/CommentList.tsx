@@ -113,7 +113,7 @@ export default function CommentList({ pid }: { pid: string }) {
 
             <div>
                 {comments.map((comment) => (
-                    <div key={comment._id} className="bg-green-200 p-2 m-2 flex justify-between items-center">
+                    <div key={comment._id} className=" p-1 flex justify-between items-center">
                         <div>
                             <div>
                                 <b>{comment.user ? comment.user.username : "Unknown User"}: </b>
@@ -129,34 +129,34 @@ export default function CommentList({ pid }: { pid: string }) {
                         </div>
                         {
                             user && user.id === comment.uid && (
-                                <div className="flex gap-2">
+                                <div className="flex gap-2 justify-center items-center">
                                     {editingId === comment._id
                                         ? (
                                             <>
-                                                <button onClick={() => editComment(comment._id)} className="bg-blue-400 p-2 cursor-pointer">Save</button>
-                                                <button onClick={() => setEditingId(null)} className="bg-gray-300 p-2 cursor-pointer">Cancel</button>
+                                                <button onClick={() => editComment(comment._id)} className="w-[6em] bg-blue-400 p-2 cursor-pointer rounded-3xl">Save</button>
+                                                <button onClick={() => setEditingId(null)} className=" w-[6em] bg-gray-300 p-2 cursor-pointer rounded-3xl">Cancel</button>
                                             </>
                                         ) : (
-                                            <button onClick={() => startEdit(comment)} className="bg-yellow-400 p-2 cursor-pointer">Edit</button>
+                                            <button onClick={() => startEdit(comment)} className="w-[5em] bg-blue-300 p-2 cursor-pointer rounded-3xl">Edit</button>
                                         )}
 
-                                    <button onClick={() => deleteComment(comment._id)} className="bg-red-300 p-2 cursor-pointer">Delete</button>
-                                </div>
+                                    <button onClick={() => deleteComment(comment._id)} className=" w-[6em] bg-blue-400 p-2 cursor-pointer rounded-3xl">Delete</button>
+                                </div> 
                             )
                         }
                     </div>
                 ))}
             </div>
 
-            <form onSubmit={commentHandler} className="flex flex-col gap-2 mt-3">
+            <form onSubmit={commentHandler} className="flex justify-between items-center gap-4 mt-3">
                 <textarea
                     value={newComment}
                     onChange={(e) => setNewComment(e.target.value)}
-                    className="border p-2"
-                    rows={4}
+                    className="border border-gray-300 p-2 rounded-lg flex-1"
+                    rows={1}
                     placeholder="Add a comment..."
                 />
-                <button className="bg-blue-600 w-[10em] text-white px-4 py-2 m-auto rounded cursor-pointer">Add</button>
+                <button className="bg-blue-600 w-[10em] text-white px-4 py-2 m-auto rounded-4xl cursor-pointer">Add</button>
             </form>
         </div>
     );

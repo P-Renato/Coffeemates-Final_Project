@@ -14,6 +14,7 @@ export type PostType = {
     user: {
         _id: string,
         username: string,
+        photoURL: string,
     }
 }
 
