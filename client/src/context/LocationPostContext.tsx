@@ -25,7 +25,7 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
     fetch(`${apiUrl}/api/post`)
       .then((res) => res.json())
       .then((data) => {
-        console.log("API DATA:", data);
+        // console.log("API DATA:", data);
 
         if (data.success && Array.isArray(data.posts)) {
           setPosts(data.posts);

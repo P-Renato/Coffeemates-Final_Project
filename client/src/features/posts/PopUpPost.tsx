@@ -4,9 +4,12 @@ import LocationPicker from "../map/LocationPicker";
 import { geocodeAddress, reverseGeocode } from "../../utils/geocode";
 import { useAuth } from "../../hooks/useAuth";
 import { createPost, updatePost } from "../../api/postApi";
+import type { PostType } from "../../utils/types";
 
 interface PopUpPostProps {
-    postToEdit?: any; // optional, for edit mode
+    postToEdit?: PostType; 
+    onSuccess?: (post: PostType, isEdit: boolean) => void;
+    onCancel?: () => void;
 }
 
 export default function PopUpPost({ postToEdit }: PopUpPostProps) {
@@ -108,9 +111,9 @@ export default function PopUpPost({ postToEdit }: PopUpPostProps) {
 
             setPostPopup(false);
             resetForm();
-        } catch (error: any) {
+        } catch (error) {
             console.error("Post error:", error);
-            alert(`Failed to submit post: ${error.message || "Please try again."}`);
+            alert(`Failed to submit post: ${(error as Error).message || "Please try again."}`);
         }
     };
 
