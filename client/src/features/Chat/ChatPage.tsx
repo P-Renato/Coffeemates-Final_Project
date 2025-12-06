@@ -159,7 +159,10 @@ export default function ChatPage() {
         <div className="flex min-h-screen">
             <ToastContainer position="top-right" autoClose={3000} />
 
-            <div className="w-[30%] mx-auto bg-white rounded-lg shadow-2xl p-6 space-y-6">
+            <div
+                className={`mx-auto bg-white rounded-lg shadow-2xl p-6 space-y-6 ${!openChatBox ? "w-[100%]" : "w-[40%]"
+                    }`}
+            >
 
                 {/* Search */}
                 <input
@@ -167,8 +170,8 @@ export default function ChatPage() {
                     value={searchQuery}
                     onChange={handleChange}
                     onKeyDown={(e) => e.key === "Enter" && searchUser(searchQuery)}
-                    placeholder="Type a name here"
-                    className="border border-gray-300 p-2 m-2 w-full rounded-md"
+                    placeholder="🔍︎   Search"
+                    className="border border-gray-300 p-2 m-2 w-full rounded-3xl"
                 />
 
                 {/* User List */}
@@ -188,7 +191,7 @@ export default function ChatPage() {
                                 <span className="flex items-center space-x-2 text-gray-800">
                                     <img
                                         onClick={() => openChat(u._id)}
-                                        src={u.photoURL ? `http://localhost:4343${u.photoURL}` : '/default-avatar.png'} 
+                                        src={u.photoURL ? `http://localhost:4343${u.photoURL}` : 'http://localhost:4343/uploads/profile/sample-photo.jpeg'}
                                         alt={u.username}
                                         className="w-12 h-12 rounded-full cursor-pointer"
                                         onError={(e) => {

@@ -94,7 +94,7 @@ const ProfilePage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [userPosts, setUserPosts] = useState<PostType[]>([]);
   const [postsLoading, setPostsLoading] = useState(true);
-  const { postPopup, setPostPopup, posts, setPosts } = useAppContext();
+  const { setPostPopup } = useAppContext();
 
   const location = useLocation();
   
@@ -110,6 +110,22 @@ const ProfilePage: React.FC = () => {
         if (!token) {
           throw new Error("No authentication token available");
         }
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "An error occurred");
+        console.error("Error fetching profile:", err);
+      } finally {
+        setLoading(false);
+        setPostsLoading(false);
+      }
+    };
+
+    if (user && token) {
+      fetchProfile();
+    } else {
+      setLoading(false);
+      setPostsLoading(false);
+    }
+  }, [user, token, navigate, location.state?.refresh]);     
 
   // Fetch profile data from backend
  useEffect(() => {
@@ -400,7 +416,7 @@ const ProfilePage: React.FC = () => {
           ) : (
             <div className="posts-grid">
               {userPosts.map((post) => (
-                <div key={post._id || post.pid} className="post-item">
+                <div key={post._id || post.pid} className="flex flex-col gap-4 p-4">
                   <PostCard post={post} />
                 </div>
               ))}
