@@ -55,8 +55,8 @@ export const allPosts = async (req: Request, res: Response) => {
 
     res.status(200).json({ success: true, posts });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ success: false, msg: "Error fetching posts" });
+    console.error('❌ Error in allPosts:', err);
+    res.status(500).json({ success: false, msg: "Error fetching posts", error: (err as Error).message });
   }
 };
 
@@ -82,7 +82,6 @@ export const onePost = async (req: Request, res: Response) => {
 export const editPost = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    //const uid = req.body.uid;      
 
     const updateData = req.body;
     // have to use _id with findOneAndUpdate
@@ -162,7 +161,8 @@ export const addNewPost = async (req: Request, res: Response) => {
       lng: lng !== undefined && lng !== null ? Number(lng) : 0,
     });
 
-    res.status(201).json({ success: true, newPost: [newPost, newLocation] });
+    res.status(201).json({ success: true, newPost, newLocation });
+
   } catch (err: any) {
     console.error(err);
     res.status(400).json({ success: false, msg: err.message || "addNewPost error" });
@@ -182,10 +182,10 @@ export const deletePost = async (req: Request, res: Response) => {
 
     // Delete related comments
     await Comment.deleteMany({ pid: id });
-
     await Post.findByIdAndDelete(id);
+    await Location.deleteOne({ name: post.shopName, address: post.location });
 
-    res.status(200).json({ success: true, msg: "Post and related comments deleted" });
+    res.status(200).json({ success: true, msg: "Post, Location and related comments deleted" });
   } catch (err) {
     res.status(500).json({ success: false, msg: "deletePost error" });
   }
@@ -226,9 +226,59 @@ export const getPostsByUserId = async (req: Request, res: Response) => {
     console.log('📱 Fetching posts for user:', userId);
 
     // Find posts where uid matches userId
-    const posts = await Post.find({ uid: userId })
+    /*const posts = await Post.find({ uid: userId })
       .sort({ createdAt: -1 }) // Newest first
-      .lean();
+      .lean();*/
+
+    const posts = await Post.aggregate([
+      {
+        $match: { uid: new mongoose.Types.ObjectId(userId) } // filter by userId
+      },
+      { $sort: { createdAt: -1 } },
+      {
+        $lookup: {
+          from: "users",
+          let: { userId: "$uid" },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $eq: [
+                    "$_id",
+                    {
+                      $convert: {
+                        input: "$$userId",
+                        to: "objectId",
+                        onError: null,
+                        onNull: null
+                      }
+                    }
+                  ]
+                }
+              }
+            },
+            { $project: { username: 1 } }
+          ],
+          as: "user"
+        }
+      },
+      { $unwind: { path: "$user", preserveNullAndEmptyArrays: true } },
+      {
+        $project: {
+          title: 1,
+          content: 1,
+          location: 1,
+          star: 1,
+          uid: 1,
+          imageUrl: 1,
+          shopName: 1,
+          commentIds: 1,
+          likeIds: 1,
+          createdAt: 1,
+          "user.username": 1
+        }
+      }
+    ]);
 
     console.log(`✅ Found ${posts.length} posts for user ${userId}`);
 

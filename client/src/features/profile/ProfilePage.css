@@ -3,14 +3,14 @@
 .edit-profile-page {
   width: 100%;
   height: 100%;
-  background-color: #faf7f0;
+  background-color: #F5F4F2;
   overflow-y: auto;
 }
 
 .profile-cover {
   position: relative;
   width: 100%;
-  height: 220px;
+  height: 13.75em; 
   background-color: #ddd;
 }
 
@@ -18,26 +18,38 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
+  display: block; 
 }
+
+
+.profile-cover-image {
+  width: 100%;
+  height: 100%;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
 
 .profile-avatar-wrapper {
   position: absolute;
-  left: 80px;
-  bottom: -60px;
+  left: 5em; 
+  bottom: -3.75em; 
 }
 
 .profile-avatar {
-  width: 140px;
-  height: 140px;
+  width: 8.75em; 
+  height: 8.75em; 
   border-radius: 50%;
-  border: 4px solid #faf7f0;
+  border: 0.25em solid #faf7f0; 
   object-fit: cover;
+  box-shadow: 2px 0.5em rgba(0, 0, 0, 0.1);
 }
 
 /* content */
 .profile-content,
 .edit-profile-content {
-  padding: 90px 80px 40px;
+  padding: 5.625em 5em 2.5em; 
 }
 
 /* header */
@@ -45,7 +57,7 @@
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 32px;
+  margin-bottom: 2em; 
 }
 
 .profile-main-info {
@@ -54,53 +66,54 @@
 
 .profile-id {
   color: #777;
-  margin-bottom: 4px;
+  margin-bottom: 0.25em; 
 }
 
 .profile-name {
-  font-size: 26px;
+  font-size: 1.625em; 
   font-weight: 700;
 }
 
 .profile-place {
   color: #555;
-  margin-top: 4px;
+  margin-top: 0.25em; 
 }
 
 .profile-stats {
   display: flex;
-  gap: 24px;
-  margin-top: 8px;
+  gap: 1.5em; 
+  margin-top: 0.5em;
 }
 
 .profile-stat-label {
-  font-size: 12px;
+  font-size: 0.75em; 
   color: #777;
 }
 
 .profile-stat-value {
-  font-size: 16px;
+  font-size: 1em; 
   font-weight: 600;
 }
 
 /* buttons */
 .profile-actions {
   display: flex;
-  gap: 12px;
+  gap: 0.75em; 
   align-items: center;
 }
 
 .btn {
   border: none;
-  padding: 8px 18px;
-  border-radius: 999px;
-  font-size: 14px;
+  padding: 0.5em 1.125em; 
+  font-size: 0.875em; 
   cursor: pointer;
+  border-radius: 8px;
 }
 
 .btn-primary {
-  background-color: #222;
+  background-color: #5B86E5;
   color: #fff;
+  width: 10em;
 }
 
 .btn-secondary {
@@ -111,22 +124,23 @@
 .btn-danger {
   background-color: #b32424;
   color: #fff;
+  width: 15em;
 }
 
 /* sections */
 .profile-section {
-  margin-top: 32px;
+  margin-top: 2em; 
 }
 
 .section-title {
-  font-size: 18px;
+  font-size: 1.125em;
   font-weight: 600;
 }
 
 .section-subtitle {
-  font-size: 12px;
+  font-size: 0.75em; 
   color: #777;
-  margin-bottom: 12px;
+  margin-bottom: 0.75em; 
 }
 
 /* coffee profile table (read-only) */
@@ -137,9 +151,9 @@
 .coffee-profile-row {
   display: grid;
   grid-template-columns: 1.5fr 2fr;
-  padding: 8px 0;
+  padding: 0.5em 0; 
   border-bottom: 1px solid #eee;
-  font-size: 14px;
+  font-size: 0.875em; 
 }
 
 .coffee-profile-question {
@@ -154,13 +168,13 @@
 .post-list {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 1em;
 }
 
 .post-card.placeholder {
-  height: 180px;
+  height: 11.25em; 
   background-color: #e0ddd4;
-  border-radius: 8px;
+  border-radius: 0.5em; 
 }
 
 /* edit page */
@@ -168,39 +182,39 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 24px;
+  margin-bottom: 1.5em; 
 }
 
 .edit-profile-title {
-  font-size: 22px;
+  font-size: 1.375em; 
   font-weight: 600;
 }
 
 .edit-profile-form {
-  max-width: 520px;
-  margin-bottom: 36px;
+  max-width: 100%; 
+  margin-bottom: 2.25em;
 }
 
 .form-group {
-  margin-bottom: 16px;
+  margin-bottom: 1em; 
 }
 
 .form-label {
   display: block;
-  font-size: 14px;
-  margin-bottom: 4px;
+  font-size: 0.875em; 
+  margin-bottom: 0.25em; 
 }
 
 .form-input {
   width: 100%;
-  padding: 6px 10px;
-  border-radius: 4px;
+  padding: 0.375em 0.625em; 
+  border-radius: 0.25em;
   border: 1px solid #ccc;
-  font-size: 14px;
+  font-size: 0.875em;
 }
 
 .edit-profile-footer {
-  margin-top: 32px;
+  margin-top: 2em; 
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -211,7 +225,11 @@
 }
 
 
-.profile-avatar {
-  border: 4px solid white;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+/* Additional fix if image is not covering */
+.profile-cover-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  min-height: 100%; /* Ensure it covers minimum height */
 }

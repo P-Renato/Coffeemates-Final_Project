@@ -4,14 +4,15 @@ import MapWithSidePanel from "../features/map/MapSidePanel";
 import CommentList from "../features/comment/CommentList";
 import { star } from "../utils/rating";
 import { useAuth } from "../hooks/useAuth";
-import UserAvatar from './UserAvatar';
+import { useAppContext } from "../context/LocationPostContext";
 
 // create a .env file in client with VITE_API_URL=http://localhost:4343
 const apiUrl = import.meta.env.VITE_API_URL;
 const imagePath = import.meta.env.VITE_IMAGE_PATH;
 
 export default function PostCard({ post }: { post: PostType }) {
-    const { user } = useAuth(); // current logged-in user
+  const { user } = useAuth(); // current logged-in user
+  const { posts, setPosts, postPopup, setPostPopup, editingPost, setEditingPost } = useAppContext();
   const rating = star(post.star);
 
   const [like, setLike] = useState(false);
@@ -30,7 +31,7 @@ export default function PostCard({ post }: { post: PostType }) {
 
     try {
       const res = await fetch(`${apiUrl}/api/post/like/${post._id}`, {
-        method: "PATCH", 
+        method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ uid: user.id }),
       });
@@ -41,22 +42,60 @@ export default function PostCard({ post }: { post: PostType }) {
       }
 
       // Update state based on response
-      setLike((prev) => !prev);             
-      setLikeCount(data.likeCount);          
+      setLike((prev) => !prev);
+      setLikeCount(data.likeCount);
 
     } catch (err) {
       console.error("Like API error:", err);
     }
   };
 
+  // edit
+  const editHandler = async () => {
+      setPostPopup(true);
+      setEditingPost(post);
+  }
+
+  // delete
+  const deleteHandler = async () => {
+    const confirmed = window.confirm("Are you sure you want to delete this post?");
+    if (!confirmed) return; // Stop if user cancels
+
+    try {
+      const res = await fetch(`${apiUrl}/api/post/${post._id}`, {
+        method: "DELETE",
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        alert("Deleting failed: " + (data.msg || "Unknown error"));
+        return;
+      }
+
+      setPosts((prev) => prev.filter((p) => p._id !== post._id));
+    } catch (err) {
+      console.error("fetch DELETE error", err);
+    }
+  }
+
   return (
     <div className="flex flex-col">
-      <div className="bg-blue-200">
+      <div className="flex justify-between bg-blue-200">
         <b>{post.user?.username || 'Unknown User'}</b>
 
         <span className="cursor-pointer" onClick={likeHandler}>
           {like ? " ❤️" : " 🤍"} {likeCount}
         </span>
+        {
+          user && user.id === post.uid && (
+            <div className="flex gap-2">
+              <button onClick={editHandler} className="cursor-pointer bg-yellow-400 text-white">Edit</button>
+              <button onClick={deleteHandler} className="cursor-pointer bg-red-400 text-white">Delete</button>
+            </div>
+
+          )
+        }
+
       </div>
 
       <div className="flex w-full border" key={post._id}>

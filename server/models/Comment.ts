@@ -7,8 +7,8 @@ const commentSchema = new mongoose.Schema(
   {
     cid: { type: Number, unique: true },
     content: { type: String, required: true },
-    uid: { type: String, required: true },
-    pid: { type: String, required: true },
+    uid: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true }, // <-- ObjectId
+    pid: { type: mongoose.Schema.Types.ObjectId, ref: "Post", required: true }, // <-- ObjectId
     parentCommentId: { type: String, require: true }, 
   },
   { timestamps: true }

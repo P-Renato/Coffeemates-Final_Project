@@ -1,41 +1,42 @@
-//cliant/compornents/CoffeeQuestionRow.tsx
+// client/components/CoffeeQuestionRow.tsx
+import React from 'react';
+import type coffeeProfileStyles from './coffeeProfile.module.css';
+
+type CoffeeProfileClasses = typeof coffeeProfileStyles;
 
 type Props = {
   label: string;
-  value: string | null; // selected question
-  answer: string;       // typed value
+  value: string | null;
+  answer: string;
   disabled: boolean;
   onSelectClick: () => void;
   onAnswerChange: (v: string) => void;
+  styles: CoffeeProfileClasses; 
 };
 
-export default function CoffeeQuestionRow({
+const CoffeeQuestionRow: React.FC<Props> = ({
   label,
   value,
   answer,
   disabled,
   onSelectClick,
   onAnswerChange,
-}: Props) {
+  styles
+}) => {
   return (
-    <div className="w-full mb-4">
-      <div className="flex items-center justify-between">
-        
+    <div className={styles.row}>
+      <div className={styles.rowContent}>
         {/* QUESTION LABEL */}
-        <span
-          className={`text-text ${
-            disabled ? "opacity-40" : ""
-          }`}
-        >
+        <span className={disabled ? styles.questionLabelDisabled : styles.questionLabel}>
           {value ?? label}
         </span>
 
         {/* ▼ ICON */}
         <button
           onClick={disabled ? undefined : onSelectClick}
-          className={`ml-3 text-text ${
-            disabled ? "opacity-40 cursor-not-allowed" : "cursor-pointer"
-          }`}
+          className={disabled ? styles.dropdownButtonDisabled : styles.dropdownButton}
+          type="button"
+          disabled={disabled}
         >
           ▼
         </button>
@@ -48,24 +49,15 @@ export default function CoffeeQuestionRow({
             value={answer}
             onChange={(e) => onAnswerChange(e.target.value)}
             placeholder="Answer..."
-            className="
-              ml-4
-              w-56
-              bg-transparent
-              outline-none
-              border-b
-              border-gray-300
-              placeholder-gray-400
-              text-left
-              caret-gray-700
-              focus:border-text
-            "
+            className={styles.answerInput}
           />
         )}
       </div>
 
       {/* BOTTOM GRAY LINE */}
-      <div className="w-full border-b border-gray-300 mt-2"></div>
+      <div className={styles.divider} />
     </div>
   );
-}
+};
+
+export default CoffeeQuestionRow;

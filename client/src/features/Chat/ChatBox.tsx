@@ -28,7 +28,7 @@ export default function ChatBox({ id }: { id: string }) {
 
     // --- fetch other user name ---
     useEffect(() => {
-        fetch(`${apiUrl}/api/auth/${otherId}`)
+        fetch(`${apiUrl}/api/users/${otherId}`)
             .then((res) => res.json())
             .then((data) => {
                 if (!data?.user?.id) navigate("/");
@@ -138,16 +138,19 @@ export default function ChatBox({ id }: { id: string }) {
     return (
         <div className="mx-auto flex flex-col h-full w-full bg-white rounded-2xl shadow-2xl p-6 space-y-4">
             {/* Header */}
-            <div className="flex justify-start gap-6 items-center">
-                <div className="flex justify-between items-center gap-2">
-                    <img
-                        src="../muine.jpg"
-                        alt="Avatar"
-                        className="w-12 h-12 rounded-full object-cover cursor-pointer"
-                    />
-                    <span className="text-green-800">{otherName}</span>
+            {user && (
+                <div className="flex justify-start gap-6 items-center">
+                    <div className="flex justify-between items-center gap-2">
+                        <img
+                            src={user.photoURL || 'https://st3.depositphotos.com/6672868/13701/v/450/depositphotos_137014128-stock-illustration-user-profile-icon.jpg'}
+                            alt="Avatar"
+                            className="w-12 h-12 rounded-full object-cover cursor-pointer"
+                        />
+                        <span className="text-green-800">{otherName}</span>
+                    </div>
                 </div>
-            </div>
+
+            )}
 
             {/* Search */}
             <div>

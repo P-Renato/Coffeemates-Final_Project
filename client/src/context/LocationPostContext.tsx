@@ -19,12 +19,13 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
   const [posts, setPosts] = useState<PostType[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [editingPost, setEditingPost] = useState<any | null>(null);
 
   useEffect(() => {
     fetch(`${apiUrl}/api/post`)
       .then((res) => res.json())
       .then((data) => {
-        console.log("API DATA:", data);
+        // console.log("API DATA:", data);
 
         if (data.success && Array.isArray(data.posts)) {
           setPosts(data.posts);
@@ -53,7 +54,7 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   return (
-    <AppContext.Provider value={{ postPopup, setPostPopup, locationList, setLocationList, posts, setPosts, loading, error }}>
+    <AppContext.Provider value={{ postPopup, setPostPopup, locationList, setLocationList, posts, setPosts, loading, error, editingPost, setEditingPost }}>
       {children}
     </AppContext.Provider>
   );

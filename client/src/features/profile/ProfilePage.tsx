@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth"; // Adjust path as needed
 import "./ProfilePage.css";
-import { getPostsByUserId } from "../../api/postApi";
-import PostCard from "../../components/PostCard";
-import type { PostType } from "../../utils/types";
-import UserAvatar from "../../components/UserAvatar";
+import { getPostsByUserId } from '../../api/postApi';
+import PostCard from '../../components/PostCard';
+import type { PostType } from '../../utils/types';
+import { useAppContext } from "../../context/LocationPostContext";
+import PopUpPost from "../posts/PopUpPost";
 
 type CoffeeProfileData = {
   basics?: {
@@ -83,6 +84,8 @@ const questionMap: Record<string, Record<string, string>> = {
   },
 };
 
+const DEFAULT_PROFILE_IMAGE = 'https://st3.depositphotos.com/6672868/13701/v/450/depositphotos_137014128-stock-illustration-user-profile-icon.jpg';
+
 const ProfilePage: React.FC = () => {
   const navigate = useNavigate();
   const { user, token } = useAuth();
@@ -91,6 +94,9 @@ const ProfilePage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [userPosts, setUserPosts] = useState<PostType[]>([]);
   const [postsLoading, setPostsLoading] = useState(true);
+  const { postPopup, setPostPopup, posts, setPosts, editingPost, setEditingPost } = useAppContext();
+
+  const location = useLocation();
 
   // Fetch profile data from backend
   useEffect(() => {
@@ -103,42 +109,32 @@ const ProfilePage: React.FC = () => {
         if (!token) {
           throw new Error("No authentication token available");
         }
-
+        
         if (!user || !user.id) {
-          throw new Error("User not authenticated");
+          throw new Error('User not authenticated');
         }
-
-        console.log("🔵 Fetching profile for user:", user.id);
-
         // Fetch user profile data
-        const userResponse = await fetch(
-          `http://localhost:4343/api/auth/${user.id}`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
-            },
-          }
-        );
+        const userResponse = await fetch(`http://localhost:4343/api/users/${user.id}?t=${Date.now()}`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+          cache: 'no-store'
+        });
 
         if (!userResponse.ok) {
-          throw new Error("Failed to fetch user data");
+          throw new Error('Failed to fetch user data');
         }
 
         const userData = await userResponse.json();
 
         // Fetch coffee profile
-        const profileResponse = await fetch(
-          "http://localhost:4343/api/auth/profile/questions",
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
-            },
-          }
-        );
-
-        console.log("🔵 Profile response status:", profileResponse.status);
+        const profileResponse = await fetch('http://localhost:4343/api/auth/profile/questions', {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        });
 
         if (!profileResponse.ok) {
           throw new Error("Failed to fetch profile questions");
@@ -148,11 +144,15 @@ const ProfilePage: React.FC = () => {
 
         // Transform the API responses
         const transformedProfile: ProfileData = {
-          id: userData.user?.username || userData.user?.id || "unknown",
-          name: userData.user?.username || "Unknown User",
+          id: userData.user?.username || userData.user?.id || 'unknown',
+          name: userData.user?.username || 'Unknown User',
           place: userData.user?.place || "Unknown location",
-          avatarUrl: userData.user?.photoURL || "/images/default-avatar.png",
-          coverImageUrl: "/images/default-cover.png",
+          avatarUrl: userData.user?.photoURL 
+            ? `http://localhost:4343${userData.user.photoURL}`
+            : "/images/default-avatar.png",
+          coverImageUrl: userData.user?.coverImageURL 
+            ? `http://localhost:4343${userData.user.coverImageURL}`
+            : "/images/default-cover.png",
           coffeematesCount: 0,
           postCount: 0, // Will update after fetching posts
           coffeeProfile: profileData.answers || {},
@@ -163,7 +163,7 @@ const ProfilePage: React.FC = () => {
         console.log("📱 Fetching posts for user:", user.id);
         try {
           const posts = await getPostsByUserId(user.id);
-          console.log("✅ Fetched posts:", posts.length);
+          // console.log("✅ Fetched posts:", posts.length);
           setUserPosts(posts);
 
           transformedProfile.postCount = posts.length;
@@ -172,8 +172,8 @@ const ProfilePage: React.FC = () => {
           console.error("Error fetching posts:", postError);
         }
 
-        console.log("First post data structure:", userPosts[0]);
-        console.log("User object in post:", userPosts[0]?.user);
+        // console.log("First post data structure:", userPosts[0]);
+        // console.log("User object in post:", userPosts[0]?.user);
       } catch (err) {
         setError(err instanceof Error ? err.message : "An error occurred");
         console.error("Error fetching profile:", err);
@@ -189,7 +189,7 @@ const ProfilePage: React.FC = () => {
       setLoading(false);
       setPostsLoading(false);
     }
-  }, [user, token, navigate]);
+  }, [user, token, navigate, location.state?.refresh]);
 
   const getCoffeeProfileDisplay = (coffeeProfile: CoffeeProfileData) => {
     const displayItems: { question: string; answer: string }[] = [];
@@ -227,6 +227,31 @@ const ProfilePage: React.FC = () => {
     console.log("Send message clicked");
   };
 
+  const handlePostCreated = (newPost: PostType) => {
+    // Add the new post to local state
+    setUserPosts(prev => [newPost, ...prev]);
+    
+    // Update post count
+    if (profile) {
+      setProfile(prev => prev ? {
+        ...prev,
+        postCount: prev.postCount + 1
+      } : null);
+    }
+  };
+
+  const handlePostUpdated = (updatedPost: PostType) => {
+    // Update the post in local state
+    setUserPosts(prev => prev.map(post => 
+      post._id === updatedPost._id ? updatedPost : post
+    ));
+  };
+
+  const handleEditPost = (post: PostType) => {
+    setEditingPost(post);
+    setPostPopup(true);
+  };
+
   // Loading state
   if (loading) {
     return (
@@ -257,23 +282,48 @@ const ProfilePage: React.FC = () => {
   const coffeeProfileDisplay = getCoffeeProfileDisplay(profile.coffeeProfile);
 
   return (
-    <div className="profile-page">
-      {/* Cover */}
-      <div className="profile-cover">
-        <img
-          src={profile.coverImageUrl}
-          alt="Cover"
-          className="profile-cover-image"
+    <div className="profile-page bg-[#F5F4F2]">
+
+      {/* Show PopUpPost when postPopup is true */}
+      {postPopup && (
+        <PopUpPost 
+          postToEdit={editingPost}
+          onSuccess={(post, isEdit) => {
+            if (isEdit) {
+              handlePostUpdated(post);
+            } else {
+              handlePostCreated(post);
+            }
+            setPostPopup(false);
+            setEditingPost(null);
+          }}
         />
-        <div className="profile-avatar-wrapper">
-          <UserAvatar
-            username={profile.name}
-            profileImage={profile.avatarUrl}
-            size="xl"
-            className="profile-avatar"
-          />
-        </div>
+      )}
+
+    {/* Cover */}
+    <div className="profile-cover">
+      <div 
+        className="profile-cover-image"
+        style={{ 
+          backgroundImage: `url(${profile.coverImageUrl})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          height: '300px', // or whatever height you use
+          width: '100%'
+        }}
+      />
+    
+      <div className="profile-avatar-wrapper">
+        <img
+          src={profile.avatarUrl || DEFAULT_PROFILE_IMAGE}
+          alt={profile.name}
+          className="profile-avatar"
+          onError={(e) => {
+            e.currentTarget.src = DEFAULT_PROFILE_IMAGE;
+          }}
+        />
       </div>
+    </div>
 
       <div className="profile-content">
         {/* Header */}
@@ -351,36 +401,57 @@ const ProfilePage: React.FC = () => {
 
         {/* Posts Section - REPLACE THIS */}
         <section className="profile-section">
-          <h2 className="section-title">Posts ({userPosts.length})</h2>
+        <h2 className="section-title">Posts ({userPosts.length})</h2>
 
-          {postsLoading ? (
-            <div className="loading-posts">Loading posts...</div>
-          ) : userPosts.length === 0 ? (
-            <div className="no-posts-message">
-              <div className="no-posts-icon">☕</div>
-              <p>No posts yet. Share your coffee experiences!</p>
-              {isOwnProfile && (
-                <button
-                  onClick={() => navigate("/create-post")} // Adjust to your post creation route
-                  className="btn btn-primary"
-                >
-                  Create Your First Post
-                </button>
-              )}
-            </div>
-          ) : (
-            <div className="posts-grid">
-              {userPosts.map((post) => (
-                <div key={post._id || post.pid} className="post-item">
-                  <PostCard post={post} />
-                </div>
-              ))}
-            </div>
-          )}
-        </section>
+        {postsLoading ? (
+          <div className="loading-posts">Loading posts...</div>
+        ) : userPosts.length === 0 ? (
+          <div className="no-posts-message">
+            <div className="no-posts-icon">☕</div>
+            <p>No posts yet. Share your coffee experiences!</p>
+            {isOwnProfile && (
+              <button
+                onClick={() => setPostPopup(true)} // Now this will show PopUpPost
+                className="btn btn-primary"
+              >
+                Create Your First Post
+              </button>
+            )}
+          </div>
+        ) : (
+          <div className="posts-grid">
+            {userPosts.map((post) => (
+              <div key={post._id || post.pid} className="post-item">
+                {/* Add edit button if it's user's own post */}
+                {isOwnProfile && (
+                  <button
+                    onClick={() => handleEditPost(post)}
+                    className="edit-post-btn"
+                  >
+                    Edit
+                  </button>
+                )}
+                <PostCard post={post} />
+              </div>
+            ))}
+          </div>
+        )}
+        
+        {/* Add Post Button for existing posts */}
+        {isOwnProfile && userPosts.length > 0 && (
+          <div className="add-post-container">
+            <button
+              onClick={() => setPostPopup(true)}
+              className="btn btn-primary add-post-btn"
+            >
+              + Add New Post
+            </button>
+          </div>
+        )}
+      </section>
       </div>
     </div>
   );
 };
-
+    
 export default ProfilePage;

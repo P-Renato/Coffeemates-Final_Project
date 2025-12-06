@@ -40,7 +40,7 @@ export default function ChatPage() {
         if (!auth) return;
 
         // Fetch user list
-        fetch(`${apiUrl}/api/auth/`)
+        fetch(`${apiUrl}/api/users/`)
             .then((res) => res.json())
             .then((data) => {
                 setUsers(data.users.filter((u: UserType) => u._id !== auth.id));
@@ -123,7 +123,7 @@ export default function ChatPage() {
 
         try {
             const res = await fetch(
-                `${apiUrl}/api/auth/search?q=${encodeURIComponent(searchQuery)}`
+                `${apiUrl}/api/users/search?q=${encodeURIComponent(searchQuery)}`
             );
             const data = await res.json();
             setSearchResults(data.users);
@@ -188,9 +188,12 @@ export default function ChatPage() {
                                 <span className="flex items-center space-x-2 text-gray-800">
                                     <img
                                         onClick={() => openChat(u._id)}
-                                        src="hoian.jpg"
-                                        alt="User Avatar"
+                                        src={u.photoURL ? `http://localhost:4343${u.photoURL}` : 'https://st3.depositphotos.com/6672868/13701/v/450/depositphotos_137014128-stock-illustration-user-profile-icon.jpg'} 
+                                        alt={u.username}
                                         className="w-12 h-12 rounded-full cursor-pointer"
+                                        onError={(e) => {
+                                            e.currentTarget.src = '/default-avatar.png'; // Fallback if image fails to load
+                                        }}
                                     />
 
                                     <span
