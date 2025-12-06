@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 import CoffeeProfile from "../../components/CoffeeProfile";
 import DeleteAccountModal from "../../components/DeleteAccountModal";
-import { FaUserCircle, FaImage, FaCamera } from "react-icons/fa";
+import { FaImage, FaCamera } from "react-icons/fa";
 import "./ProfilePage.css";
 
 type CoffeeProfileItem = {
@@ -31,11 +31,13 @@ type CoffeeProfileUpdates = {
   [key: string]: Record<string, string> | undefined;
 };
 
+const DEFAULT_PROFILE_IMAGE = 'https://st3.depositphotos.com/6672868/13701/v/450/depositphotos_137014128-stock-illustration-user-profile-icon.jpg';
+
 const COFFEE_LABELS = [
-  "Favorite type of coffee",
-  "Favorite café in your area", 
-  "Your coffee vibe",
-  "Favorite coffee bean origin",
+  "What's your favorite type of coffee?",
+  "What's your favorite café in your area?", 
+  "How would you describe your coffee vibe?",
+  "What's your favorite coffee bean origin?",
   "If you owned a café, what would it be like?",
 ];
 
@@ -84,7 +86,6 @@ const EditProfile: React.FC = () => {
   const [place, setPlace] = useState("");
   const [avatarUrl, setAvatarUrl] = useState("");
   const [coverImageUrl, setCoverImageUrl] = useState("");
-  console.log("CoverImageURL: ", coverImageUrl);
 
   const [profileImage, setProfileImage] = useState<File | null>(null);
   const [coverImage, setCoverImage] = useState<File | null>(null);
@@ -94,8 +95,7 @@ const EditProfile: React.FC = () => {
   // Store coffee profile from API
   const [categoryAnswers, setCategoryAnswers] = useState<CategoryAnswers>({});
   const [availableQuestions, setAvailableQuestions] = useState<Record<string, CategoryData>>({});
-
-  console.log("Category Answers: ", categoryAnswers)
+  
   // UI state for the 5 selected questions
   const [questions, setQuestions] = useState<(string | null)[]>(
     COFFEE_LABELS.map(() => null)
@@ -104,10 +104,9 @@ const EditProfile: React.FC = () => {
     COFFEE_LABELS.map(() => "")
   );
 
-  const [showPicker, setShowPicker] = useState(false);
-  const [activeIndex, setActiveIndex] = useState<number | null>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [profileRows, setProfileRows] = useState<Array<{question: string | null, answer: string}>>([]);
 
   // Fetch profile data on component mount
   useEffect(() => {
@@ -185,6 +184,38 @@ const EditProfile: React.FC = () => {
 
         setQuestions(newQuestions);
         setAnswers(newAnswers);
+
+        const rowsForCoffeeProfile: Array<{question: string | null, answer: string}> = [];
+
+        // The default question should always be first
+        const defaultQuestion = "What's your favorite type of coffee?";
+        let hasDefaultQuestion = false;
+
+        flatAnswers.forEach(item => {
+          if (item.question === defaultQuestion) {
+            // Put default question first
+            rowsForCoffeeProfile.unshift({
+              question: item.question,
+              answer: item.answer
+            });
+            hasDefaultQuestion = true;
+          } else {
+            rowsForCoffeeProfile.push({
+              question: item.question,
+              answer: item.answer
+            });
+          }
+        });
+
+        // If no default question exists in DB, add it empty
+        if (!hasDefaultQuestion) {
+          rowsForCoffeeProfile.unshift({
+            question: defaultQuestion,
+            answer: ""
+          });
+        }
+
+        setProfileRows(rowsForCoffeeProfile);
 
       } catch (err) {
         setError(err instanceof Error ? err.message : 'An error occurred');
@@ -279,45 +310,8 @@ const EditProfile: React.FC = () => {
       console.error('Error uploading images:', error);
       throw error;
     }
-  };
+  };  
 
-  // const handleRemoveProfileImage = () => {
-  //   setProfileImage(null);
-  //   setAvatarUrl('');
-  // };
-
-  
-
-  const openPicker = (index: number) => {
-    setActiveIndex(index);
-    setShowPicker(true);
-  };
-
-  const selectQuestion = (q: string) => {
-    if (activeIndex === null) return;
-    setQuestions((prev) => {
-      const copy = [...prev];
-      copy[activeIndex] = q;
-      return copy;
-    });
-    setShowPicker(false);
-    setActiveIndex(null);
-  };
-
-  const closePicker = () => {
-    setShowPicker(false);
-    setActiveIndex(null);
-  };
-
-  const setAnswer = (index: number, value: string) => {
-    setAnswers((prev) => {
-      const copy = [...prev];
-      copy[index] = value;
-      return copy;
-    });
-  };
-
-  const isEnabled = () => true;
 
   const handleUpdateUserProfile = async () => {
   try {
@@ -365,13 +359,16 @@ const EditProfile: React.FC = () => {
     return responseData.user || responseData;
   } catch (err) {
     console.error('Update user error:', err);
+    console.log(categoryAnswers)
     throw err;
   }
 };
 
 const validateForm = (): string | null => {
   // Check if at least one coffee profile question is answered
-  const hasCoffeeAnswers = answers.some(answer => answer.trim() !== '');
+  const hasCoffeeAnswers = profileRows.some(row => 
+    row.question && row.answer.trim() !== ''
+  );
   if (!hasCoffeeAnswers) {
     return "Please answer at least one coffee profile question";
   }
@@ -387,7 +384,9 @@ const validateForm = (): string | null => {
   }
 
   // Check for duplicate questions
-  const selectedQuestions = questions.filter(q => q !== null);
+  const selectedQuestions = profileRows
+    .filter(row => row.question !== null)
+    .map(row => row.question);
   const uniqueQuestions = new Set(selectedQuestions);
   if (selectedQuestions.length !== uniqueQuestions.size) {
     return "Please select different questions for each slot";
@@ -405,6 +404,7 @@ const validateForm = (): string | null => {
       if (!token) {
         throw new Error("Not authenticated");
       }
+
       const validationError = validateForm();
       if (validationError) {
         setError(validationError);
@@ -418,29 +418,42 @@ const validateForm = (): string | null => {
       await handleUpdateUserProfile();
       // Convert UI questions/answers back to your schema format
       const updates: CoffeeProfileUpdates = {};
-      console.log("Updates: ", updates)
       
-      questions.forEach((question, index) => {
-        if (question && answers[index]) {
-          // Find which category and field this question belongs to
-          let found = false;
-          Object.entries(questionMap).forEach(([category, fields]) => {
-            Object.entries(fields).forEach(([field, qText]) => {
-              if (qText === question) {
-                if (!updates[category]) updates[category] = {};
-                updates[category][field] = answers[index];
-                found = true;
-              }
-            });
+       profileRows.forEach((row, index) => {
+      if (row.question && row.answer.trim()) {
+        // Find which category and field this question belongs to
+        let found = false;
+        Object.entries(questionMap).forEach(([category, fields]) => {
+          Object.entries(fields).forEach(([field, qText]) => {
+            if (qText === row.question) {
+              console.log(`✅ MATCH: category="${category}", field="${field}"`);
+              if (!updates[category]) updates[category] = {};
+              updates[category][field] = row.answer;
+              found = true;
+            }
           });
+        });
           
           // If not found in questionMap, use a default
-          if (!found && question && answers[index]) {
+          if (!found && row.question && row.answer.trim()) {
             if (!updates.basics) updates.basics = {};
-            updates.basics[`custom${index}`] = answers[index];
+            updates.basics[`custom${index}`] = row.answer;
           }
         }
       });
+
+      // Check if we have updates
+    const totalFields = Object.values(updates).reduce((sum, category) => {
+      return sum + (category ? Object.keys(category).length : 0);
+      }, 0);
+      
+      console.log(`Total fields to update: ${totalFields}`);
+      
+      if (totalFields === 0) {
+        // Still navigate since user profile might have been updated
+        navigate("/profile", { state: { refresh: true } });
+        return;
+      }
 
       // Send updates to backend
       const updatePromises = Object.entries(updates).flatMap(([category, fields]) => 
@@ -512,7 +525,7 @@ const validateForm = (): string | null => {
   });
 
   return (
-    <div className="edit-profile-page">
+    <div className="edit-profile-page ">
       {/* Hidden file inputs */}
       <input
         type="file"
@@ -532,9 +545,13 @@ const validateForm = (): string | null => {
       <div className="profile-cover">
         {/* Cover image - click to change */}
         <div 
-          className={`profile-cover-area ${!coverImageUrl ? 'cover-placeholder' : ''}`}
-          onClick={handleCoverImageClick}
-          style={coverImageUrl ? { backgroundImage: `url(${coverImageUrl})` } : {}}
+          className="profile-cover-area"
+        onClick={handleCoverImageClick}
+        style={{ 
+          backgroundImage: `url(${coverImageUrl})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center'
+        }}
         >
           {!coverImageUrl && (
             <div className="cover-placeholder-content">
@@ -552,24 +569,20 @@ const validateForm = (): string | null => {
         
         {/* Profile avatar - click to change */}
         <div className="profile-avatar-wrapper">
-          <div 
-            className={`profile-avatar-container ${!avatarUrl ? 'avatar-placeholder' : ''}`}
-            onClick={handleProfileImageClick}
-          >
-            {avatarUrl ? (
-              <img
-                src={avatarUrl}
-                alt={name}
-                className="profile-avatar"
-              />
-            ) : (
-              <FaUserCircle className="profile-avatar-icon" />
-            )}
-            <div className="avatar-overlay">
-              <FaCamera className="avatar-camera-icon" />
-            </div>
+        <div 
+          className="profile-avatar-container"
+          onClick={handleProfileImageClick}
+        >
+          <img
+            src={avatarUrl || DEFAULT_PROFILE_IMAGE}
+            alt={name}
+            className="profile-avatar"
+          />
+          <div className="avatar-overlay">
+            <FaCamera className="avatar-camera-icon" />
           </div>
         </div>
+      </div>
       </div>
 
       <div className="edit-profile-content">
@@ -621,17 +634,22 @@ const validateForm = (): string | null => {
         </div>
 
         <CoffeeProfile
-          labels={COFFEE_LABELS}
-          questions={questions}
-          answers={answers}
-          showPicker={showPicker}
-          activeIndex={activeIndex}
-          isEnabled={isEnabled}
-          openPicker={openPicker}
-          selectQuestion={selectQuestion}
-          closePicker={closePicker}
-          setAnswer={setAnswer}
           questionOptions={questionOptions}
+          initialRows={profileRows}
+          onRowsChange={(rows) => {
+            const rowsChanged = JSON.stringify(rows) !== JSON.stringify(profileRows);
+            if(rowsChanged){
+              // Update profileRows when CoffeeProfile changes
+              setProfileRows(rows);
+              
+              // Also update the old questions/answers arrays for backward compatibility
+              const newQuestions = rows.map(row => row.question);
+              const newAnswers = rows.map(row => row.answer);
+              setQuestions(newQuestions);
+              setAnswers(newAnswers);
+
+            }
+          }}
         />
 
         <div className="edit-profile-footer">

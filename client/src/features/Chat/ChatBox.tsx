@@ -28,7 +28,7 @@ export default function ChatBox({ id }: { id: string }) {
 
     // --- fetch other user name ---
     useEffect(() => {
-        fetch(`${apiUrl}/api/auth/${otherId}`)
+        fetch(`${apiUrl}/api/users/${otherId}`)
             .then((res) => res.json())
             .then((data) => {
                 if (!data?.user?.id) navigate("/");
@@ -142,7 +142,7 @@ export default function ChatBox({ id }: { id: string }) {
                 <div className="flex justify-start gap-6 items-center">
                     <div className="flex justify-between items-center gap-2">
                         <img
-                            src={user.photoURL || '/default-avatar.png'}
+                            src={user.photoURL || 'https://st3.depositphotos.com/6672868/13701/v/450/depositphotos_137014128-stock-illustration-user-profile-icon.jpg'}
                             alt="Avatar"
                             className="w-12 h-12 rounded-full object-cover cursor-pointer"
                         />
