@@ -70,9 +70,9 @@ const LoginPage: React.FC = () => {
       const token = data.token || data.user?.token; 
       const user = data.user || data.userData;
 
-      console.log('Login Successful! ', data);
-console.log('User object received:', user);
-console.log('User role:', user.role);
+      // console.log('Login Successful! ', data);
+      // console.log('User object received:', user);
+      // console.log('User role:', user.role);
 
       if(token && user) {
         login(token, user);

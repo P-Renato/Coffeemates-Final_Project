@@ -56,7 +56,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
           // Update localStorage with fresh data
           localStorage.setItem('userData', JSON.stringify(freshUser));
           setUser(freshUser);
-          console.log('✅ Login updated with fresh user data:', freshUser);
+          // console.log('✅ Login updated with fresh user data:', freshUser);
         }
       } catch (error) {
         console.error('Failed to fetch fresh user data:', error);
