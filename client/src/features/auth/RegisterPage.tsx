@@ -7,7 +7,7 @@ import '../../styles/_global.css';
 import { FcGoogle } from "react-icons/fc";
 import { FaFacebook } from "react-icons/fa";
 import { FaUserCircle } from "react-icons/fa";
-
+import { FiUser, FiMail, FiLock } from "react-icons/fi";
 
 interface RegisterFormData {
   username: string;
@@ -27,25 +27,19 @@ const initialFormData: RegisterFormData = {
   password: '',
 };
 
-// change to actual backend URL when deployed or running locally
 const API_BASE_URL = 'http://localhost:4343/api/auth/register';
 
-
 const RegisterPage: React.FC = () => {
-  // TODO: Use useNavigate() from react-router-dom to redirect to /login
   const navigate = useNavigate(); 
-  
   const [formData, setFormData] = useState<RegisterFormData>(initialFormData);
   const [status, setStatus] = useState<Status>({ loading: false, error: null, success: false });
 
- 
-  const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value,
     });
   };
-
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -62,7 +56,6 @@ const RegisterPage: React.FC = () => {
       });
 
       if (!response.ok) {
-       
         const errorData = await response.json();
         throw new Error(errorData.message || 'Registration failed due to server error.');
       }
@@ -73,148 +66,248 @@ const RegisterPage: React.FC = () => {
       console.log('Registration Successful: ', result);
       
       setTimeout(() => {
-        navigate('/login');;
+        navigate('/login');
       }, 2000);
 
     } catch (err) {
-     
       const errorMessage = (err instanceof Error) ? err.message : 'A network error occurred.';
       console.error('Registration Error:', errorMessage);
       setStatus({ loading: false, error: errorMessage, success: false });
     }
   };
 
-  const bgContainerStyle = {
-    backgroundImage: `url(${bgImage})`,
-      backgroundSize: "cover",
-      backgroundPosition: "center",
-      backgroundRepeat: "no-repeat",
-      height: "100vh",
-      width: "100%",
-      display: "flex",
-      justifyContent: "center",
-      alignItems: "center",
-  }
-
- 
-  const containerStyle = {
-    maxWidth: '80%',
-    width: '80%',
-    height: '80%',
-    margin: '100px auto',
-    padding: '30px',
-    border: '1px solid #ddd',
-    textAlign: 'center' as const,
-    backgroundColor: 'rgba(255, 255, 255, 0.9)'
-  };
-
-  const inputStyle = {
-    width: '60%',
-    padding: '10px',
-    margin: '10px 0',
-    boxSizing: 'border-box' as const,
-    border: '1px solid #ccc',
-    textAlign: 'left' as const,
-    borderRadius: '4px',
-  };
-
-  const buttonStyle = {
-    padding: '.8em auto',
-    backgroundColor: status.loading ? '#95a5a6' : '#4a69bd',
-    color: 'white',
-    border: 'none',
-    cursor: status.loading ? 'not-allowed' : 'pointer',
-    width: '20em',
-    margin: '1.2em',
-    borderRadius: '8px',
-    height: '4.5em'
-  };
-
-  
-
-
   return (
-    <section className='flex'>
-      <div className={styles.sidebar}>
-        <h2 className={styles.courier}  style={{fontSize: 40}}>Coffeemates</h2>
-
-        <div className={styles.avatar}>
-          <FaUserCircle className={styles.avatarIcon} />
-        </div>
-
-        <p className={styles.roboto} style={{ fontSize: 16}}>Welcome!</p>
-      </div>
-      <div style={bgContainerStyle}>
-
-        <div style={containerStyle}>
-          <h1 className={styles.courier} style={{fontSize: 40}}>Coffeemates</h1>
-          <p className={styles.courier} style={{ fontSize: 24}}>Connect, sip, and share your brew.</p>
-
-        <div className={styles.formWrapper}>  
-          <h3 >Create Account</h3>
-        </div>
-        
-          <div style={{ display: 'flex',  justifyContent: 'space-around', width: '80%', gap: '10px', margin: '1.1em auto' }}>
-              <button type="button" onClick={() => window.location.href = "http://localhost:4343/api/auth/google"} style={{...buttonStyle,  display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '18px' , backgroundColor: '#fff',  fontWeight: 'lighter', fontSize: '12', color: '#333', border: '1px solid var(--color-primary)'}}>Sign up with Google <FcGoogle size={24} /></button>
-              <button type="button" onClick={() => window.location.href = "http://localhost:4343/api/auth/facebook"} style={{...buttonStyle,  display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '18px' , backgroundColor: '#fff',  fontWeight: 'lighter', fontSize: '12', color: '#333', border: '1px solid var(--color-primary)'}}>Sign up with Facebook <FaFacebook size={24} color="#1877F2" /></button>
+    <div className="min-h-screen flex flex-col lg:flex-row">
+      {/* Left Sidebar - Hidden on mobile, visible on medium+ */}
+      <div className="hidden md:flex md:w-1/3 lg:w-1/4 bg-gradient-to-b from-blue-50 to-gray-50 flex-col items-center justify-center p-8 border-r border-gray-200">
+        <div className="text-center mb-8">
+          <h2 className={`${styles.courier} text-4xl lg:text-5xl text-gray-800 mb-6`}>Coffeemates</h2>
+          <div className="flex justify-center mb-6">
+            <FaUserCircle className="w-32 h-32 text-blue-400" />
           </div>
-
-          <div style={{ margin: '20px 0', color: '#888' }}>— OR —</div>
-
-          
-          {status.error && <p style={{ color: '#c0392b', padding: '10px', backgroundColor: '#fbeaea', border: '1px solid #c0392b', borderRadius: '4px' }}>Error: {status.error}</p>}
-          {status.success && <p style={{ color: '#27ae60', padding: '10px', backgroundColor: '#eafbf0', border: '1px solid #27ae60', borderRadius: '4px' }}>Success! Please log in.</p>}
-          {status.loading && <p style={{ color: '#2980b9' }}>Creating account...</p>}
-
-          <form onSubmit={handleSubmit} style={{ display: 'flex', justifyContent: 'center', width: '100%', alignItems: 'center', flexDirection: 'column', gap: '5px' }}>
-
-            
-            <input
-              id="username"
-              name="username"
-              type="text"
-              required
-              value={formData.username}
-              onChange={handleChange}
-              style={inputStyle}
-              placeholder="Username"
-            />
-
-            
-            <input
-              id="email"
-              name="email"
-              type="email"
-              required
-              value={formData.email}
-              onChange={handleChange}
-              style={inputStyle}
-              placeholder="Email"
-            />
-
-            
-            <input
-              id="password"
-              name="password"
-              type="password"
-              required
-              value={formData.password}
-              onChange={handleChange}
-              style={inputStyle}
-              placeholder="Password"
-            />
-
-            <button type="submit" disabled={status.loading} style={{...buttonStyle, background: `var(--color-primary)`, width: '60%', fontFamily: 'var(--font-body)', fontSize: '16' }} className='rounded-2xl'>
-              Create Account
-            </button>
-          </form>
-
-          <p style={{ marginTop: '20px', fontSize: '0.9rem' }}>
-            Already have an account? <a href="/login" style={{ color: '#4a69bd', textDecoration: 'none' }}>Login</a>
+          <p className={`${styles.roboto} text-xl text-gray-700 mb-2`}>Join Our Community</p>
+          <p className="text-gray-500 text-sm max-w-xs">
+            Connect with coffee enthusiasts worldwide. Share recipes, discover beans, and brew together.
           </p>
         </div>
+        
+        <div className="mt-8 w-full max-w-xs">
+          <div className="space-y-3">
+            <div className="flex items-center gap-3 p-3 bg-white rounded-lg shadow-sm">
+              <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                <span className="text-blue-600 font-bold">☕</span>
+              </div>
+              <span className="text-sm text-gray-700">Share coffee experiences</span>
+            </div>
+            <div className="flex items-center gap-3 p-3 bg-white rounded-lg shadow-sm">
+              <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                <span className="text-green-600 font-bold">🌱</span>
+              </div>
+              <span className="text-sm text-gray-700">Discover new beans</span>
+            </div>
+            <div className="flex items-center gap-3 p-3 bg-white rounded-lg shadow-sm">
+              <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center">
+                <span className="text-orange-600 font-bold">👥</span>
+              </div>
+              <span className="text-sm text-gray-700">Connect with brewers</span>
+            </div>
+          </div>
+        </div>
       </div>
-    </section>
+
+      {/* Main Content Area */}
+      <div 
+        className="flex-1 flex items-center justify-center p-4 md:p-8"
+        style={{
+          backgroundImage: `url(${bgImage})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat',
+          minHeight: '100vh'
+        }}
+      >
+        <div className="w-full max-w-md lg:max-w-xl bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl p-6 md:p-8 lg:p-10">
+          
+          {/* Mobile Header - Only shown on small screens */}
+          <div className="md:hidden text-center mb-8">
+            <h1 className={`${styles.courier} text-3xl text-gray-800 mb-2`}>Coffeemates</h1>
+            <p className={`${styles.courier} text-gray-600 mb-6`}>Connect, sip, and share your brew.</p>
+            <div className="flex justify-center mb-6">
+              <FaUserCircle className="w-20 h-20 text-blue-400" />
+            </div>
+          </div>
+
+          {/* Desktop Header */}
+          <div className="hidden md:block text-center mb-8">
+            <h1 className={`${styles.courier} text-4xl lg:text-5xl text-gray-800 mb-2`}>Join Coffeemates</h1>
+            <p className="text-gray-600">Create your account and start your coffee journey</p>
+          </div>
+
+          {/* Status Messages */}
+          {status.error && (
+            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl">
+              <p className="text-red-600 text-sm text-center">{status.error}</p>
+            </div>
+          )}
+
+          {status.success && (
+            <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-xl">
+              <p className="text-green-600 text-sm text-center">
+                ✅ Account created successfully! Redirecting to login...
+              </p>
+            </div>
+          )}
+
+          {status.loading && (
+            <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-xl">
+              <p className="text-blue-600 text-sm text-center flex items-center justify-center gap-2">
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                Creating your account...
+              </p>
+            </div>
+          )}
+
+          {/* Social Login Buttons */}
+          <div className="mb-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+              <button 
+                type="button" 
+                onClick={() => window.location.href = "http://localhost:4343/api/auth/google"} 
+                className="flex items-center justify-center gap-3 px-4 py-3.5 bg-white border border-gray-300 rounded-xl hover:border-blue-400 hover:bg-blue-50 transition-all duration-200"
+              >
+                <FcGoogle size={20} />
+                <span className="text-sm md:text-base font-medium">Google</span>
+              </button>
+              <button 
+                type="button" 
+                onClick={() => window.location.href = "http://localhost:4343/api/auth/facebook"} 
+                className="flex items-center justify-center gap-3 px-4 py-3.5 bg-white border border-gray-300 rounded-xl hover:border-blue-400 hover:bg-blue-50 transition-all duration-200"
+              >
+                <FaFacebook size={20} color="#1877F2" />
+                <span className="text-sm md:text-base font-medium">Facebook</span>
+              </button>
+            </div>
+            
+            <div className="flex items-center my-6">
+              <div className="flex-1 border-t border-gray-300"></div>
+              <span className="px-4 text-gray-500 text-sm">Or register with email</span>
+              <div className="flex-1 border-t border-gray-300"></div>
+            </div>
+          </div>
+
+          {/* Registration Form */}
+          <form onSubmit={handleSubmit} className="space-y-5">
+            <div className="relative">
+              <FiUser className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" />
+              <input
+                id="username"
+                name="username"
+                type="text"
+                required
+                value={formData.username}
+                onChange={handleChange}
+                className="w-full pl-12 pr-4 py-3.5 border border-gray-300 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none transition-all placeholder-gray-500"
+                placeholder="Choose a username"
+                disabled={status.loading || status.success}
+              />
+            </div>
+
+            <div className="relative">
+              <FiMail className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" />
+              <input
+                id="email"
+                name="email"
+                type="email"
+                required
+                value={formData.email}
+                onChange={handleChange}
+                className="w-full pl-12 pr-4 py-3.5 border border-gray-300 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none transition-all placeholder-gray-500"
+                placeholder="Your email address"
+                disabled={status.loading || status.success}
+              />
+            </div>
+
+            <div className="relative">
+              <FiLock className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" />
+              <input
+                id="password"
+                name="password"
+                type="password"
+                required
+                value={formData.password}
+                onChange={handleChange}
+                className="w-full pl-12 pr-4 py-3.5 border border-gray-300 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none transition-all placeholder-gray-500"
+                placeholder="Create a password"
+                disabled={status.loading || status.success}
+              />
+            </div>
+
+            <div className="pt-4">
+              <button 
+                type="submit" 
+                disabled={status.loading || status.success}
+                className="w-full py-4 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl"
+              >
+                {status.loading ? 'Creating Account...' : status.success ? 'Account Created!' : 'Create Account'}
+              </button>
+            </div>
+          </form>
+
+          {/* Terms and Privacy */}
+          <div className="text-center mt-6">
+            <p className="text-xs text-gray-500">
+              By creating an account, you agree to our{' '}
+              <a href="/terms" className="text-blue-600 hover:text-blue-800">Terms of Service</a>
+              {' '}and{' '}
+              <a href="/privacy" className="text-blue-600 hover:text-blue-800">Privacy Policy</a>
+            </p>
+          </div>
+
+          {/* Login Link */}
+          <div className="text-center mt-8 pt-6 border-t border-gray-200">
+            <p className="text-gray-600">
+              Already have an account?{' '}
+              <button 
+                onClick={() => navigate('/login')}
+                className="text-blue-600 hover:text-blue-800 font-medium transition-colors"
+              >
+                Sign in here
+              </button>
+            </p>
+          </div>
+
+          {/* Mobile Features - Only on small screens */}
+          <div className="md:hidden mt-8">
+            <div className="grid grid-cols-3 gap-4 text-center">
+              <div className="p-3 bg-blue-50 rounded-lg">
+                <div className="text-2xl mb-1">☕</div>
+                <p className="text-xs text-gray-600">Share</p>
+              </div>
+              <div className="p-3 bg-green-50 rounded-lg">
+                <div className="text-2xl mb-1">🌱</div>
+                <p className="text-xs text-gray-600">Discover</p>
+              </div>
+              <div className="p-3 bg-orange-50 rounded-lg">
+                <div className="text-2xl mb-1">👥</div>
+                <p className="text-xs text-gray-600">Connect</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Scroll Indicator for debugging (hidden in production) */}
+      <div className="fixed bottom-4 right-4 hidden">
+        <div className="text-xs text-gray-500 bg-white/80 p-2 rounded">
+          <span className="sm:hidden">XS</span>
+          <span className="hidden sm:inline md:hidden">SM</span>
+          <span className="hidden md:inline lg:hidden">MD</span>
+          <span className="hidden lg:inline xl:hidden">LG</span>
+          <span className="hidden xl:inline 2xl:hidden">XL</span>
+          <span className="hidden 2xl:inline">2XL</span>
+        </div>
+      </div>
+    </div>
   );
 };
 
