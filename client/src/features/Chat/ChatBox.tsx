@@ -36,10 +36,11 @@ export default function ChatBox({ id }: { id: string }) {
                 else {
                     setOtherName(data.user.username);
                     setOtherImg(data.user.photoURL || "");
+                    
                 }
             })
             .catch(() => navigate("/"));
-    }, [otherId, navigate]);
+    }, [otherId, navigate, otherImg]);
 
     // --- initialize socket ---
     useEffect(() => {
@@ -59,7 +60,7 @@ export default function ChatBox({ id }: { id: string }) {
             });
         });
 
-        return () => {socket.off("newMessage")};
+        return () => { socket.off("newMessage") };
     }, [auth.id, otherId]);
 
     // get messages between users at the beginning
@@ -94,7 +95,7 @@ export default function ChatBox({ id }: { id: string }) {
             return;
         }
 
-        
+
         setMessages((prev) => {
             const newMsgs = data.msgs
                 .reverse() // oldest → newest
@@ -140,6 +141,10 @@ export default function ChatBox({ id }: { id: string }) {
         scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }, [messages]);
 
+    const avatarUrl = otherImg
+        ? `http://localhost:4343${otherImg}`
+        : 'http://localhost:4343/uploads/profile/sample-photo.jpeg';
+
     return (
         <div className="mx-auto flex flex-col h-full w-full bg-white border-l border-gray-300 p-6 space-y-4">
             {/* Header */}
@@ -147,7 +152,7 @@ export default function ChatBox({ id }: { id: string }) {
                 <div className="flex justify-start gap-6 items-center">
                     <div className="flex justify-between items-center gap-2">
                         <img
-                            src={otherImg || 'http://localhost:4343/uploads/profile/sample-photo.jpeg'}
+                            src={avatarUrl}
                             alt="Avatar"
                             className="w-12 h-12 rounded-full object-cover cursor-pointer"
                         />

@@ -13,6 +13,8 @@ const imagePath = import.meta.env.VITE_IMAGE_PATH;
 
 export default function PostCard({ post }: { post: PostType }) {
   const { user } = useAuth(); // current logged-in user
+  console.log("img: ", user?.photoURL)
+
   const { setPosts, setPostPopup, setEditingPost } = useAppContext();
   const rating = star(post.star);
 
@@ -83,12 +85,16 @@ export default function PostCard({ post }: { post: PostType }) {
     <div className="flex flex-col justify-between bg-white p-4 rounded-2xl shadow-md">
       <div className="flex justify-between items-center ">
         <div className="flex justify-between items-center gap-2">
-          {post.user?.photoURL
-            ?
-            <img src={`${apiUrl}${post.user.photoURL}`} className="w-6 h-6 rounded-full object-cover" />
-            :
-            <img src={`http://localhost:4343/uploads/profile/sample-photo.jpeg`} className="w-6 h-6 rounded-full object-cover" />
-          }
+          <img
+            src={
+              user?.photoURL
+                ? `${user.photoURL}`
+                : `${apiUrl}/uploads/profile/sample-photo.jpeg`
+            }
+            alt="Avatar"
+            className="w-6 h-6 rounded-full object-cover"
+          />
+
 
           <b className="p-2">{post.user?.username || 'Unknown User'}</b>
           <span className="cursor-pointer" onClick={likeHandler}>
