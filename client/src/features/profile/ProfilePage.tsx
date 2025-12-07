@@ -398,11 +398,22 @@ const ProfilePage: React.FC = () => {
             )}
           </div>
         </section>
-
+            
         {/* Posts Section - REPLACE THIS */}
         <section className="profile-section">
         <h2 className="section-title">Posts ({userPosts.length})</h2>
-
+         {/* Add Post Button for existing posts */}
+        {isOwnProfile && userPosts.length > 0 && (
+          <div className="add-post-container">
+            <button
+              onClick={() => setPostPopup(true)}
+              className="btn btn-primary add-post-btn"
+            >
+              + Add New Post
+            </button>
+          </div>
+        )}
+        <br />
         {postsLoading ? (
           <div className="loading-posts">Loading posts...</div>
         ) : userPosts.length === 0 ? (
@@ -421,8 +432,8 @@ const ProfilePage: React.FC = () => {
         ) : (
           <div className="posts-grid">
             {userPosts.map((post) => (
-              <div key={post._id || post.pid} className="post-item">
-                {/* Add edit button if it's user's own post */}
+              <div key={post._id || post.pid} className="mb-4">
+                {/* Add edit button if it's user's own post
                 {isOwnProfile && (
                   <button
                     onClick={() => handleEditPost(post)}
@@ -431,23 +442,14 @@ const ProfilePage: React.FC = () => {
                     Edit
                   </button>
                 )}
+                   */}
                 <PostCard post={post} />
               </div>
             ))}
           </div>
         )}
         
-        {/* Add Post Button for existing posts */}
-        {isOwnProfile && userPosts.length > 0 && (
-          <div className="add-post-container">
-            <button
-              onClick={() => setPostPopup(true)}
-              className="btn btn-primary add-post-btn"
-            >
-              + Add New Post
-            </button>
-          </div>
-        )}
+       
       </section>
       </div>
     </div>
