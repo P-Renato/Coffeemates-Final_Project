@@ -5,6 +5,7 @@ import CommentList from "../features/comment/CommentList";
 import { star } from "../utils/rating";
 import { useAuth } from "../hooks/useAuth";
 import { useAppContext } from "../context/LocationPostContext";
+import { NavLink } from "react-router-dom";
 
 // create a .env file in client with VITE_API_URL=http://localhost:4343
 const apiUrl = import.meta.env.VITE_API_URL;
@@ -12,7 +13,7 @@ const imagePath = import.meta.env.VITE_IMAGE_PATH;
 
 export default function PostCard({ post }: { post: PostType }) {
   const { user } = useAuth(); // current logged-in user
-  const { posts, setPosts, postPopup, setPostPopup, editingPost, setEditingPost } = useAppContext();
+  const { setPosts, setPostPopup, setEditingPost } = useAppContext();
   const rating = star(post.star);
 
   const [like, setLike] = useState(false);
@@ -52,8 +53,8 @@ export default function PostCard({ post }: { post: PostType }) {
 
   // edit
   const editHandler = async () => {
-      setPostPopup(true);
-      setEditingPost(post);
+    setPostPopup(true);
+    setEditingPost(post);
   }
 
   // delete
@@ -79,41 +80,53 @@ export default function PostCard({ post }: { post: PostType }) {
   }
 
   return (
-    <div className="flex flex-col">
-      <div className="flex justify-between bg-blue-200">
-        <b>{post.user?.username || 'Unknown User'}</b>
+    <div className="flex flex-col justify-between bg-white p-4 rounded-2xl shadow-md">
+      <div className="flex justify-between items-center ">
+        <div className="flex justify-between items-center gap-2">
+          {post.user?.photoURL
+            ?
+            <img src={`${apiUrl}${post.user.photoURL}`} className="w-6 h-6 rounded-full object-cover" />
+            :
+            <img src={`http://localhost:4343/uploads/profile/sample-photo.jpeg`} className="w-6 h-6 rounded-full object-cover" />
+          }
 
-        <span className="cursor-pointer" onClick={likeHandler}>
-          {like ? " ❤️" : " 🤍"} {likeCount}
-        </span>
-        {
-          user && user.id === post.uid && (
-            <div className="flex gap-2">
-              <button onClick={editHandler} className="cursor-pointer bg-yellow-400 text-white">Edit</button>
-              <button onClick={deleteHandler} className="cursor-pointer bg-red-400 text-white">Delete</button>
-            </div>
+          <b className="p-2">{post.user?.username || 'Unknown User'}</b>
+          <span className="cursor-pointer" onClick={likeHandler}>
+            {like ? " ❤️" : " 🤍"} {likeCount}
+          </span>
+        </div>
+        <div className="flex justify-between items-center gap-4">
+          {
+            user && user.id === post.uid && (
+              <div className="flex gap-2">
+                <button onClick={editHandler} className="cursor-pointer w-[5em] bg-gray-400 text-white rounded-2xl p-1">Edit</button>
+                <button onClick={deleteHandler} className="cursor-pointer w-[5em] bg-gray-500 text-white rounded-2xl p-1">Delete</button>
+              </div>
 
-          )
-        }
+            )
+          }
+          <span className=""><NavLink to="/chat">🗨️</NavLink></span>
+          <span>🏳</span>
+        </div>
 
       </div>
 
-      <div className="flex w-full border" key={post._id}>
+      <div className="flex w-full border-t-3 border-gray-300" key={post._id}>
         <img
           src={`${apiUrl}${imagePath}${post.imageUrl}`}
           alt="Coffee post"
-          className="basis-[33%] object-cover max-h-64" // Limits to 256px max height
+          className="basis-[33%] object-cover max-h-64 max-w-120" // Limits to 256px max height
           onError={(e) => {
             e.currentTarget.onerror = null;
             e.currentTarget.src = 'https://placehold.co/400x300/333/fff?text=Coffee+Post';
           }}
         />
 
-        <div className="basis-[33%] flex items-center justify-center bg-gray-100 p-2">
+        <div className="basis-[33%] flex items-center justify-center border-r border-gray-300 p-2">
           <MapWithSidePanel content={post} />
         </div>
 
-        <div className="basis-[34%] bg-white p-2 flex flex-col justify-between">
+        <div className="basis-[34%] bg-white p-4 flex flex-col justify-between">
           <p className="font-bold">{post.title}</p>
           <p className="text-yellow-600">Rating: {post.star} {rating}</p>
           <i className="text-green-600 text-sm">{new Date(post.createdAt).toLocaleString()}</i>

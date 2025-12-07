@@ -9,6 +9,7 @@ const apiUrl = import.meta.env.VITE_API_URL;
 export default function ChatBox({ id }: { id: string }) {
     const otherId = id;
     const [otherName, setOtherName] = useState("");
+    const [otherImg, setOtherImg] = useState("");
 
     const navigate = useNavigate();
     const { user } = useAuth();
@@ -32,7 +33,10 @@ export default function ChatBox({ id }: { id: string }) {
             .then((res) => res.json())
             .then((data) => {
                 if (!data?.user?.id) navigate("/");
-                else setOtherName(data.user.username);
+                else {
+                    setOtherName(data.user.username);
+                    setOtherImg(data.user.photoURL || "");
+                }
             })
             .catch(() => navigate("/"));
     }, [otherId, navigate]);
@@ -137,13 +141,13 @@ export default function ChatBox({ id }: { id: string }) {
     }, [messages]);
 
     return (
-        <div className="mx-auto flex flex-col h-full w-full bg-white rounded-2xl shadow-2xl p-6 space-y-4">
+        <div className="mx-auto flex flex-col h-full w-full bg-white border-l border-gray-300 p-6 space-y-4">
             {/* Header */}
             {user && (
                 <div className="flex justify-start gap-6 items-center">
                     <div className="flex justify-between items-center gap-2">
                         <img
-                            src={user.photoURL || 'https://st3.depositphotos.com/6672868/13701/v/450/depositphotos_137014128-stock-illustration-user-profile-icon.jpg'}
+                            src={otherImg || 'http://localhost:4343/uploads/profile/sample-photo.jpeg'}
                             alt="Avatar"
                             className="w-12 h-12 rounded-full object-cover cursor-pointer"
                         />
@@ -154,69 +158,68 @@ export default function ChatBox({ id }: { id: string }) {
             )}
 
             {/* Search */}
-            <div>
+            <div className="flex justify-between items-center">
                 <input
                     type="text"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     onKeyDown={(e) => e.key === "Enter" && searchMessages()}
                     placeholder="Search messages"
-                    className="border p-2 rounded w-[85%] mb-2"
+                    className="border p-2 rounded w-[98%] mb-2"
                 />
                 <button
                     onClick={searchMessages}
-                    className="bg-blue-500 text-white px-3 py-1 rounded ml-2"
+                    className="w-[6em] bg-blue-500 text-white px-3 py-1 rounded-2xl ml-2"
                 >
                     Search
                 </button>
             </div>
 
             {/* Messages */}
-            <div
-                ref={scrollRef}
-                className="flex-1 overflow-y-auto bg-gray-50 p-4 rounded-2xl shadow-inner space-y-2"
-            >
-                {searchQuery ? (
-                    searchResults.length ? (
-                        searchResults.map((m) => <Message key={m._id} m={m} auth={auth} />)
+            <div className="bg-gray-100">
+                <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-2">
+                    {searchQuery ? (
+                        searchResults.length ? (
+                            searchResults.map((m) => <Message key={m._id} m={m} auth={auth} />)
+                        ) : (
+                            <p className="text-center text-gray-500">No matching messages</p>
+                        )
                     ) : (
-                        <p className="text-center text-gray-500">No matching messages</p>
-                    )
-                ) : (
-                    <>
-                        {hasMore && (
-                            <p
-                                onClick={loadMore}
-                                className="text-center text-green-600 cursor-pointer"
-                            >
-                                Load more...
-                            </p>
-                        )}
-                        {messages.map((m) => (
-                            <Message key={m._id} m={m} auth={auth} />
-                        ))}
-                    </>
+                        <>
+                            {hasMore && (
+                                <p
+                                    onClick={loadMore}
+                                    className="text-center text-green-600 cursor-pointer"
+                                >
+                                    Load more...
+                                </p>
+                            )}
+                            {messages.map((m) => (
+                                <Message key={m._id} m={m} auth={auth} />
+                            ))}
+                        </>
+                    )}
+                </div>
+
+                {/* Input */}
+                {!searchQuery && (
+                    <div className=" flex justify-between items-center bg-white  m-10">
+                        <input
+                            className="flex-1 p-2 border border-gray-300 rounded-md outline-none focus:border-gray-500 focus:ring-gray-500 transition"
+                            value={input}
+                            onChange={(e) => setInput(e.target.value)}
+                            onKeyDown={(e) => e.key === "Enter" && sendMessage()}
+                            placeholder="Type a message..."
+                        />
+                        <button
+                            onClick={sendMessage}
+                            className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-md font-medium transition cursor-pointer"
+                        >
+                            ➤
+                        </button>
+                    </div>
                 )}
             </div>
-
-            {/* Input */}
-            {!searchQuery && (
-                <div className="flex mt-4 space-x-2">
-                    <input
-                        className="flex-1 p-2 border border-gray-300 rounded-md outline-none focus:border-green-500 focus:ring-green-500 transition"
-                        value={input}
-                        onChange={(e) => setInput(e.target.value)}
-                        onKeyDown={(e) => e.key === "Enter" && sendMessage()}
-                        placeholder="Type a message..."
-                    />
-                    <button
-                        onClick={sendMessage}
-                        className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-md font-medium transition cursor-pointer"
-                    >
-                        Send
-                    </button>
-                </div>
-            )}
         </div>
     );
 }
@@ -228,11 +231,11 @@ function Message({ m, auth }: { m: ChatType; auth: { id: string; username: strin
             className={`flex ${m.senderId === auth.id ? "justify-end" : "justify-start"}`}
         >
             <div
-                className={`p-3 rounded-lg max-w-xs ${m.senderId === auth.id ? "bg-green-100" : "bg-gray-100"
+                className={`p-3 rounded-lg max-w-xs ${m.senderId === auth.id ? "bg-green-300" : "bg-white"
                     }`}
             >
-                <div className="text-sm font-medium text-green-600">{m.senderUsername}</div>
-                <div className="text-sm text-gray-800">{m.content}</div>
+                {/* <div className="text-sm font-medium text-green-600">{m.senderUsername}</div> */}
+                <div className="text-sm text-gray-1200">{m.content}</div>
                 <div className="text-xs text-gray-400 text-right">
                     {new Date(m.createdAt).toLocaleDateString()}{" "}
                     {new Date(m.createdAt).toLocaleTimeString([], {
