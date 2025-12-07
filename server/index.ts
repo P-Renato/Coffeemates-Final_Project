@@ -84,10 +84,10 @@ connectDB();
 
 
 
+app.use('/api/auth/upload', uploadRoutes);
 app.use('/api/auth/profile', profileRouter);
 app.use('/api/auth', authRouter);
 app.use('/api/users', userRouter);
-app.use('/api/auth/upload', uploadRoutes);
 
 app.get('/api/test', (req, res) => {
     res.json({ message: 'Server is working!' });

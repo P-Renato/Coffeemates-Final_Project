@@ -59,7 +59,7 @@ export default function ChatBox({ id }: { id: string }) {
             });
         });
 
-        return () => socket.off("newMessage");
+        return () => {socket.off("newMessage")};
     }, [auth.id, otherId]);
 
     // get messages between users at the beginning
@@ -94,10 +94,11 @@ export default function ChatBox({ id }: { id: string }) {
             return;
         }
 
+        
         setMessages((prev) => {
             const newMsgs = data.msgs
                 .reverse() // oldest → newest
-                .filter((msg) => !prev.some((m) => m._id === msg._id));
+                .filter((msg: ChatType) => !prev.some((m) => m._id === msg._id));
             return [...newMsgs, ...prev]; // prepend older messages
         });
 

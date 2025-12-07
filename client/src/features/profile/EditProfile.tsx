@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 import CoffeeProfile from "../../components/CoffeeProfile";
 import DeleteAccountModal from "../../components/DeleteAccountModal";
-import { FaImage, FaCamera } from "react-icons/fa";
+import { FaCamera } from "react-icons/fa";
 import "./ProfilePage.css";
 
 type CoffeeProfileItem = {
@@ -365,14 +365,6 @@ const EditProfile: React.FC = () => {
 };
 
 const validateForm = (): string | null => {
-  // Check if at least one coffee profile question is answered
-  const hasCoffeeAnswers = profileRows.some(row => 
-    row.question && row.answer.trim() !== ''
-  );
-  if (!hasCoffeeAnswers) {
-    return "Please answer at least one coffee profile question";
-  }
-
   // Check name
   if (!name.trim()) {
     return "Name is required";
@@ -392,7 +384,7 @@ const validateForm = (): string | null => {
     return "Please select different questions for each slot";
   }
 
-  return null; // No errors
+  return null; 
 };
 
 
@@ -493,11 +485,56 @@ const validateForm = (): string | null => {
     }
   };
 
-  const handleDeleteAccount = () => {
+  const handleDeleteAccount = async () => {
+  try {
     setShowDeleteModal(false);
-    console.log("Delete account clicked");
-    // You'll need to implement actual delete account functionality
-  };
+    
+    if (!token || !user?.id) {
+      throw new Error("Not authenticated");
+    }
+
+    // Show confirmation
+    const confirmed = window.confirm(
+      "Are you sure you want to delete your account? This action cannot be undone."
+    );
+    
+    if (!confirmed) {
+      return;
+    }
+
+    console.log("Deleting account with ID:", user.id);
+    
+    // Call the DELETE endpoint
+    const response = await fetch(`http://localhost:4343/api/users/${user.id}`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    console.log("Response status:", response.status);
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Failed to delete account');
+    }
+
+    const data = await response.json();
+    console.log("✅ Delete successful:", data);
+    
+    // Clear user data from localStorage
+    localStorage.removeItem('token');
+    localStorage.removeItem('userData');
+    
+    // Redirect to home page
+    navigate('/login');
+    
+  } catch (err) {
+    console.error('Delete account error:', err);
+    setError(err instanceof Error ? err.message : 'Failed to delete account');
+  }
+};
 
   const handleCancel = () => {
     navigate("/profile");
@@ -553,16 +590,10 @@ const validateForm = (): string | null => {
           backgroundPosition: 'center'
         }}
         >
-          {!coverImageUrl && (
-            <div className="cover-placeholder-content">
-              <FaImage className="cover-icon" />
-              <span>Click to add cover image</span>
-            </div>
-          )}
+          
           {coverImageUrl && (
             <div className="cover-overlay">
               <FaCamera className="cover-camera-icon" />
-              <span>Click to change cover</span>
             </div>
           )}
         </div>

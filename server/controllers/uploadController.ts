@@ -10,6 +10,10 @@ export const uploadProfileImage = async (req: AuthRequest, res: Response) => {
       return res.status(401).json({ error: '❌ Not authenticated' });
     }
 
+    console.log('📦 req.files:', req.files);
+    console.log('📦 req.body:', req.body);
+    console.log('📦 req.file:', req.file);
+
     if (!req.file) {
       return res.status(400).json({ error: '❌ No file uploaded' });
     }
