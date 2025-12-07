@@ -16,7 +16,7 @@ userRouter.patch('/password/change', authenticateToken, changePassword);
 
 userRouter.get('/:id', getUserById); 
 
-userRouter.delete('/:id', deleteUser)
+userRouter.delete('/:id', authenticateToken, deleteUser)
 userRouter.patch('/:id/status', updateUserStatus);
 
 userRouter.get('/search', searchUsers);

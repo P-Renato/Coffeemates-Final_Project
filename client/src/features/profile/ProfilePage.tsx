@@ -94,7 +94,7 @@ const ProfilePage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [userPosts, setUserPosts] = useState<PostType[]>([]);
   const [postsLoading, setPostsLoading] = useState(true);
-  const { postPopup, setPostPopup, posts, setPosts, editingPost, setEditingPost } = useAppContext();
+  const { postPopup, setPostPopup, editingPost, setEditingPost } = useAppContext();
 
   const location = useLocation();
 
