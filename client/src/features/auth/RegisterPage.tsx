@@ -1,13 +1,12 @@
-import React, { useState } from 'react';
-import type { FormEvent, ChangeEvent } from 'react';
-import { useNavigate } from "react-router-dom";
+// src/pages/RegisterPage.tsx
+import React, { useState } from "react";
+import type { FormEvent, ChangeEvent } from "react";
+import { useNavigate, Link } from "react-router-dom";
 import bgImage from "../../assets/cafe_login-signup-page.png";
-import styles from './styles.module.css';
-import '../../styles/_global.css';
+import styles from "./AuthLayout.module.css";
+import "../../styles/_global.css";
 import { FcGoogle } from "react-icons/fc";
-import { FaFacebook } from "react-icons/fa";
-import { FaUserCircle } from "react-icons/fa";
-
+import { FaFacebook, FaUserCircle } from "react-icons/fa";
 
 interface RegisterFormData {
   username: string;
@@ -22,30 +21,34 @@ interface Status {
 }
 
 const initialFormData: RegisterFormData = {
-  username: '',
-  email: '',
-  password: '',
+  username: "",
+  email: "",
+  password: "",
 };
 
 // change to actual backend URL when deployed or running locally
-const API_BASE_URL = 'http://localhost:4343/api/auth/register';
-
+const API_BASE_URL = "http://localhost:4343/api/auth/register";
 
 const RegisterPage: React.FC = () => {
-  // TODO: Use useNavigate() from react-router-dom to redirect to /login
-  const navigate = useNavigate(); 
-  
-  const [formData, setFormData] = useState<RegisterFormData>(initialFormData);
-  const [status, setStatus] = useState<Status>({ loading: false, error: null, success: false });
+  const navigate = useNavigate();
 
- 
-  const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
+  const [formData, setFormData] =
+    useState<RegisterFormData>(initialFormData);
+  const [status, setStatus] = useState<Status>({
+    loading: false,
+    error: null,
+    success: false,
+  });
+
+  const handleChange = (
+    e: ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
+  ) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
   };
-
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -55,166 +58,208 @@ const RegisterPage: React.FC = () => {
 
     try {
       const response = await fetch(API_BASE_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify(formData),
       });
 
       if (!response.ok) {
-       
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Registration failed due to server error.');
+        let errorMessage =
+          "Registration failed due to server error.";
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.message || errorMessage;
+        } catch {
+          // ignore JSON parse errors and keep default message
+        }
+        throw new Error(errorMessage);
       }
-      
+
       const result = await response.json();
+      console.log("Registration Successful: ", result);
+
       setStatus({ loading: false, error: null, success: true });
       setFormData(initialFormData);
-      console.log('Registration Successful: ', result);
-      
-      setTimeout(() => {
-        navigate('/login');;
-      }, 2000);
 
+      // show success message briefly, then redirect
+      setTimeout(() => {
+        navigate("/login");
+      }, 2000);
     } catch (err) {
-     
-      const errorMessage = (err instanceof Error) ? err.message : 'A network error occurred.';
-      console.error('Registration Error:', errorMessage);
+      const errorMessage =
+        err instanceof Error
+          ? err.message
+          : "A network error occurred.";
+      console.error("Registration Error:", errorMessage);
       setStatus({ loading: false, error: errorMessage, success: false });
     }
   };
 
-  const bgContainerStyle = {
-    backgroundImage: `url(${bgImage})`,
-      backgroundSize: "cover",
-      backgroundPosition: "center",
-      backgroundRepeat: "no-repeat",
-      height: "100vh",
-      width: "100%",
-      display: "flex",
-      justifyContent: "center",
-      alignItems: "center",
-  }
-
- 
-  const containerStyle = {
-    maxWidth: '80%',
-    width: '80%',
-    height: '80%',
-    margin: '100px auto',
-    padding: '30px',
-    border: '1px solid #ddd',
-    textAlign: 'center' as const,
-    backgroundColor: 'rgba(255, 255, 255, 0.9)'
-  };
-
-  const inputStyle = {
-    width: '60%',
-    padding: '10px',
-    margin: '10px 0',
-    boxSizing: 'border-box' as const,
-    border: '1px solid #ccc',
-    textAlign: 'left' as const,
-    borderRadius: '4px',
-  };
-
-  const buttonStyle = {
-    padding: '.8em auto',
-    backgroundColor: status.loading ? '#95a5a6' : '#4a69bd',
-    color: 'white',
-    border: 'none',
-    cursor: status.loading ? 'not-allowed' : 'pointer',
-    width: '20em',
-    margin: '1.2em',
-    borderRadius: '8px',
-    height: '4.5em'
-  };
-
-  
-
-
   return (
-    <section className='flex'>
-      <div className={styles.sidebar}>
-        <h2 className={styles.courier}  style={{fontSize: 40}}>Coffeemates</h2>
+    <div className={styles.authLayout}>
+      {/* Left sidebar */}
+      <aside className={styles.authSidebar}>
+        <div className={styles.authSidebarLogo}>Coffeemates</div>
 
-        <div className={styles.avatar}>
+        <div className={styles.authSidebarAvatar}>
           <FaUserCircle className={styles.avatarIcon} />
         </div>
 
-        <p className={styles.roboto} style={{ fontSize: 16}}>Welcome!</p>
-      </div>
-      <div style={bgContainerStyle}>
+        <div className={styles.authSidebarWelcome}>Welcome!</div>
+      </aside>
 
-        <div style={containerStyle}>
-          <h1 className={styles.courier} style={{fontSize: 40}}>Coffeemates</h1>
-          <p className={styles.courier} style={{ fontSize: 24}}>Connect, sip, and share your brew.</p>
+      {/* Right side main area */}
+      <main className={styles.authMain}>
+        {/* Background image */}
+        <div
+          className={styles.authMainBg}
+          style={{ backgroundImage: `url(${bgImage})` }}
+        />
 
-        <div className={styles.formWrapper}>  
-          <h3 >Create Account</h3>
+        {/* Foreground content */}
+        <div className={styles.authMainContent}>
+          <section className={styles.authCard}>
+            <h1 className={styles.authCardTitle}>Coffeemates</h1>
+            <p className={styles.authCardSubtitle}>
+              Create your account and share your favorite brews.
+            </p>
+
+            {/* Social signup buttons */}
+            <div className={styles.authSocialRow}>
+              <button
+                type="button"
+                className={styles.authBtnSocial}
+                onClick={() =>
+                  (window.location.href =
+                    "http://localhost:4343/api/auth/google")
+                }
+              >
+                <span>Sign up with Google</span>
+                <FcGoogle size={22} />
+              </button>
+
+              <button
+                type="button"
+                className={`${styles.authBtnSocial} ${styles.authBtnSocialPrimary}`}
+                onClick={() =>
+                  (window.location.href =
+                    "http://localhost:4343/api/auth/facebook")
+                }
+              >
+                <span>Sign up with Facebook</span>
+                <FaFacebook size={20} />
+              </button>
+            </div>
+
+            {/* OR separator */}
+            <div className={styles.authOr}>
+              <span className={styles.authOrLine} />
+              <span>or create an account with email</span>
+              <span className={styles.authOrLine} />
+            </div>
+
+            {/* Form section */}
+            <div className={styles.authFormSection}>
+              <h2 className={styles.authFormSectionTitle}>
+                Create Account
+              </h2>
+
+              {status.error && (
+                <p className={styles.authError}>
+                  Error: {status.error}
+                </p>
+              )}
+              {status.success && (
+                <p className={styles.authSuccess}>
+                  Success! Redirecting to login...
+                </p>
+              )}
+              {status.loading && (
+                <p className={styles.authLoading}>Creating account...</p>
+              )}
+
+              <form
+                className={styles.authForm}
+                onSubmit={handleSubmit}
+              >
+                {/* username */}
+                <div className={styles.authFieldGroup}>
+                  <label
+                    className={styles.authLabel}
+                    htmlFor="username"
+                  >
+                    Username
+                  </label>
+                  <input
+                    id="username"
+                    name="username"
+                    type="text"
+                    className={styles.authInput}
+                    required
+                    value={formData.username}
+                    onChange={handleChange}
+                  />
+                </div>
+
+                {/* email */}
+                <div className={styles.authFieldGroup}>
+                  <label
+                    className={styles.authLabel}
+                    htmlFor="email"
+                  >
+                    Email
+                  </label>
+                  <input
+                    id="email"
+                    name="email"
+                    type="email"
+                    className={styles.authInput}
+                    required
+                    value={formData.email}
+                    onChange={handleChange}
+                  />
+                </div>
+
+                {/* password */}
+                <div className={styles.authFieldGroup}>
+                  <label
+                    className={styles.authLabel}
+                    htmlFor="password"
+                  >
+                    Password
+                  </label>
+                  <input
+                    id="password"
+                    name="password"
+                    type="password"
+                    className={styles.authInput}
+                    required
+                    value={formData.password}
+                    onChange={handleChange}
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  className={styles.authBtnPrimary}
+                  disabled={status.loading}
+                >
+                  {status.loading
+                    ? "Creating account..."
+                    : "Create Account"}
+                </button>
+              </form>
+
+              <p className={styles.authBottomText}>
+                Already have an account?{" "}
+                <Link to="/login">Log in</Link>
+              </p>
+            </div>
+          </section>
         </div>
-        
-          <div style={{ display: 'flex',  justifyContent: 'space-around', width: '80%', gap: '10px', margin: '1.1em auto' }}>
-              <button type="button" onClick={() => window.location.href = "http://localhost:4343/api/auth/google"} style={{...buttonStyle,  display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '18px' , backgroundColor: '#fff',  fontWeight: 'lighter', fontSize: '12', color: '#333', border: '1px solid var(--color-primary)'}}>Sign up with Google <FcGoogle size={24} /></button>
-              <button type="button" onClick={() => window.location.href = "http://localhost:4343/api/auth/facebook"} style={{...buttonStyle,  display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '18px' , backgroundColor: '#fff',  fontWeight: 'lighter', fontSize: '12', color: '#333', border: '1px solid var(--color-primary)'}}>Sign up with Facebook <FaFacebook size={24} color="#1877F2" /></button>
-          </div>
-
-          <div style={{ margin: '20px 0', color: '#888' }}>— OR —</div>
-
-          
-          {status.error && <p style={{ color: '#c0392b', padding: '10px', backgroundColor: '#fbeaea', border: '1px solid #c0392b', borderRadius: '4px' }}>Error: {status.error}</p>}
-          {status.success && <p style={{ color: '#27ae60', padding: '10px', backgroundColor: '#eafbf0', border: '1px solid #27ae60', borderRadius: '4px' }}>Success! Please log in.</p>}
-          {status.loading && <p style={{ color: '#2980b9' }}>Creating account...</p>}
-
-          <form onSubmit={handleSubmit} style={{ display: 'flex', justifyContent: 'center', width: '100%', alignItems: 'center', flexDirection: 'column', gap: '5px' }}>
-
-            
-            <input
-              id="username"
-              name="username"
-              type="text"
-              required
-              value={formData.username}
-              onChange={handleChange}
-              style={inputStyle}
-              placeholder="Username"
-            />
-
-            
-            <input
-              id="email"
-              name="email"
-              type="email"
-              required
-              value={formData.email}
-              onChange={handleChange}
-              style={inputStyle}
-              placeholder="Email"
-            />
-
-            
-            <input
-              id="password"
-              name="password"
-              type="password"
-              required
-              value={formData.password}
-              onChange={handleChange}
-              style={inputStyle}
-              placeholder="Password"
-            />
-
-            <button type="submit" disabled={status.loading} style={{...buttonStyle, background: `var(--color-primary)`, width: '60%', fontFamily: 'var(--font-body)', fontSize: '16' }} className='rounded-2xl'>
-              Create Account
-            </button>
-          </form>
-
-          <p style={{ marginTop: '20px', fontSize: '0.9rem' }}>
-            Already have an account? <a href="/login" style={{ color: '#4a69bd', textDecoration: 'none' }}>Login</a>
-          </p>
-        </div>
-      </div>
-    </section>
+      </main>
+    </div>
   );
 };
 
