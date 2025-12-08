@@ -15,7 +15,7 @@ export default function Sidebar() {
         { label: 'Messages', icon: '💬', url: '/chat' },
         { label: 'Post', icon: '➕' },
         { label: 'Profile', icon: '👤', url: '/profile' },
-        { label: 'Settings', icon: '⚙️', url: '/settings' },
+        {/* label: 'Settings', icon: '⚙️', url: '/settings' */},
     ];
 
     return (
