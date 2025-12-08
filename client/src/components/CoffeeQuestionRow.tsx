@@ -23,6 +23,9 @@ const CoffeeQuestionRow: React.FC<Props> = ({
   onAnswerChange,
   styles
 }) => {
+  if (!styles) {
+    return <div>Error: Styles not loaded</div>;
+  }
   return (
     <div className={styles.row}>
       <div className={styles.rowContent}>
