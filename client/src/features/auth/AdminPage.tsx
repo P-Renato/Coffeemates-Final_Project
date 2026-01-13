@@ -183,7 +183,7 @@ const MOCK_USERS = [
 ];
 
 // Mock support tickets for investigation cases
-const MOCK_TICKETS = [
+const MOCK_TICKETS: Ticket[] = [
   {
     id: 'ticket-1',
     userId: '7',

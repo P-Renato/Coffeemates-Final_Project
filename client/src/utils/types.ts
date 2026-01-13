@@ -7,9 +7,12 @@ export type PostType = {
     uid: string,
     shopName: string,
     commentIds: number[],
-    likeIds: number[],
+    likeIds: string[],
     imageUrl: string,
     pid: string,
+    lat?: number,
+    lng?: number,
+    postImg?: string,
     createdAt: string,
     user: {
         _id: string,
@@ -64,6 +67,6 @@ export type AppContextType = {
     setPosts: React.Dispatch<React.SetStateAction<PostType[]>>;
     loading: boolean;
     error: string | null;
-    editingPost: any | null;
-    setEditingPost: React.Dispatch<React.SetStateAction<any | null>>;
+    editingPost: PostType | null;
+    setEditingPost: React.Dispatch<React.SetStateAction<PostType | null>>;
 };

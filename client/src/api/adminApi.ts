@@ -1,5 +1,6 @@
 // src/api/adminApi.ts
 import axios from 'axios';
+import { handleError } from '../utils/errorHandlers';
 
 // Your backend URL - from your logs
 const API_URL = 'http://localhost:4343';
@@ -54,8 +55,8 @@ export const getAllUsers = async () => {
       console.warn('Unexpected response structure:', response.data);
       return [];
     }
-  } catch (error: any) {
-    console.error('Error fetching users:', error.response?.data || error.message);
+  } catch (error) {
+    handleError('getAllUsers', error)
     throw error;
   }
 };
@@ -79,8 +80,8 @@ export const updateUserStatus = async (userId: string, updates: { status?: strin
     
     console.log('User status updated:', response.data);
     return response.data;
-  } catch (error: any) {
-    console.error('Error updating user status:', error.response?.data || error.message);
+  } catch (error) {
+    handleError('updateUserStatus', error)
     throw error;
   }
 };
@@ -118,7 +119,7 @@ export const deleteUserById = async (userId: string) => {
     return data;
     
   } catch (error) {
-    console.error('❌ Delete error:', error);
+    handleError('deleteUserById', error);
     throw error;
   }
 };

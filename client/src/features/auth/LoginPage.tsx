@@ -70,7 +70,7 @@ const LoginPage: React.FC = () => {
         login(token, user);
         setStatus({loading: false, error: null, success: true });
 
-        if (user.email === "example@admin.com") {
+        if (user.role === 'admin') {
           console.log('Redirecting to admin page');
           navigate('/admin');  
         } else {

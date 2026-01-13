@@ -1,5 +1,5 @@
 import PostCard from "../../components/PostCard";
-import { useAppContext } from "../../context/LocationPostContext";
+import { useAppContext } from "../../hooks/usePost";
 
 export default function PostPage() {
   const { posts, error, loading } = useAppContext();

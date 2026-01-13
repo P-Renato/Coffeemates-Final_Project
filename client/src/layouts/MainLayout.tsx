@@ -1,6 +1,6 @@
 import { Outlet } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
-import { useAppContext } from "../context/LocationPostContext";
+import { useAppContext } from "../hooks/usePost";
 import PopUpPost from "../features/posts/PopUpPost";
 
 const MainLayout = () => {
