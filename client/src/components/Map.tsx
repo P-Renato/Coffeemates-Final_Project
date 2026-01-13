@@ -1,5 +1,5 @@
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
-import { useAppContext } from "../context/LocationPostContext";
+import { useAppContext } from "../hooks/usePost"; 
 
 
 

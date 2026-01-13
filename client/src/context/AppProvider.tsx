@@ -1,17 +1,8 @@
-import { createContext, useContext } from 'react';
-import type { AppContextType } from '../utils/types';
 import type { PostType, Location } from "../utils/types";
 import { useEffect, useState } from 'react';
+import { AppContext } from "./PostContext";
 
 const apiUrl = import.meta.env.VITE_API_URL;   // create a .env file in client with VITE_API_URL=http://localhost:4343
-
-export const AppContext = createContext<AppContextType | null>(null);
-
-export const useAppContext = () => {
-  const context = useContext(AppContext);
-  if (!context) throw new Error("useAppContext must be used within AppProvider");
-  return context;
-};
 
 export const AppProvider = ({ children }: { children: React.ReactNode }) => {
   const [postPopup, setPostPopup] = useState(false);
@@ -19,7 +10,7 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
   const [posts, setPosts] = useState<PostType[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [editingPost, setEditingPost] = useState<any | null>(null);
+  const [editingPost, setEditingPost] = useState<PostType | null>(null);
 
   useEffect(() => {
     fetch(`${apiUrl}/api/post`)

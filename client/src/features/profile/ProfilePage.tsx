@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { useAuth } from "../../hooks/useAuth"; // Adjust path as needed
+import { useAuth } from "../../hooks/useAuth"; 
 import "./ProfilePage.css";
 import { getPostsByUserId } from '../../api/postApi';
 import PostCard from '../../components/PostCard';
 import type { PostType } from '../../utils/types';
-import { useAppContext } from "../../context/LocationPostContext";
+import { useAppContext } from "../../hooks/usePost";
 import PopUpPost from "../posts/PopUpPost";
 
 type CoffeeProfileData = {
@@ -247,10 +247,10 @@ const ProfilePage: React.FC = () => {
     ));
   };
 
-  const handleEditPost = (post: PostType) => {
-    setEditingPost(post);
-    setPostPopup(true);
-  };
+  // const handleEditPost = (post: PostType) => {
+  //   setEditingPost(post);
+  //   setPostPopup(true);
+  // };
 
   // Loading state
   if (loading) {

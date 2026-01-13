@@ -4,7 +4,7 @@ import MapWithSidePanel from "../features/map/MapSidePanel";
 import CommentList from "../features/comment/CommentList";
 import { star } from "../utils/rating";
 import { useAuth } from "../hooks/useAuth";
-import { useAppContext } from "../context/LocationPostContext";
+import { useAppContext } from "../hooks/usePost";
 import { NavLink } from "react-router-dom";
 
 // create a .env file in client with VITE_API_URL=http://localhost:4343

@@ -1,5 +1,5 @@
 import { NavLink } from "react-router-dom";
-import { useAppContext } from "../context/LocationPostContext";
+import { useAppContext } from "../hooks/usePost";
 import { useAuth } from "../hooks/useAuth";
 import '../styles/_global.css';
 import styles from './sidebar.module.css';

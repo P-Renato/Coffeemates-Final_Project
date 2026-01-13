@@ -1,20 +1,28 @@
 import React, { useState, useEffect } from "react";
-import { useAppContext } from "../../context/LocationPostContext";
+import { useAppContext } from "../../hooks/usePost";
 import LocationPicker from "../map/LocationPicker";
 import { geocodeAddress, reverseGeocode } from "../../utils/geocode";
 import { useAuth } from "../../hooks/useAuth";
 import { createPost, updatePost } from "../../api/postApi";
-import type { PostType } from "../../utils/types";
+import type { PostType, Location } from "../../utils/types";
 
 interface PopUpPostProps {
-    postToEdit?: PostType; 
+    postToEdit?: PostType | null; 
     onSuccess?: (post: PostType, isEdit: boolean) => void;
     onCancel?: () => void;
 }
 
+type CreatePostResponse = {
+  newPost: PostType;
+  newLocation: Location; 
+  updatedPost: PostType;
+};
+
+
+
 export default function PopUpPost({ postToEdit }: PopUpPostProps) {
     const { user } = useAuth();
-    const { setPostPopup, setLocationList, posts, setPosts, editingPost, setEditingPost } = useAppContext();
+    const { setPostPopup, setLocationList, posts, setPosts, setEditingPost } = useAppContext();
 
     // Form states
     const [title, setTitle] = useState(postToEdit?.title || "");
@@ -60,7 +68,7 @@ export default function PopUpPost({ postToEdit }: PopUpPostProps) {
         if (!location && (lat === null || lng === null)) return alert("Please pick a location.");
         if (!postToEdit && !imageFile) return alert("Please select an image."); // image required only for new post
 
-        let finalLat = lat;
+        let finalLat: number | null = lat;
         let finalLng = lng;
 
         // Geocode if lat/lng missing
@@ -78,6 +86,11 @@ export default function PopUpPost({ postToEdit }: PopUpPostProps) {
             const name = await reverseGeocode(lat, lng);
             if (name) setLocation(name);
         }
+        if (finalLat === null || finalLng === null) {
+            alert("Location coordinates are missing.");
+            return;
+        }
+
 
         const formData = new FormData();
         formData.append("title", title);
@@ -88,12 +101,12 @@ export default function PopUpPost({ postToEdit }: PopUpPostProps) {
         formData.append("location", location);
         formData.append("lat", finalLat.toString());
         formData.append("lng", finalLng.toString());
-        if (imageFile) formData.append("postImg", imageFile);
+        if (imageFile) formData.append("postImage", imageFile);
 
         console.log("before update data: ", title);
 
         try {
-            let data;
+            let data: CreatePostResponse;
             if (postToEdit) {
                 // Edit mode
                 data = await updatePost(postToEdit._id, formData);
