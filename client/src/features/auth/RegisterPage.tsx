@@ -27,7 +27,7 @@ const initialFormData: RegisterFormData = {
   password: '',
 };
 
-const API_BASE_URL = 'http://localhost:4343/api/auth/register';
+const API_BASE_URL = '/api/auth/register';
 
 const RegisterPage: React.FC = () => {
   const navigate = useNavigate(); 
@@ -172,7 +172,7 @@ const RegisterPage: React.FC = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
               <button 
                 type="button" 
-                onClick={() => window.location.href = "http://localhost:4343/api/auth/google"} 
+                onClick={() => window.location.href = "/api/auth/google"} 
                 className="flex items-center justify-center gap-3 px-4 py-3.5 bg-white border border-gray-300 rounded-xl hover:border-blue-400 hover:bg-blue-50 transition-all duration-200"
               >
                 <FcGoogle size={20} />
@@ -180,7 +180,7 @@ const RegisterPage: React.FC = () => {
               </button>
               <button 
                 type="button" 
-                onClick={() => window.location.href = "http://localhost:4343/api/auth/facebook"} 
+                onClick={() => window.location.href = "/api/auth/facebook"} 
                 className="flex items-center justify-center gap-3 px-4 py-3.5 bg-white border border-gray-300 rounded-xl hover:border-blue-400 hover:bg-blue-50 transition-all duration-200"
               >
                 <FaFacebook size={20} color="#1877F2" />

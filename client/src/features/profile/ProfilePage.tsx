@@ -98,6 +98,13 @@ const ProfilePage: React.FC = () => {
 
   const location = useLocation();
 
+  const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:4343';
+
+  console.log('🚀 EditProfile mounted');
+  console.log('🔑 Token exists:', !!token);
+  console.log('👤 User ID:', user?.id);
+  console.log('🌐 API URL:', import.meta.env.VITE_API_URL);
+  console.log('📁 .env contents:', import.meta.env);
   // Fetch profile data from backend
   useEffect(() => {
     const fetchProfile = async () => {
@@ -114,7 +121,7 @@ const ProfilePage: React.FC = () => {
           throw new Error('User not authenticated');
         }
         // Fetch user profile data
-        const userResponse = await fetch(`http://localhost:4343/api/users/${user.id}?t=${Date.now()}`, {
+        const userResponse = await fetch(`${apiUrl}/api/users/${user.id}?t=${Date.now()}`, {
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json',
@@ -129,7 +136,7 @@ const ProfilePage: React.FC = () => {
         const userData = await userResponse.json();
 
         // Fetch coffee profile
-        const profileResponse = await fetch('http://localhost:4343/api/auth/profile/questions', {
+        const profileResponse = await fetch(`${apiUrl}/api/auth/profile/questions`, {
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json',
@@ -148,10 +155,10 @@ const ProfilePage: React.FC = () => {
           name: userData.user?.username || 'Unknown User',
           place: userData.user?.place || "Unknown location",
           avatarUrl: userData.user?.photoURL 
-            ? `http://localhost:4343${userData.user.photoURL}`
+            ? `${userData.user.photoURL}`
             : "/images/default-avatar.png",
           coverImageUrl: userData.user?.coverImageURL 
-            ? `http://localhost:4343${userData.user.coverImageURL}`
+            ? `${userData.user.coverImageURL}`
             : "/images/default-cover.png",
           coffeematesCount: 0,
           postCount: 0, // Will update after fetching posts

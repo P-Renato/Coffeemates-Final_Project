@@ -1,5 +1,5 @@
 // client/src/api/postApi.ts
-const API_URL = 'http://localhost:4343/api';
+const API_URL = '/api';
 
 const getToken = () => {
   return localStorage.getItem('authToken')?.replace(/['"]+/g, '').trim();

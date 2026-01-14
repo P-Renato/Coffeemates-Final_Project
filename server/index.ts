@@ -23,7 +23,7 @@ const app = express();
 
 /* ----------- middlewares ---------------------- */
 app.use(cors({
-    origin: process.env.CLIENT_URL || 'http://localhost:5173' || 'http://localhost:5174',
+    origin: process.env.CLIENT_URL || 'http://localhost:5173' || 'http://localhost:5174' || "https://coffeemates-client.onrender.com",
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'Cookie']
@@ -85,7 +85,7 @@ connectDB();
 
 
 app.use('/api/auth/upload', uploadRoutes);
-app.use('/api/auth/profile', profileRouter);
+app.use('/api/auth', profileRouter);
 app.use('/api/auth', authRouter);
 app.use('/api/users', userRouter);
 
@@ -118,4 +118,3 @@ const port = process.env.PORT || 4343;
 httpServer.listen(port, () => {
     console.log(`Server running on http://localhost:${port}`);
 });
-

@@ -108,6 +108,13 @@ const EditProfile: React.FC = () => {
   const [saving, setSaving] = useState(false);
   const [profileRows, setProfileRows] = useState<Array<{question: string | null, answer: string}>>([]);
 
+  const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:4343';
+
+  console.log('🚀 EditProfile mounted');
+  console.log('🔑 Token exists:', !!token);
+  console.log('👤 User ID:', user?.id);
+  console.log('🌐 API URL:', import.meta.env.VITE_API_URL);
+  console.log('📁 .env contents:', import.meta.env);
   // Fetch profile data on component mount
   useEffect(() => {
     const fetchProfileData = async () => {
@@ -120,7 +127,7 @@ const EditProfile: React.FC = () => {
         }
 
         // 1. Fetch user data
-        const userResponse = await fetch(`http://localhost:4343/api/users/${user.id}`, {
+        const userResponse = await fetch(`${apiUrl}/api/users/${user.id}`, {
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json',
@@ -134,7 +141,7 @@ const EditProfile: React.FC = () => {
         const userData = await userResponse.json();
         
         // 2. Fetch coffee profile questions and answers
-        const profileResponse = await fetch('http://localhost:4343/api/auth/profile/questions', {
+        const profileResponse = await fetch(`${apiUrl}/api/auth/profile/questions`, {
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json',
@@ -150,8 +157,8 @@ const EditProfile: React.FC = () => {
         // Set user data
         setId(userData.user?.username || userData.user?.id || '');
         setName(userData.user?.username || '');
-        setAvatarUrl(userData.user?.photoURL ? `http://localhost:4343${userData.user.photoURL}` : '');
-        setCoverImageUrl(userData.user?.coverImageURL ? `http://localhost:4343${userData.user.coverImageURL}` : '');
+        setAvatarUrl(userData.user?.photoURL ? `${userData.user.photoURL}` : '');
+        setCoverImageUrl(userData.user?.coverImageURL ? `${userData.user.coverImageURL}` : '');
         setPlace(userData.user?.place || ""); 
 
         // Set coffee profile data
@@ -270,7 +277,7 @@ const EditProfile: React.FC = () => {
     }
     
     try {
-      const response = await fetch('http://localhost:4343/api/auth/upload/images', {
+      const response = await fetch(`${apiUrl}/api/auth/upload/images`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -285,7 +292,7 @@ const EditProfile: React.FC = () => {
       
       // Update with permanent URLs from backend
       if (data.user?.photoURL) {
-        const fullUrl = `http://localhost:4343${data.user.photoURL}`;
+        const fullUrl = `${data.user.photoURL}`;
         console.log('🖼️ Setting avatar URL to:', fullUrl);
         setAvatarUrl(fullUrl);
 
@@ -296,7 +303,7 @@ const EditProfile: React.FC = () => {
         }); 
       }
       if (data.user?.coverImageURL) {
-        const fullUrl = `http://localhost:4343${data.user.coverImageURL}`;
+        const fullUrl = `${data.user.coverImageURL}`;
         console.log('🖼️ Setting cover URL to:', fullUrl);
         setCoverImageUrl(fullUrl);
       }
@@ -324,7 +331,7 @@ const EditProfile: React.FC = () => {
       place: place
     };
 
-    const response = await fetch(`http://localhost:4343/api/auth/profile/update`, {
+    const response = await fetch(`${apiUrl}/api/auth/profile/update`, {
       method: 'PATCH',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -345,7 +352,7 @@ const EditProfile: React.FC = () => {
         place: responseData.user.place,
         // Also include photoURL if it's returned
         ...(responseData.user.photoURL && { 
-          photoURL: `http://localhost:4343${responseData.user.photoURL}` 
+          photoURL: `${responseData.user.photoURL}` 
         })
       });
     }
@@ -458,7 +465,7 @@ const validateForm = (): string | null => {
 
       // Update each answer individually or batch them
       for (const update of updatePromises) {
-        const response = await fetch('http://localhost:4343/api/auth/profile/answers', {
+        const response = await fetch(`${apiUrl}/api/auth/profile/answers`, {
           method: 'PATCH',
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -505,7 +512,7 @@ const validateForm = (): string | null => {
     console.log("Deleting account with ID:", user.id);
     
     // Call the DELETE endpoint
-    const response = await fetch(`http://localhost:4343/api/users/${user.id}`, {
+    const response = await fetch(`${apiUrl}/api/users/${user.id}`, {
       method: 'DELETE',
       headers: {
         'Authorization': `Bearer ${token}`,

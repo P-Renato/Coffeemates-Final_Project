@@ -2,7 +2,7 @@ import type { PostType, Location } from "../utils/types";
 import { useEffect, useState } from 'react';
 import { AppContext } from "./PostContext";
 
-const apiUrl = import.meta.env.VITE_API_URL;   // create a .env file in client with VITE_API_URL=http://localhost:4343
+const apiUrl = import.meta.env.VITE_API_URL;   // create a .env file in client with VITE_API_URL=
 
 export const AppProvider = ({ children }: { children: React.ReactNode }) => {
   const [postPopup, setPostPopup] = useState(false);

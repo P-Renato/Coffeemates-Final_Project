@@ -14,7 +14,7 @@ interface NominatimResult {
 export async function geocodeAddress(address: string): Promise<Coordinates | null> {
   try {
     const res = await fetch(
-      `http://localhost:4343/api/geocode?address=${encodeURIComponent(address)}`
+      `/api/geocode?address=${encodeURIComponent(address)}`
     );
 
     if (!res.ok) {
@@ -38,7 +38,7 @@ export async function geocodeAddress(address: string): Promise<Coordinates | nul
 export async function reverseGeocode(lat: number, lng: number): Promise<string | null> {
   try {
     const res = await fetch(
-      `http://localhost:4343/api/geocode/reverse?lat=${lat}&lon=${lng}`
+      `/api/geocode/reverse?lat=${lat}&lon=${lng}`
     );
 
     if (!res.ok) {
