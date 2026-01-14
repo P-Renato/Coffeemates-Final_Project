@@ -8,6 +8,8 @@ const OAuthSuccess = () => {
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
   const hasHandledOAuth = useRef(false);
 
+  const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:4343';
+
   useEffect(() => {
     // Prevent double execution
     if (hasHandledOAuth.current) {
@@ -44,7 +46,7 @@ const OAuthSuccess = () => {
           
           try {
             // ✅ USE THE TOKEN FOR AUTHORIZATION
-            const response = await fetch(`/api/users/${userId}`, {
+            const response = await fetch(`${API_BASE_URL}/api/users/${userId}`, {
               headers: {
                 'Authorization': `Bearer ${token}`
               }

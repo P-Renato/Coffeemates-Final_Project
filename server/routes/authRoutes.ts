@@ -95,7 +95,7 @@ authRouter.get('/config', (req, res) => {
         google: {
             clientId: process.env.GOOGLE_CLIENT_ID ? '✅ Set' : '❌ Missing',
             clientSecret: process.env.GOOGLE_CLIENT_SECRET ? '✅ Set' : '❌ Missing',
-            callbackUrl: `${process.env.BASE_URL}/api/auth/google/callback`
+            callbackUrl: `${process.env.VITE_API_URL}/api/auth/google/callback`
         },
         baseUrl: process.env.BASE_URL
     });
