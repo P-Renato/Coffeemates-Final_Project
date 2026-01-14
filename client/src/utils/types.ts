@@ -37,7 +37,7 @@ export type CommentType = {
 export type ChatType = {
     _id: string,
     content: string,
-    senderId: string,
+    senderId: string | number,
     receiverId: string,
     senderUsername: string,
     createdAt: string,

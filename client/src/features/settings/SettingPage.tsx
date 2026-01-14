@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import CoffeeQuestionRow from "../../components/CoffeeQuestionRow";
 import CoffeeQuestionPicker from "../../components/CoffeeQuestionPicker";
 import DeleteAccountModal from "../../components/DeleteAccountModal";
+import coffeeProfileStyles from "../../components/coffeeProfile.module.css";
+import coffeeQuestionRowStyles from "../../components/coffeeQuestionRow.module.css";
 
 export default function SettingPage() {
   const [coverPhoto, setCoverPhoto] = useState<string | null>(
@@ -76,10 +78,10 @@ export default function SettingPage() {
             onChange={handleCoverChange}
           />
 
-          <div className="absolute left-14 -bottom-20 w-[160px] h-[160px] z-50">
+          <div className="absolute left-14 -bottom-20 w-40 h-40 z-50">
             <img
               src={profilePhoto ?? ""}
-              className="w-[160px] h-[160px] rounded-full object-cover border-4 border-white shadow-lg cursor-pointer"
+              className="w-40 h-40 rounded-full object-cover border-4 border-white shadow-lg cursor-pointer"
               onClick={() => document.getElementById("profileInput")?.click()}
             />
             <input
@@ -131,6 +133,7 @@ export default function SettingPage() {
         {labels.map((lbl, i) => (
           <CoffeeQuestionRow
             key={i}
+            styles={coffeeQuestionRowStyles}
             label={selectedQuestions[i] ?? lbl}
             value={selectedQuestions[i] ?? ""}
             answer={answers[i]}
@@ -158,6 +161,7 @@ export default function SettingPage() {
       {/* Modals */}
       {showPicker && (
         <CoffeeQuestionPicker
+          styles={coffeeProfileStyles} 
           onSelect={selectQuestion}
           onClose={() => setShowPicker(false)}
         />

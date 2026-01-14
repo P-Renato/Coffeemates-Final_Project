@@ -12,7 +12,7 @@ const apiUrl = import.meta.env.VITE_API_URL;
 export default function ChatPage() {
     const [auth, setAuth] = useState<{ id: string; username: string } | null>(null);
     const [users, setUsers] = useState<UserType[]>([]);
-    const [notifications, setNotifications] = useState<Record<number, number>>({});
+    const [notifications, setNotifications] = useState<Record<string, number>>({});
     const [lastmessage, setLastmessage] = useState<ChatType[]>([]);
     const [searchQuery, setSearchQuery] = useState("");
     const [searchResults, setSearchResults] = useState<UserType[]>([]);

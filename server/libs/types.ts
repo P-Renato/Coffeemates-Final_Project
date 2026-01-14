@@ -21,6 +21,8 @@ export interface IUser extends Document {
   coverImageURL?: string;
   googleId?: string;
   facebookId?: string;
+  status?: 'active' | 'pending' | 'banned' | 'inactive'; 
+  isActive?: boolean;
   oauthProvider?: 'google' | 'facebook' | 'local';
   comparePassword(candidatePassword: string): Promise<boolean>;
   createdAt: Date;

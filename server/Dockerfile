@@ -9,7 +9,7 @@ COPY bun.lock ./
 COPY tsconfig.json ./
 
 # Install dependencies
-RUN bun install
+RUN bun install --frozen-lockfile
 
 # Copy source code
 COPY . .
@@ -18,4 +18,4 @@ COPY . .
 EXPOSE 4343
 
 # Start development server
-CMD ["bun", "--watch", "index.ts"]
+CMD ["bun", "run", "start"]
