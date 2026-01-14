@@ -137,7 +137,7 @@ const LoginPage: React.FC = () => {
             <div className="flex flex-col sm:flex-row gap-4 mb-6">
               <button 
                 type="button" 
-                onClick={() => window.location.href = "/api/auth/google"} 
+                onClick={() => window.location.href = `${API_BASE_URL}/api/auth/google`} 
                 className="flex-1 flex items-center justify-center gap-3 px-4 py-3 bg-white border border-blue-300 rounded-xl hover:bg-blue-50 transition-colors duration-200"
               >
                 <FcGoogle size={20} />
@@ -145,7 +145,7 @@ const LoginPage: React.FC = () => {
               </button>
               <button 
                 type="button" 
-                onClick={() => window.location.href = "/api/auth/facebook"} 
+                onClick={() => window.location.href = `${API_BASE_URL}/api/auth/facebook`} 
                 className="flex-1 flex items-center justify-center gap-3 px-4 py-3 bg-white border border-blue-300 rounded-xl hover:bg-blue-50 transition-colors duration-200"
               >
                 <FaFacebook size={20} color="#1877F2" />

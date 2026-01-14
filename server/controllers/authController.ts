@@ -42,8 +42,7 @@ export const login = async (req: Request, res: Response) => {
         id: user._id,
         username: user.username,
         email: user.email,
-        role: user.role || 'user', // Include role, default to 'user'
-        // Add other fields you need
+        role: user.role || 'user', 
       },
       token
     });
