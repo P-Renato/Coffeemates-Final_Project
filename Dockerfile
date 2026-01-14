@@ -5,7 +5,7 @@ WORKDIR /app
 
 # Copy server files
 COPY server/package.json ./
-COPY server/bun.lockb ./
+COPY server/bun.lock* ./
 COPY server/tsconfig.json ./
 
 # Install dependencies
