@@ -23,11 +23,15 @@ const app = express();
 
 /* ----------- middlewares ---------------------- */
 app.use(cors({
-    origin: process.env.CLIENT_URL || 'http://localhost:5173' || 'http://localhost:5174' || "https://coffeemates-client.onrender.com",
+    origin: [
+        process.env.CLIENT_URL, // This could be your deployed frontend
+        'http://localhost:5173', 
+        'http://localhost:5174', 
+        'https://coffeemates-client.onrender.com'
+    ].filter(Boolean) as string[], // Remove any undefined/null values
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'Cookie']
-    
 }));
 
 app.use(cookieParser());
