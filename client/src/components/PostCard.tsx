@@ -7,7 +7,7 @@ import { useAuth } from "../hooks/useAuth";
 import { useAppContext } from "../hooks/usePost";
 import { NavLink } from "react-router-dom";
 
-// create a .env file in client with VITE_API_URL=http://localhost:4343
+// create a .env file in client with VITE_API_URL=
 const apiUrl = import.meta.env.VITE_API_URL;
 const imagePath = import.meta.env.VITE_IMAGE_PATH;
 

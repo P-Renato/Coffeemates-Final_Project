@@ -142,8 +142,8 @@ export default function ChatBox({ id }: { id: string }) {
     }, [messages]);
 
     const avatarUrl = otherImg
-        ? `http://localhost:4343${otherImg}`
-        : 'http://localhost:4343/uploads/profile/sample-photo.jpeg';
+        ? `${otherImg}`
+        : '/uploads/profile/sample-photo.jpeg';
 
     return (
         <div className="mx-auto flex flex-col h-full w-full bg-white border-l border-gray-300 p-6 space-y-4">

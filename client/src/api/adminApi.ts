@@ -3,7 +3,7 @@ import axios from 'axios';
 import { handleError } from '../utils/errorHandlers';
 
 // Your backend URL - from your logs
-const API_URL = 'http://localhost:4343';
+const API_URL = '';
 
 // Helper to get token
 const getToken = () => {
@@ -100,7 +100,7 @@ export const deleteUserById = async (userId: string) => {
   try {
     const token = localStorage.getItem('authToken')?.replace(/['"]+/g, '').trim();
     
-    const response = await fetch(`http://localhost:4343/api/auth/${userId}`, {
+    const response = await fetch(`/api/auth/${userId}`, {
       method: 'DELETE',
       headers: token ? {
         'Authorization': `Bearer ${token}`

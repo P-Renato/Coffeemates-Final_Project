@@ -191,7 +191,7 @@ export default function ChatPage() {
                                 <span className="flex items-center space-x-2 text-gray-800">
                                     <img
                                         onClick={() => openChat(u._id)}
-                                        src={u.photoURL ? `http://localhost:4343${u.photoURL}` : 'http://localhost:4343/uploads/profile/sample-photo.jpeg'}
+                                        src={u.photoURL ? `${u.photoURL}` : '/uploads/profile/sample-photo.jpeg'}
                                         alt={u.username}
                                         className="w-12 h-12 rounded-full cursor-pointer"
                                         onError={(e) => {

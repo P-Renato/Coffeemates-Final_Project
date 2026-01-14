@@ -81,5 +81,3 @@ export const uploadImages = upload.fields([
 
 // For posts
 export const uploadPostImage = upload.single('postImage');
-
-

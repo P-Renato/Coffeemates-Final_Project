@@ -13,7 +13,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  const apiUrl = import.meta.env.REACT_APP_API_URL || 'http://localhost:4343';
+  const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:4343';
 
   const logout = useCallback(() => {
     localStorage.removeItem('authToken');

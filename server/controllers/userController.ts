@@ -412,4 +412,3 @@ export const updateUserStatus = async (req: Request, res: Response) => {
     res.status(500).json({ error: 'Failed to update user status' });
   }
 };
-

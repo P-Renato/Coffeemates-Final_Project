@@ -11,8 +11,15 @@ export default defineConfig({
     proxy: {
       // Proxy API calls to your backend
       '/api': {
-        target: 'http://localhost:4343',
+        target: process.env.VITE_API_URL || 'http://localhost:4343',
         changeOrigin: true,
+        secure: false,
+        rewrite: (path) => path.replace(/^\/api/, '/api'),
+      },
+      '/uploads': {
+        target: process.env.VITE_API_URL || 'http://localhost:4343',
+        changeOrigin: true,
+        secure: false,
       },
       '/auth': {
         target: 'http://localhost:4343',
@@ -28,3 +35,5 @@ export default defineConfig({
     }
   }
 })
+
+
