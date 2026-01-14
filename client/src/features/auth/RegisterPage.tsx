@@ -27,7 +27,8 @@ const initialFormData: RegisterFormData = {
   password: '',
 };
 
-const API_BASE_URL = '/api/auth/register';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:4343';
+
 
 const RegisterPage: React.FC = () => {
   const navigate = useNavigate(); 
@@ -48,7 +49,7 @@ const RegisterPage: React.FC = () => {
     setStatus({ loading: true, error: null, success: false });
 
     try {
-      const response = await fetch(API_BASE_URL, {
+      const response = await fetch(`${API_BASE_URL}/api/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
