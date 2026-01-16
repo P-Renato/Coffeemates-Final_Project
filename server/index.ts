@@ -89,7 +89,7 @@ connectDB();
 
 
 app.use('/api/auth/upload', uploadRoutes);
-app.use('/api/auth', profileRouter);
+app.use('/api/auth/profile', profileRouter);
 app.use('/api/auth', authRouter);
 app.use('/api/users', userRouter);
 
