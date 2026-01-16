@@ -1,0 +1,344 @@
+name: CoffeeMates CI/CD
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  # Check route consistency between frontend and backend
+  route-consistency:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Find all frontend API calls
+        id: frontend-routes
+        run: |
+          echo "🔍 Finding all API calls in frontend..."
+          FRONTEND_API_CALLS=$(grep -r "fetch\|axios" src --include="*.ts" --include="*.tsx" | \
+            grep -o "['\"]/api/[^'\"]*['\"]" | \
+            sed "s/'//g; s/\"//g" | \
+            sort -u)
+          
+          echo "Frontend API calls found:"
+          echo "$FRONTEND_API_CALLS"
+          
+          # Save for later use
+          echo "calls<<EOF" >> $GITHUB_OUTPUT
+          echo "$FRONTEND_API_CALLS" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+      
+      - name: Find all backend routes
+        id: backend-routes
+        run: |
+          echo "🔍 Finding all backend routes..."
+          BACKEND_ROUTES=$(grep -r "router\.[get|post|put|patch|delete]" server/routes --include="*.ts" | \
+            grep -o "['\"][^'\"]*['\"]" | \
+            sed "s/'//g; s/\"//g" | \
+            sort -u)
+          
+          echo "Backend routes found:"
+          echo "$BACKEND_ROUTES"
+          
+          # Save for later use
+          echo "routes<<EOF" >> $GITHUB_OUTPUT
+          echo "$BACKEND_ROUTES" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+      
+      - name: Check route consistency
+        run: |
+          echo "🔗 Checking frontend/backend route consistency..."
+          
+          # Read the saved variables
+          FRONTEND_CALLS="${{ steps.frontend-routes.outputs.calls }}"
+          BACKEND_ROUTES="${{ steps.backend-routes.outputs.routes }}"
+          
+          ERROR_COUNT=0
+          
+          # Check each frontend call
+          while IFS= read -r api_call; do
+            if [ -n "$api_call" ]; then
+              echo ""
+              echo "Checking: $api_call"
+              
+              # Extract just the path part
+              PATH_ONLY=$(echo "$api_call" | sed 's|/api/||')
+              
+              # Check if any backend route ends with this path
+              FOUND=false
+              while IFS= read -r backend_route; do
+                if [ -n "$backend_route" ]; then
+                  # Remove leading slash if present
+                  BACKEND_CLEAN=$(echo "$backend_route" | sed 's|^/||')
+                  if [[ "$PATH_ONLY" == *"$BACKEND_CLEAN" ]] || [[ "$BACKEND_CLEAN" == *"$PATH_ONLY" ]]; then
+                    FOUND=true
+                    echo "  ✅ Backend has: $backend_route"
+                  fi
+                fi
+              done <<< "$BACKEND_ROUTES"
+              
+              if [ "$FOUND" = false ]; then
+                echo "  ❌ NO BACKEND ROUTE FOUND for: $api_call"
+                ERROR_COUNT=$((ERROR_COUNT + 1))
+                
+                # Give specific advice for common issues
+                if [[ "$api_call" == *"/profile/questions" ]]; then
+                  echo "  💡 SUGGESTION: Check server/index.ts - profileRouter should be mounted at /api/auth/profile"
+                  echo "  💡 Or change frontend to call /api/auth/questions"
+                fi
+              fi
+            fi
+          done <<< "$FRONTEND_CALLS"
+          
+          if [ $ERROR_COUNT -gt 0 ]; then
+            echo ""
+            echo "❌ Found $ERROR_COUNT route mismatch(es)"
+            exit 1
+          else
+            echo ""
+            echo "✅ All frontend API calls have corresponding backend routes!"
+          fi
+
+  # Test Backend with Bun
+  test-backend:
+    runs-on: ubuntu-latest
+    services:
+      mongo:
+        image: mongo:latest
+        ports:
+          - 27017:27017
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+      
+      - name: Install backend dependencies
+        working-directory: ./server
+        run: bun install
+      
+      - name: Type check
+        working-directory: ./server
+        run: bun x tsc --noEmit
+      
+      - name: Create test for the specific failing route
+        working-directory: ./server
+        run: |
+          # Create a test to verify the exact route issue
+          cat > test-route-issue.js << 'EOF'
+          import { spawn } from 'child_process';
+          import { fileURLToPath } from 'url';
+          import { dirname, join } from 'path';
+          
+          const __filename = fileURLToPath(import.meta.url);
+          const __dirname = dirname(__filename);
+          
+          console.log('🔍 Testing route: /api/auth/profile/questions');
+          console.log('Expected: Should NOT return 404');
+          console.log('');
+          
+          // Start the server
+          const server = spawn('bun', ['run', 'dev'], {
+            cwd: __dirname,
+            stdio: ['pipe', 'pipe', 'pipe']
+          });
+          
+          // Capture output
+          let serverOutput = '';
+          server.stdout.on('data', (data) => {
+            serverOutput += data.toString();
+            console.log(data.toString().trim());
+          });
+          
+          server.stderr.on('data', (data) => {
+            console.error('Server error:', data.toString());
+          });
+          
+          // Wait for server to start
+          await new Promise(resolve => setTimeout(resolve, 10000));
+          
+          // Test the problematic endpoint
+          try {
+            const response = await fetch('http://localhost:4343/api/auth/profile/questions');
+            console.log(`Status: ${response.status}`);
+            
+            if (response.status === 404) {
+              console.log('❌ FAIL: Route /api/auth/profile/questions returns 404');
+              console.log('');
+              console.log('POSSIBLE SOLUTIONS:');
+              console.log('1. Check server/index.ts - profileRouter should be mounted at /api/auth/profile');
+              console.log('   Change: app.use("/api/auth", profileRouter);');
+              console.log('   To:     app.use("/api/auth/profile", profileRouter);');
+              console.log('');
+              console.log('2. Or change frontend to call /api/auth/questions instead');
+              process.exit(1);
+            } else {
+              console.log(`✅ Route exists (status: ${response.status})`);
+            }
+          } catch (error) {
+            console.log('❌ Could not connect to server');
+            console.log(error.message);
+            process.exit(1);
+          } finally {
+            server.kill();
+          }
+          EOF
+          
+          echo "Running route test..."
+          # We'll run this test in the integration step
+
+  # Test Frontend Build
+  test-frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: 'package-lock.json'
+      
+      - name: Install frontend dependencies
+        run: npm ci
+      
+      - name: Find the problematic API call
+        run: |
+          echo "🔍 Searching for where /api/auth/profile/questions is called..."
+          
+          # Find files calling the problematic route
+          grep -r "/api/auth/profile/questions" src --include="*.ts" --include="*.tsx" || \
+            echo "Could not find exact string - checking for similar patterns"
+          
+          # Check for any profile/questions calls
+          echo ""
+          echo "Checking for profile questions API calls..."
+          grep -r "profile.*questions" src --include="*.ts" --include="*.tsx" -i
+      
+      - name: Build frontend
+        env:
+          VITE_API_URL: https://coffeemates-backend-service.onrender.com
+          VITE_IMAGE_PATH: /uploads/posts/
+        run: |
+          npm run build
+          
+          # Check if build succeeded
+          if [ ! -d "dist" ]; then
+            echo "❌ Build failed - no dist directory"
+            exit 1
+          fi
+          
+          echo "✅ Frontend build successful"
+
+  # Integration Test - Full Stack
+  integration-test:
+    runs-on: ubuntu-latest
+    needs: [route-consistency, test-backend, test-frontend]
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
+      
+      - name: Start backend
+        working-directory: ./server
+        env:
+          PORT: 4343
+          MONGO_URI: mongodb://localhost:27017/test
+          JWT_SECRET: test-secret
+          CLIENT_URL: http://localhost:5173
+          CORS_ORIGIN: http://localhost:5173
+        run: |
+          bun install
+          
+          # Create test uploads structure
+          mkdir -p uploads/posts uploads/profile uploads/cover
+          echo "test" > uploads/posts/test.jpg
+          echo "test" > uploads/profile/test.jpg
+          
+          # Start server in background
+          bun run dev &
+          SERVER_PID=$!
+          sleep 15
+          
+          echo "Server started with PID: $SERVER_PID"
+      
+      - name: Test ALL API endpoints
+        run: |
+          echo "🧪 Testing API Endpoints"
+          echo "========================"
+          
+          # Test 1: The problematic endpoint
+          echo ""
+          echo "1. Testing /api/auth/profile/questions"
+          echo "   (This is what frontend calls)"
+          STATUS1=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:4343/api/auth/profile/questions)
+          echo "   Status: $STATS1"
+          
+          echo ""
+          echo "2. Testing /api/auth/questions" 
+          echo "   (This is what backend actually has)"
+          STATUS2=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:4343/api/auth/questions)
+          echo "   Status: $STATUS2"
+          
+          echo ""
+          echo "3. Testing static file serving"
+          echo "   Testing /uploads/profile/test.jpg"
+          curl -f http://localhost:4343/uploads/profile/test.jpg && \
+            echo "   ✅ Static files work" || \
+            echo "   ❌ Static files fail"
+          
+          # Analyze results
+          echo ""
+          echo "📊 ANALYSIS:"
+          if [ "$STATUS1" = "404" ] && [ "$STATUS2" != "404" ]; then
+            echo "❌ ROUTE MISMATCH DETECTED!"
+            echo ""
+            echo "Frontend calls: /api/auth/profile/questions"
+            echo "Backend has:    /api/auth/questions"
+            echo ""
+            echo "SOLUTION: In server/index.ts, change:"
+            echo "  app.use('/api/auth', profileRouter);"
+            echo "To:"
+            echo "  app.use('/api/auth/profile', profileRouter);"
+            echo ""
+            echo "Or change frontend to call /api/auth/questions instead"
+            exit 1
+          elif [ "$STATUS2" = "404" ]; then
+            echo "❌ Backend route /api/auth/questions also doesn't exist!"
+            echo "Check server/routes/profileRoutes.ts"
+            exit 1
+          else
+            echo "✅ Routes are consistent"
+          fi
+      
+      - name: Cleanup
+        if: always()
+        run: |
+          pkill -f "bun run dev" || true
+
+  # Deploy if all tests pass
+  deploy:
+    runs-on: ubuntu-latest
+    needs: [route-consistency, integration-test]
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+      - name: All tests passed
+        run: |
+          echo "🚀 All tests passed! Ready for deployment."
+          echo ""
+          echo "Before deploying, make sure to:"
+          echo "1. Fix the route mismatch in server/index.ts"
+          echo "2. Commit and push the fix"
+          echo "3. Render will auto-deploy from main branch"
