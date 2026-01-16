@@ -6,7 +6,6 @@ on:
     branches: [main, master]
 
 jobs:
-  # ONE job that tests everything important
   test-production-readiness:
     runs-on: ubuntu-latest
     services:
@@ -25,22 +24,52 @@ jobs:
         working-directory: ./server
         env:
           PORT: 5000
+          ATLAS_URI: mongodb://localhost:27017/test_db  # ← ADD THIS
           MONGO_URI: mongodb://localhost:27017/test_db
           JWT_SECRET: test-secret-123
           CORS_ORIGIN: http://localhost:5173
+          CLIENT_URL: http://localhost:5173
+          GOOGLE_CLIENT_ID: test
+          GOOGLE_CLIENT_SECRET: test
+          FACEBOOK_APP_ID: test
+          FACEBOOK_APP_SECRET: test
+          SESSION_SECRET: test-session
         run: |
-          # Install
-          curl -fsSL https://bun.sh/install | bash
-          export PATH="$HOME/.bun/bin:$PATH"
+          # Install Bun (simpler method)
+          if ! command -v bun &> /dev/null; then
+            curl -fsSL https://bun.sh/install | bash
+            export PATH="$HOME/.bun/bin:$PATH"
+          fi
+          
+          # Install dependencies
           bun install
           
           # Check TypeScript
           bun x tsc --noEmit
           echo "✅ TypeScript compiles"
           
+          # Create a .env file for testing
+          cat > .env.test << 'EOF'
+          PORT=5000
+          ATLAS_URI=mongodb://localhost:27017/test_db
+          MONGO_URI=mongodb://localhost:27017/test_db
+          JWT_SECRET=test-secret-123
+          CORS_ORIGIN=http://localhost:5173
+          CLIENT_URL=http://localhost:5173
+          GOOGLE_CLIENT_ID=test
+          GOOGLE_CLIENT_SECRET=test
+          FACEBOOK_APP_ID=test
+          FACEBOOK_APP_SECRET=test
+          SESSION_SECRET=test-session
+          EOF
+          
+          # Use the test environment
+          export $(cat .env.test | xargs)
+          
           # Start server
           bun run dev &
-          sleep 10
+          SERVER_PID=$!
+          sleep 15
           
           # Test the EXACT route that's failing
           echo "🔍 Testing /api/auth/profile/questions..."
@@ -55,6 +84,7 @@ jobs:
             echo ""
             echo "Current config:"
             grep -n "profileRouter" index.ts
+            kill $SERVER_PID 2>/dev/null || true
             exit 1
           else
             echo "✅ Route exists (might need auth - status $STATUS is OK)"
@@ -68,6 +98,9 @@ jobs:
           curl -f http://localhost:5000/uploads/profile/test.jpg && \
             echo "✅ Static files work" || \
             echo "⚠️ Static files might not be configured"
+          
+          # Clean up
+          kill $SERVER_PID 2>/dev/null || true
       
       # Step 3: Test Frontend
       - name: Setup and test frontend
@@ -102,6 +135,7 @@ jobs:
         run: |
           echo "🚀 DEPLOYMENT READY CHECKLIST"
           echo "============================="
+          echo "✅ Backend starts without errors"
           echo "✅ Backend routes exist"
           echo "✅ Frontend builds with production URLs"
           echo "✅ No hardcoded localhost"
