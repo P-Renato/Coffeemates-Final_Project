@@ -1,38 +1,48 @@
 FROM oven/bun:1-alpine AS builder
 WORKDIR /app
 
-# Copy package files FIRST (for better caching)
+# Copy package files first (for caching)
 COPY server/package.json ./
 COPY server/bun.lock* ./
 COPY server/tsconfig.json ./
 
-# Install dependencies
+# Install all dependencies
 RUN bun install --frozen-lockfile
 
-# Copy source code
-COPY server/src ./src
+# Copy ALL server source files
+COPY server/ ./
 
 FROM oven/bun:1-alpine
 WORKDIR /app
 
-# Copy from builder stage
+# Copy production node_modules
 COPY --from=builder /app/node_modules ./node_modules
+
+# Copy ALL application files from builder
+COPY --from=builder /app/index.ts ./
 COPY --from=builder /app/package.json ./
+COPY --from=builder /app/tsconfig.json ./
 COPY --from=builder /app/src ./src
+COPY --from=builder /app/controllers ./controllers
+COPY --from=builder /app/routes ./routes
+COPY --from=builder /app/models ./models
+COPY --from=builder /app/middlewares ./middlewares
+COPY --from=builder /app/libs ./libs
+COPY --from=builder /app/utils ./utils
 
 # Create uploads directory structure
 RUN mkdir -p uploads/posts uploads/profile uploads/cover
 
-# Environment variables will be passed from Render
+# Environment variables (Render will override these)
 ENV NODE_ENV=production
 ENV PORT=4343
 
-# Expose the port
+# Expose port
 EXPOSE 4343
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD bun -e "import('node:http').then(http => http.get('http://localhost:4343/api/test', {timeout: 2000}, res => { if (res.statusCode === 200) process.exit(0); else process.exit(1) }).on('error', () => process.exit(1)))"
+  CMD wget --no-verbose --tries=1 --spider http://localhost:4343/api/test || exit 1
 
-# Start the application
+# Start command - uses package.json "start" script
 CMD ["bun", "run", "start"]
