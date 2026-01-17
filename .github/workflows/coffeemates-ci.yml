@@ -110,7 +110,7 @@ jobs:
           VITE_IMAGE_PATH: /uploads/posts/
         run: |
           # Install
-          npm ci
+          npm install
           
           # Check for hardcoded localhost
           echo "🔍 Checking for localhost in frontend..."
