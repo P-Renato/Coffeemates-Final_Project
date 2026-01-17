@@ -195,7 +195,7 @@ export default function ChatPage() {
                                         alt={u.username}
                                         className="w-12 h-12 rounded-full cursor-pointer"
                                         onError={(e) => {
-                                            e.currentTarget.src = '/default-avatar.png'; // Fallback if image fails to load
+                                            e.currentTarget.src = 'https://st3.depositphotos.com/6672868/13701/v/450/depositphotos_137014128-stock-illustration-user-profile-icon.jpg'; // Fallback if image fails to load
                                         }}
                                     />
 
