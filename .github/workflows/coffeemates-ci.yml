@@ -102,15 +102,15 @@ jobs:
           # Clean up
           kill $SERVER_PID 2>/dev/null || true
       
-      # Step 3: Test Frontend
+      # Step 3: Test Frontend - FIXED
       - name: Setup and test frontend
-        working-directory: .  # Root directory (where package.json is)
+        working-directory: ./client  # ← ADD THIS LINE
         env:
           VITE_API_URL: https://coffeemates-backend-service.onrender.com
           VITE_IMAGE_PATH: /uploads/posts/
         run: |
-          # Install
-          npm install
+          # Install - now in correct directory
+          npm ci
           
           # Check for hardcoded localhost
           echo "🔍 Checking for localhost in frontend..."
