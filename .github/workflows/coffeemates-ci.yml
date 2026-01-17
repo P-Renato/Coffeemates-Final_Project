@@ -103,38 +103,38 @@ jobs:
           kill $SERVER_PID 2>/dev/null || true
       
       # Step 3: Test Frontend - FINAL VERSION
-- name: Setup and test frontend
-  working-directory: ./client
-  env:
-    VITE_API_URL: https://coffeemates-backend-service.onrender.com
-    VITE_IMAGE_PATH: /uploads/posts/
-  run: |
-    npm ci
-    
-    # Build with production environment
-    echo "Building with VITE_API_URL=$VITE_API_URL"
-    npm run build
-    
-    # CRITICAL CHECK: Built files should NOT contain localhost
-    echo "🔍 Checking built production files..."
-    if grep -r "localhost:4343" dist/ 2>/dev/null; then
-      echo "❌ CRITICAL ERROR: Production build contains localhost!"
-      echo "   This means VITE_API_URL environment variable wasn't used"
-      echo "   Check that:"
-      echo "   1. VITE_API_URL is set in Render environment"
-      echo "   2. You're using import.meta.env.VITE_API_URL in your code"
-      exit 1
-    fi
-    
-    # Optional: Check for your production URL in the build
-    if grep -r "coffeemates-backend-service" dist/ 2>/dev/null; then
-      echo "✅ Production build uses Render backend URL"
-    else
-      echo "⚠️  Warning: Build doesn't contain Render URL"
-      echo "   (Might be using relative paths or different variable)"
-    fi
-    
-    echo "✅ Frontend builds successfully"
+    name: Setup and test frontend
+    working-directory: ./client
+    env:
+      VITE_API_URL: https://coffeemates-backend-service.onrender.com
+      VITE_IMAGE_PATH: /uploads/posts/
+    run: |
+      npm ci
+      
+      # Build with production environment
+      echo "Building with VITE_API_URL=$VITE_API_URL"
+      npm run build
+      
+      # CRITICAL CHECK: Built files should NOT contain localhost
+      echo "🔍 Checking built production files..."
+      if grep -r "localhost:4343" dist/ 2>/dev/null; then
+        echo "❌ CRITICAL ERROR: Production build contains localhost!"
+        echo "   This means VITE_API_URL environment variable wasn't used"
+        echo "   Check that:"
+        echo "   1. VITE_API_URL is set in Render environment"
+        echo "   2. You're using import.meta.env.VITE_API_URL in your code"
+        exit 1
+      fi
+      
+      # Optional: Check for your production URL in the build
+      if grep -r "coffeemates-backend-service" dist/ 2>/dev/null; then
+        echo "✅ Production build uses Render backend URL"
+      else
+        echo "⚠️  Warning: Build doesn't contain Render URL"
+        echo "   (Might be using relative paths or different variable)"
+      fi
+      
+      echo "✅ Frontend builds successfully"
       
       # Step 4: Final check
       - name: Verify deployment ready
