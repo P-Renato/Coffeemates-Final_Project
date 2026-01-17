@@ -126,7 +126,7 @@ jobs:
         exit 1
       fi
       
-      # Optional: Check for your production URL in the build
+      
       if grep -r "coffeemates-backend-service" dist/ 2>/dev/null; then
         echo "✅ Production build uses Render backend URL"
       else
