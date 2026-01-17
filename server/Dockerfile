@@ -4,9 +4,9 @@ FROM oven/bun:1-alpine
 WORKDIR /app
 
 # Copy package files
-COPY server/package.json ./
-COPY server/bun.lock* ./ 
-COPY server/tsconfig.json ./
+COPY package.json ./
+COPY bun.lock* ./ 
+COPY tsconfig.json ./
 
 COPY server/src ./src
 
