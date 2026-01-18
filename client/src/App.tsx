@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import AuthLayout from "./layouts/AuthLayout";
 import MainLayout from "./layouts/MainLayout";
 import { AuthProvider } from './context/AuthProvider';
@@ -18,53 +18,55 @@ import EditProfil from "./features/profile/EditProfile";
 
 const App = () => {
   return (
-    <AppProvider>
-      <AuthProvider>
-        <Routes>
-          {/* Redirect root to login */}
-          <Route path="/" element={<Navigate to="/home" replace />} />
+    <BrowserRouter>
+      <AppProvider>
+        <AuthProvider>
+          <Routes>
+            {/* Redirect root to login */}
+            <Route path="/" element={<Navigate to="/home" replace />} />
 
-          {/* Public routes - accessible without authentication */}
-          <Route element={<AuthLayout />}>
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/signup" element={<RegisterPage />} />
-          </Route>
+            {/* Public routes - accessible without authentication */}
+            <Route element={<AuthLayout />}>
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/signup" element={<RegisterPage />} />
+            </Route>
 
-          {/* OAuth success route */}
-          <Route path="/oauth-success" element={<OAuthSuccess />} />
+            {/* OAuth success route */}
+            <Route path="/oauth-success" element={<OAuthSuccess />} />
 
-          {/* Protected routes - ONLY accessible when authenticated */}
-          <Route
-            element={
-              <ProtectedRoute>
-                <MainLayout />
-              </ProtectedRoute>
-            }
-          >
-            <Route path="/home" element={<HomePage />} />
-            <Route path="/search" element={<SearchPage />} />
-            <Route path="/chat" element={<ChatPage />} />
-            <Route path="/profile" element={<ProfilePage />} />
-            <Route path="/profile/edit" element={<EditProfil />} />
-            <Route path="/settings" element={<SettingPage />} />
-            <Route path="/edit-profile" element={<EditProfil />} />
-          </Route>
+            {/* Protected routes - ONLY accessible when authenticated */}
+            <Route
+              element={
+                <ProtectedRoute>
+                  <MainLayout />
+                </ProtectedRoute>
+              }
+            >
+              <Route path="/home" element={<HomePage />} />
+              <Route path="/search" element={<SearchPage />} />
+              <Route path="/chat" element={<ChatPage />} />
+              <Route path="/profile" element={<ProfilePage />} />
+              <Route path="/profile/edit" element={<EditProfil />} />
+              <Route path="/settings" element={<SettingPage />} />
+              <Route path="/edit-profile" element={<EditProfil />} />
+            </Route>
 
-          {/* Admin route */}
-          <Route
-            path="/admin"
-            element={
-              <ProtectedRoute>
-                <AdminPage />
-              </ProtectedRoute>
-            }
-          />
+            {/* Admin route */}
+            <Route
+              path="/admin"
+              element={
+                <ProtectedRoute>
+                  <AdminPage />
+                </ProtectedRoute>
+              }
+            />
 
-          {/* Catch-all */}
-          <Route path="*" element={<h1>404: Not Found</h1>} />
-        </Routes>
-      </AuthProvider>
-    </AppProvider>
+            {/* Catch-all */}
+            <Route path="*" element={<h1>404: Not Found</h1>} />
+          </Routes>
+        </AuthProvider>
+      </AppProvider>
+    </BrowserRouter>
   );
 }
 
