@@ -141,11 +141,81 @@ jobs:
       
       # Step 3: Test Frontend with focus on routing
       - name: Setup and test frontend
-        input: {
-        main: 'index.html',
-        // Add this for 404 handling
-        '404': '404.html'
-      }
+        working-directory: ./client
+        env:
+          VITE_API_URL: http://localhost:5000
+        run: |
+          npm ci
+          
+          # Check if SPA routing is properly configured
+          echo "🔍 Checking SPA routing configuration..."
+          
+          # Check for index.html
+          if [ -f "index.html" ]; then
+            echo "✅ index.html exists"
+            # Check if it has the root div for React
+            if grep -q '<div id="root"></div>' index.html; then
+              echo "✅ React mount point found"
+            fi
+          fi
+          
+          # Check if Router is properly set up in App.tsx
+          echo ""
+          echo "🔍 Checking React Router setup..."
+          if [ -f "src/App.tsx" ]; then
+            if grep -q "BrowserRouter" src/App.tsx; then
+              echo "✅ BrowserRouter is used"
+            else
+              echo "❌ BrowserRouter NOT found - this is required for SPA routing"
+            fi
+            
+            # Count Route definitions
+            ROUTE_COUNT=$(grep -c "Route path=" src/App.tsx || echo "0")
+            echo "Found $ROUTE_COUNT Route definitions"
+            
+            # Check for /signup route specifically
+            if grep -q 'path="/signup"' src/App.tsx; then
+              echo "✅ /signup route is defined"
+            else
+              echo "❌ /signup route is NOT defined - this is your issue!"
+            fi
+          fi
+          
+          # Build the app
+          echo "Building with VITE_API_URL=$VITE_API_URL"
+          npm run build
+          
+          # Check the built output
+          echo ""
+          echo "🔍 Checking built files..."
+          if [ -f "dist/index.html" ]; then
+            echo "✅ index.html built successfully"
+            # Check if it's a proper SPA (no server-side routing)
+            if ! grep -q ".html" dist/index.html; then
+              echo "✅ SPA setup detected (no .html extensions in links)"
+            fi
+          else
+            echo "❌ index.html not found in dist/"
+            exit 1
+          fi
+          
+          # Check for missing static.json for SPA hosting
+          if [ ! -f "static.json" ]; then
+            echo "⚠️  No static.json found - this may cause 404 errors on direct page access"
+            echo "   Creating a static.json for SPA support..."
+            cat > static.json << 'EOF'
+            {
+              "root": "dist/",
+              "clean_urls": true,
+              "routes": {
+                "/**": "index.html"
+              }
+            }
+            EOF
+            echo "✅ Created static.json for SPA support"
+          fi
+          
+          echo "✅ Frontend builds successfully"
       
       # Step 4: Critical fix check
       - name: Apply critical fixes
