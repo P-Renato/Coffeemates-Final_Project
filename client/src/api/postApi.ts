@@ -1,5 +1,7 @@
 // client/src/api/postApi.ts
-const API_URL = '/api';
+const API_URL = import.meta.env.VITE_API_URL ? 
+  `${import.meta.env.VITE_API_URL}/api` : 
+  '/api';
 
 const getToken = () => {
   return localStorage.getItem('authToken')?.replace(/['"]+/g, '').trim();
