@@ -31,7 +31,11 @@ export default defineConfig({
     outDir: 'dist',
     assetsDir: 'assets',
     rollupOptions: {
-      // Ensure proper handling of entry points
+      input: {
+        main: 'index.html',
+        // Add this for 404 handling
+        '404': '404.html'
+      }
     }
   }
 })

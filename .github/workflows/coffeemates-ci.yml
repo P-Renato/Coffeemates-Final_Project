@@ -141,56 +141,11 @@ jobs:
       
       # Step 3: Test Frontend with focus on routing
       - name: Setup and test frontend
-        working-directory: ./client
-        env:
-          VITE_API_URL: http://localhost:5000  # Test with local server
-        run: |
-          npm ci
-          
-          # Check if VITE_API_URL is being used correctly
-          echo "🔍 Checking environment variable usage..."
-          if grep -r "localhost:4343" src/ 2>/dev/null; then
-            echo "⚠️  WARNING: Found hardcoded localhost:4343 in source files"
-            echo "   This should be replaced with import.meta.env.VITE_API_URL"
-          fi
-          
-          # Check the postApi.ts file specifically
-          echo ""
-          echo "🔍 Checking postApi.ts..."
-          if grep -q "const API_URL = '/api';" src/api/postApi.ts; then
-            echo "❌ CRITICAL: postApi.ts uses relative URL '/api' instead of VITE_API_URL"
-            echo "   This causes issues when frontend is on different domain than backend"
-            echo "   Change to: const API_URL = import.meta.env.VITE_API_URL + '/api'"
-          fi
-          
-          # Build with production environment
-          echo "Building with VITE_API_URL=$VITE_API_URL"
-          npm run build
-          
-          # Check built files for routing issues
-          echo ""
-          echo "🔍 Checking for SPA routing issues..."
-          if [ -f "dist/index.html" ]; then
-            echo "✅ Index.html exists"
-            # Check if it's an SPA setup (should have a div#root)
-            if grep -q "id=\"root\"" dist/index.html; then
-              echo "✅ SPA setup detected"
-            fi
-          fi
-          
-          # Check for the /signup route issue
-          echo ""
-          echo "🔍 Checking routing configuration..."
-          if [ -f "src/App.tsx" ]; then
-            if grep -q "/signup" src/App.tsx; then
-              echo "✅ /signup route found in App.tsx"
-            else
-              echo "❌ /signup route NOT found in App.tsx"
-              echo "   This causes 404 when accessing /signup directly"
-            fi
-          fi
-          
-          echo "✅ Frontend builds successfully"
+        input: {
+        main: 'index.html',
+        // Add this for 404 handling
+        '404': '404.html'
+      }
       
       # Step 4: Critical fix check
       - name: Apply critical fixes
