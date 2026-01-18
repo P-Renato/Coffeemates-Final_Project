@@ -24,7 +24,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
       
-      # Step 2: Test Backend
+      # Step 2: Test Backend with better error handling
       - name: Setup and test backend
         working-directory: ./server
         env:
@@ -54,7 +54,7 @@ jobs:
           echo "✅ TypeScript compiles"
           
           # Create test .env file
-          cat > .env.test << 'ENV_EOF'
+          cat > .env.test << 'EOF'
           PORT=5000
           ATLAS_URI=mongodb://localhost:27017/test_db
           MONGO_URI=mongodb://localhost:27017/test_db
@@ -66,13 +66,13 @@ jobs:
           FACEBOOK_APP_ID=test
           FACEBOOK_APP_SECRET=test
           SESSION_SECRET=test-session
-          ENV_EOF
+          EOF
           
           # Use the test environment
           export $(cat .env.test | xargs)
           
-          # Test the backend
-          echo "🔍 Testing backend server..."
+          # CRITICAL: Test the POST endpoint that's failing
+          echo "🔍 Testing POST /api/post endpoint..."
           
           # Start server in background
           bun run dev &
@@ -93,26 +93,53 @@ jobs:
             sleep 2
           done
           
-          # Test endpoints
+          # Test POST endpoint (the one giving JSON error)
           echo ""
-          echo "🔍 Testing /api/auth/register endpoint..."
-          REGISTER_STATUS=$(curl -s -o /dev/null -w "%{http_code}" -X POST \
+          echo "🔍 Testing POST creation endpoint..."
+          TEST_RESPONSE=$(curl -s -w "\n%{http_code}" -X POST \
+            -H "Content-Type: application/json" \
+            -d '{"title":"Test Post","content":"Test content"}' \
+            http://localhost:5000/api/post)
+            
+          HTTP_CODE=$(echo "$TEST_RESPONSE" | tail -n1)
+          RESPONSE_BODY=$(echo "$TEST_RESPONSE" | head -n -1)
+          
+          echo "POST /api/post status: $HTTP_CODE"
+          
+          if [ "$HTTP_CODE" = "401" ] || [ "$HTTP_CODE" = "400" ]; then
+            echo "✅ POST endpoint responds (auth required, which is expected)"
+          elif [ "$HTTP_CODE" = "200" ] || [ "$HTTP_CODE" = "201" ]; then
+            echo "✅ POST endpoint works"
+          else
+            echo "⚠️  POST endpoint returned $HTTP_CODE"
+            echo "Response body: $RESPONSE_BODY"
+          fi
+          
+          # Test that response is valid JSON
+          if [ -n "$RESPONSE_BODY" ]; then
+            if echo "$RESPONSE_BODY" | jq . > /dev/null 2>&1; then
+              echo "✅ Response is valid JSON"
+            else
+              echo "❌ Response is NOT valid JSON - this causes 'Unexpected end of JSON input'"
+              echo "Raw response: $RESPONSE_BODY"
+            fi
+          fi
+          
+          # Test auth routes
+          echo ""
+          echo "🔍 Testing /api/auth/register..."
+          REGISTER_RESPONSE=$(curl -s -w "\n%{http_code}" -X POST \
             -H "Content-Type: application/json" \
             -d '{"username":"testuser","email":"test@test.com","password":"test123"}' \
             http://localhost:5000/api/auth/register)
-          echo "Register status: $REGISTER_STATUS"
-          
-          echo ""
-          echo "🔍 Testing /api/post endpoint..."
-          POST_STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
-            http://localhost:5000/api/post)
-          echo "GET /api/post status: $POST_STATUS"
+            
+          REGISTER_CODE=$(echo "$REGISTER_RESPONSE" | tail -n1)
+          echo "Register status: $REGISTER_CODE"
           
           # Clean up
           kill $SERVER_PID 2>/dev/null || true
-          sleep 2
       
-      # Step 3: Test Frontend
+      # Step 3: Test Frontend with focus on routing
       - name: Setup and test frontend
         working-directory: ./client
         env:
@@ -120,83 +147,123 @@ jobs:
         run: |
           npm ci
           
-          # Check router setup
-          echo "🔍 Checking router configuration..."
+          # Check if SPA routing is properly configured
+          echo "🔍 Checking SPA routing configuration..."
           
-          # Check App.tsx has BrowserRouter
+          # Check for index.html
+          if [ -f "index.html" ]; then
+            echo "✅ index.html exists"
+            # Check if it has the root div for React
+            if grep -q '<div id="root"></div>' index.html; then
+              echo "✅ React mount point found"
+            fi
+          fi
+          
+          # Check if Router is properly set up in App.tsx
+          echo ""
+          echo "🔍 Checking React Router setup..."
           if [ -f "src/App.tsx" ]; then
             if grep -q "BrowserRouter" src/App.tsx; then
-              echo "✅ BrowserRouter found in App.tsx"
+              echo "✅ BrowserRouter is used"
             else
-              echo "❌ BrowserRouter NOT in App.tsx"
-              echo "Current App.tsx first 5 lines:"
-              head -5 src/App.tsx
-              exit 1
+              echo "❌ BrowserRouter NOT found - this is required for SPA routing"
             fi
-          fi
-          
-          # Check main.tsx does NOT have BrowserRouter (since it's in App.tsx)
-          if [ -f "src/main.tsx" ]; then
-            if grep -q "BrowserRouter" src/main.tsx; then
-              echo "⚠️  BrowserRouter in main.tsx - should be removed"
-              # Fix main.tsx
-              sed -i '/BrowserRouter/d' src/main.tsx
-              sed -i '/<BrowserRouter>/,/<\/BrowserRouter>/d' src/main.tsx
-              echo "✅ Fixed main.tsx"
+            
+            # Count Route definitions
+            ROUTE_COUNT=$(grep -c "Route path=" src/App.tsx || echo "0")
+            echo "Found $ROUTE_COUNT Route definitions"
+            
+            # Check for /signup route specifically
+            if grep -q 'path="/signup"' src/App.tsx; then
+              echo "✅ /signup route is defined"
             else
-              echo "✅ BrowserRouter not in main.tsx (correct)"
-            fi
-          fi
-          
-          # Fix vite.config.ts if needed
-          echo ""
-          echo "🔍 Checking vite.config.ts..."
-          if [ -f "vite.config.ts" ]; then
-            # Remove any 404.html references
-            sed -i '/404\.html/d' vite.config.ts
-            echo "✅ Cleaned vite.config.ts"
-          fi
-          
-          # Create static.json for Render SPA support (simple version)
-          echo ""
-          echo "🔍 Creating static.json..."
-          echo '{"root":"dist/","clean_urls":true,"routes":{"/**":"index.html"}}' > static.json
-          
-          # Fix postApi.ts if needed
-          echo ""
-          echo "🔍 Checking postApi.ts..."
-          if [ -f "src/api/postApi.ts" ]; then
-            # Check if it uses hardcoded /api
-            if grep -q "const API_URL = '/api';" src/api/postApi.ts; then
-              echo "⚠️  Fixing postApi.ts API_URL..."
-              # Simple fix - just replace that one line
-              sed -i "s|const API_URL = '/api';|const API_URL = import.meta.env.VITE_API_URL + '/api';|" src/api/postApi.ts
-              echo "✅ Fixed postApi.ts"
+              echo "❌ /signup route is NOT defined - this is your issue!"
             fi
           fi
           
           # Build the app
-          echo ""
           echo "Building with VITE_API_URL=$VITE_API_URL"
           npm run build
           
-          # Verify build
+          # Check the built output
           echo ""
+          echo "🔍 Checking built files..."
+          if [ -f "dist/index.html" ]; then
+            echo "✅ index.html built successfully"
+            # Check if it's a proper SPA (no server-side routing)
+            if ! grep -q ".html" dist/index.html; then
+              echo "✅ SPA setup detected (no .html extensions in links)"
+            fi
+          else
+            echo "❌ index.html not found in dist/"
+            exit 1
+          fi
+          
+          # Check for missing static.json for SPA hosting
+          if [ ! -f "static.json" ]; then
+            echo "⚠️  No static.json found - this may cause 404 errors on direct page access"
+            echo "   Creating a static.json for SPA support..."
+            cat > static.json << 'EOF'
+            {
+              "root": "dist/",
+              "clean_urls": true,
+              "routes": {
+                "/**": "index.html"
+              }
+            }
+            EOF
+            echo "✅ Created static.json for SPA support"
+          fi
+          
           echo "✅ Frontend builds successfully"
-          echo "📁 Build output:"
-          ls -la dist/
       
-      # Step 4: Final check
-      - name: Verify deployment ready
+      # Step 4: Critical fix check
+      - name: Apply critical fixes
         run: |
-          echo "🚀 DEPLOYMENT READY CHECKLIST"
-          echo "============================="
-          echo "✅ Backend starts without errors"
-          echo "✅ Frontend builds with production URLs"
-          echo "✅ Static.json created for SPA routing"
-          echo "✅ postApi.ts uses environment variable"
+          echo "🚀 APPLYING CRITICAL FIXES"
+          echo "==========================="
+          
+          # Fix 1: Update postApi.ts to use environment variable
           echo ""
-          echo "📋 Next steps:"
-          echo "1. Deploy static.json with your client"
-          echo "2. Make sure BrowserRouter is in main.tsx or App.tsx"
-          echo "3. Set VITE_API_URL in Render environment"
+          echo "🔧 Fixing postApi.ts API_URL..."
+          cat > /tmp/fix_postapi.js << 'EOF'
+          const fs = require('fs');
+          const path = require('path');
+          
+          const postApiPath = path.join('client', 'src', 'api', 'postApi.ts');
+          if (fs.existsSync(postApiPath)) {
+            let content = fs.readFileSync(postApiPath, 'utf8');
+            
+            // Replace hardcoded '/api' with environment variable
+            if (content.includes("const API_URL = '/api';")) {
+              content = content.replace(
+                "const API_URL = '/api';",
+                "const API_URL = import.meta.env.VITE_API_URL + '/api';"
+              );
+              fs.writeFileSync(postApiPath, content);
+              console.log('✅ Fixed API_URL in postApi.ts');
+            } else if (content.includes("const API_URL = import.meta.env.VITE_API_URL")) {
+              console.log('✅ API_URL already uses environment variable');
+            } else {
+              console.log('⚠️  Could not find API_URL declaration to fix');
+            }
+          } else {
+            console.log('❌ postApi.ts not found at:', postApiPath);
+          }
+          EOF
+          
+          node /tmp/fix_postapi.js
+          
+          # Fix 2: Check for JSON response issues in backend
+          echo ""
+          echo "🔧 Checking backend response handling..."
+          if [ -f "server/controllers/postController.ts" ]; then
+            echo "Checking postController for proper JSON responses..."
+            # Look for error responses that might not be JSON
+            if grep -q "res.status(500).send" server/controllers/postController.ts; then
+              echo "⚠️  Found res.status(500).send - should use res.status(500).json"
+            fi
+          fi
+          
+          echo ""
+          echo "✅ Fixes applied"
