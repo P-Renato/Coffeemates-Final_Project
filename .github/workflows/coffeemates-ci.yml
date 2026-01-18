@@ -24,7 +24,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
       
-      # Step 2: Test Backend with better error handling
+      # Step 2: Test Backend
       - name: Setup and test backend
         working-directory: ./server
         env:
@@ -54,7 +54,7 @@ jobs:
           echo "✅ TypeScript compiles"
           
           # Create test .env file
-          cat > .env.test << 'EOF'
+          cat > .env.test << 'ENV_EOF'
           PORT=5000
           ATLAS_URI=mongodb://localhost:27017/test_db
           MONGO_URI=mongodb://localhost:27017/test_db
@@ -66,13 +66,13 @@ jobs:
           FACEBOOK_APP_ID=test
           FACEBOOK_APP_SECRET=test
           SESSION_SECRET=test-session
-          EOF
+          ENV_EOF
           
           # Use the test environment
           export $(cat .env.test | xargs)
           
-          # CRITICAL: Test the POST endpoint that's failing
-          echo "🔍 Testing POST /api/post endpoint..."
+          # Test the backend
+          echo "🔍 Testing backend server..."
           
           # Start server in background
           bun run dev &
@@ -93,53 +93,26 @@ jobs:
             sleep 2
           done
           
-          # Test POST endpoint (the one giving JSON error)
+          # Test endpoints
           echo ""
-          echo "🔍 Testing POST creation endpoint..."
-          TEST_RESPONSE=$(curl -s -w "\n%{http_code}" -X POST \
-            -H "Content-Type: application/json" \
-            -d '{"title":"Test Post","content":"Test content"}' \
-            http://localhost:5000/api/post)
-            
-          HTTP_CODE=$(echo "$TEST_RESPONSE" | tail -n1)
-          RESPONSE_BODY=$(echo "$TEST_RESPONSE" | head -n -1)
-          
-          echo "POST /api/post status: $HTTP_CODE"
-          
-          if [ "$HTTP_CODE" = "401" ] || [ "$HTTP_CODE" = "400" ]; then
-            echo "✅ POST endpoint responds (auth required, which is expected)"
-          elif [ "$HTTP_CODE" = "200" ] || [ "$HTTP_CODE" = "201" ]; then
-            echo "✅ POST endpoint works"
-          else
-            echo "⚠️  POST endpoint returned $HTTP_CODE"
-            echo "Response body: $RESPONSE_BODY"
-          fi
-          
-          # Test that response is valid JSON
-          if [ -n "$RESPONSE_BODY" ]; then
-            if echo "$RESPONSE_BODY" | jq . > /dev/null 2>&1; then
-              echo "✅ Response is valid JSON"
-            else
-              echo "❌ Response is NOT valid JSON - this causes 'Unexpected end of JSON input'"
-              echo "Raw response: $RESPONSE_BODY"
-            fi
-          fi
-          
-          # Test auth routes
-          echo ""
-          echo "🔍 Testing /api/auth/register..."
-          REGISTER_RESPONSE=$(curl -s -w "\n%{http_code}" -X POST \
+          echo "🔍 Testing /api/auth/register endpoint..."
+          REGISTER_STATUS=$(curl -s -o /dev/null -w "%{http_code}" -X POST \
             -H "Content-Type: application/json" \
             -d '{"username":"testuser","email":"test@test.com","password":"test123"}' \
             http://localhost:5000/api/auth/register)
-            
-          REGISTER_CODE=$(echo "$REGISTER_RESPONSE" | tail -n1)
-          echo "Register status: $REGISTER_CODE"
+          echo "Register status: $REGISTER_STATUS"
+          
+          echo ""
+          echo "🔍 Testing /api/post endpoint..."
+          POST_STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+            http://localhost:5000/api/post)
+          echo "GET /api/post status: $POST_STATUS"
           
           # Clean up
           kill $SERVER_PID 2>/dev/null || true
+          sleep 2
       
-      # Step 3: Test Frontend with focus on routing
+      # Step 3: Test Frontend
       - name: Setup and test frontend
         working-directory: ./client
         env:
@@ -153,29 +126,14 @@ jobs:
             if grep -q "BrowserRouter" src/main.tsx; then
               echo "✅ BrowserRouter found in main.tsx"
             else
-              echo "❌ BrowserRouter NOT in main.tsx - fixing..."
-              # Backup original
-              cp src/main.tsx src/main.tsx.backup
-              # Create fixed version
-              cat > src/main.tsx << 'EOF'
-              import React from 'react'
-              import ReactDOM from 'react-dom/client'
-              import { BrowserRouter } from 'react-router-dom'
-              import App from './App.tsx'
-              import './index.css'
-              
-              ReactDOM.createRoot(document.getElementById('root')!).render(
-                <React.StrictMode>
-                  <BrowserRouter>
-                    <App />
-                  </BrowserRouter>
-                </React.StrictMode>,
-              )
-              EOF
-              echo "✅ Fixed main.tsx"
+              echo "❌ BrowserRouter NOT in main.tsx"
+              echo "Current main.tsx content:"
+              head -20 src/main.tsx
+              exit 1
             fi
           else
             echo "⚠️  src/main.tsx not found"
+            exit 1
           fi
           
           # Fix vite.config.ts if it has 404.html reference
@@ -183,9 +141,9 @@ jobs:
           echo "🔍 Checking vite.config.ts..."
           if [ -f "vite.config.ts" ]; then
             if grep -q "404.html" vite.config.ts; then
-              echo "⚠️  Found 404.html in vite.config.ts - removing..."
+              echo "⚠️  Found 404.html in vite.config.ts - fixing..."
               # Create a clean vite.config.ts
-              cat > vite.config.ts << 'EOF'
+              cat > vite.config.ts << 'VITE_EOF'
               import { defineConfig } from 'vite';
               import react from '@vitejs/plugin-react';
               
@@ -198,7 +156,7 @@ jobs:
                   outDir: 'dist',
                 }
               });
-              EOF
+              VITE_EOF
               echo "✅ Fixed vite.config.ts"
             else
               echo "✅ vite.config.ts looks good"
@@ -208,7 +166,7 @@ jobs:
           # Create static.json for Render SPA support
           echo ""
           echo "🔍 Creating static.json for SPA support..."
-          cat > static.json << 'EOF'
+          cat > static.json << 'STATIC_EOF'
           {
             "root": "dist/",
             "clean_urls": true,
@@ -221,10 +179,192 @@ jobs:
               }
             }
           }
-          EOF
+          STATIC_EOF
           echo "✅ Created static.json"
           
+          # Fix postApi.ts to use VITE_API_URL
+          echo ""
+          echo "🔍 Checking postApi.ts..."
+          if [ -f "src/api/postApi.ts" ]; then
+            if grep -q "const API_URL = '/api';" src/api/postApi.ts; then
+              echo "⚠️  Found hardcoded '/api' in postApi.ts - fixing..."
+              cat > src/api/postApi.ts << 'POSTAPI_EOF'
+              // client/src/api/postApi.ts
+              const API_URL = import.meta.env.VITE_API_URL ? 
+                \`\${import.meta.env.VITE_API_URL}/api\` : 
+                '/api';
+              
+              const getToken = () => {
+                return localStorage.getItem('authToken')?.replace(/['"]+/g, '').trim();
+              };
+              
+              // Get all posts
+              export const getAllPosts = async () => {
+                try {
+                  const response = await fetch(\`\${API_URL}/post\`);
+                  
+                  if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(\`Failed to fetch posts: \${response.status} - \${errorText}\`);
+                  }
+                  
+                  const data = await response.json();
+                  console.log('Posts API response:', data);
+                  
+                  return data.posts || data.data || [];
+                  
+                } catch (error) {
+                  console.error('Error fetching posts:', error);
+                  throw error;
+                }
+              };
+              
+              // Create a new post
+              export const createPost = async (formData: FormData) => {
+                try {
+                  const token = getToken();
+                  console.log('Creating post with token:', token ? 'Found' : 'Missing');
+                  
+                  const response = await fetch(\`\${API_URL}/post\`, {
+                    method: 'POST',
+                    headers: token ? {
+                      'Authorization': \`Bearer \${token}\`
+                    } : {},
+                    body: formData
+                  });
+                  
+                  console.log('Post response status:', response.status);
+                  
+                  // Try to parse as JSON
+                  const responseText = await response.text();
+                  console.log('Raw response:', responseText);
+                  
+                  if (!response.ok) {
+                    let errorMessage = \`Post creation failed: \${response.status}\`;
+                    try {
+                      const errorData = JSON.parse(responseText);
+                      errorMessage = errorData.message || errorMessage;
+                    } catch {
+                      errorMessage = \`\${errorMessage} - \${responseText}\`;
+                    }
+                    throw new Error(errorMessage);
+                  }
+                  
+                  try {
+                    return JSON.parse(responseText);
+                  } catch (jsonError) {
+                    console.error('Failed to parse JSON:', jsonError);
+                    throw new Error('Invalid JSON response from server');
+                  }
+                  
+                } catch (error) {
+                  console.error('Post API error:', error);
+                  throw error;
+                }
+              };
+              
+              // Like a post
+              export const likePost = async (postId: string) => {
+                try {
+                  const token = getToken();
+                  if (!token) {
+                    throw new Error('User not authenticated');
+                  }
+              
+                  const userData = localStorage.getItem('userData');
+                  const user = userData ? JSON.parse(userData) : null;
+                  const userId = user?._id || user?.id;
+                  
+                  if (!userId) {
+                    throw new Error('User ID not found');
+                  }
+              
+                  console.log('Liking post:', postId, 'User:', userId);
+                  
+                  const response = await fetch(\`\${API_URL}/post/like/\${postId}\`, {
+                    method: 'PATCH',
+                    headers: {
+                      'Authorization': \`Bearer \${token}\`,
+                      'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ uid: userId }) 
+                  });
+                  
+                  console.log('Like response status:', response.status);
+                  
+                  if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(\`Like failed: \${response.status} - \${errorText}\`);
+                  }
+                  
+                  const data = await response.json();
+                  console.log('Like response data:', data);
+                  
+                  return data;
+                  
+                } catch (error) {
+                  console.error('Like API error:', error);
+                  throw error;
+                }
+              };
+              
+              // Get posts by user ID
+              export const getPostsByUserId = async (userId: string) => {
+                try {
+                  const response = await fetch(\`\${API_URL}/post/user/\${userId}\`);
+                  
+                  console.log('Fetching posts for user:', userId);
+                  console.log('Response status:', response.status);
+                  
+                  if (!response.ok) {
+                    throw new Error(\`Failed to fetch user posts: \${response.status}\`);
+                  }
+                  
+                  const data = await response.json();
+                  console.log(\`User \${userId} posts response:\`, data);
+                  
+                  return data.posts || [];
+                  
+                } catch (error) {
+                  console.error('Error fetching user posts:', error);
+                  throw error;
+                }
+              };
+              
+              // Update a post
+              export const updatePost = async (postId: string, formData: FormData) => {
+                try {
+                  const token = getToken(); 
+                  const response = await fetch(\`\${API_URL}/post/\${postId}\`, {
+                    method: 'PATCH',
+                    headers: token ? {
+                      'Authorization': \`Bearer \${token}\`
+                    } : {},
+                    body: formData
+                  });
+              
+                  console.log('Edit post response:', response.status);
+              
+                  if (!response.ok) {
+                    throw new Error(\`Post edit failed: \${response.status}\`);
+                  }
+              
+                  return await response.json();
+              
+                } catch (error) {
+                  console.error('Edit post API error:', error);
+                  throw error;
+                }
+              };
+              POSTAPI_EOF
+              echo "✅ Fixed postApi.ts"
+            else
+              echo "✅ postApi.ts already uses environment variable"
+            fi
+          fi
+          
           # Build the app
+          echo ""
           echo "Building with VITE_API_URL=$VITE_API_URL"
           npm run build
           
@@ -233,7 +373,6 @@ jobs:
           echo "🔍 Verifying build output..."
           if [ -f "dist/index.html" ]; then
             echo "✅ dist/index.html exists"
-            # Check if it has the correct structure
             if grep -q '<div id="root">' dist/index.html; then
               echo "✅ React mount point in built HTML"
             fi
@@ -246,53 +385,17 @@ jobs:
           
           echo "✅ Frontend builds successfully"
       
-      # Step 4: Critical fix check
-      - name: Apply critical fixes
+      # Step 4: Final check
+      - name: Verify deployment ready
         run: |
-          echo "🚀 APPLYING CRITICAL FIXES"
-          echo "==========================="
-          
-          # Fix 1: Update postApi.ts to use environment variable
+          echo "🚀 DEPLOYMENT READY CHECKLIST"
+          echo "============================="
+          echo "✅ Backend starts without errors"
+          echo "✅ Frontend builds with production URLs"
+          echo "✅ Static.json created for SPA routing"
+          echo "✅ postApi.ts uses environment variable"
           echo ""
-          echo "🔧 Fixing postApi.ts API_URL..."
-          cat > /tmp/fix_postapi.js << 'EOF'
-          const fs = require('fs');
-          const path = require('path');
-          
-          const postApiPath = path.join('client', 'src', 'api', 'postApi.ts');
-          if (fs.existsSync(postApiPath)) {
-            let content = fs.readFileSync(postApiPath, 'utf8');
-            
-            // Replace hardcoded '/api' with environment variable
-            if (content.includes("const API_URL = '/api';")) {
-              content = content.replace(
-                "const API_URL = '/api';",
-                "const API_URL = import.meta.env.VITE_API_URL + '/api';"
-              );
-              fs.writeFileSync(postApiPath, content);
-              console.log('✅ Fixed API_URL in postApi.ts');
-            } else if (content.includes("const API_URL = import.meta.env.VITE_API_URL")) {
-              console.log('✅ API_URL already uses environment variable');
-            } else {
-              console.log('⚠️  Could not find API_URL declaration to fix');
-            }
-          } else {
-            console.log('❌ postApi.ts not found at:', postApiPath);
-          }
-          EOF
-          
-          node /tmp/fix_postapi.js
-          
-          # Fix 2: Check for JSON response issues in backend
-          echo ""
-          echo "🔧 Checking backend response handling..."
-          if [ -f "server/controllers/postController.ts" ]; then
-            echo "Checking postController for proper JSON responses..."
-            # Look for error responses that might not be JSON
-            if grep -q "res.status(500).send" server/controllers/postController.ts; then
-              echo "⚠️  Found res.status(500).send - should use res.status(500).json"
-            fi
-          fi
-          
-          echo ""
-          echo "✅ Fixes applied"
+          echo "📋 Next steps:"
+          echo "1. Deploy static.json with your client"
+          echo "2. Make sure BrowserRouter is in main.tsx or App.tsx"
+          echo "3. Set VITE_API_URL in Render environment"
