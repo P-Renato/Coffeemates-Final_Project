@@ -31,7 +31,8 @@ export default defineConfig({
     outDir: 'dist',
     assetsDir: 'assets',
     rollupOptions: {
-      // Ensure proper handling of entry points
+      
+      
     }
   }
 })
