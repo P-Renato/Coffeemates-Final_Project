@@ -27,6 +27,8 @@ const initialFormData: LoginFormData = {
 
 // Change to actual backend URL when deployed or running locally
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:4343';
+console.log('API_BASE_URL:', API_BASE_URL);
+console.log('Environment:', import.meta.env.MODE);
 
 const LoginPage: React.FC = () => {
   const { login } = useAuth();
