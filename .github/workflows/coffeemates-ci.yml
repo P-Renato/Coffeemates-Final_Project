@@ -75,41 +75,31 @@ jobs:
       - name: Setup and test frontend
         working-directory: ./client
         env:
-          VITE_API_URL: http://localhost:5000
+          VITE_API_URL: https://coffeemates-backend-service.onrender.com
         run: |
           npm ci
           
-          echo "🔍 Creating SPA routing files for Render Static Site..."
+          echo "🔍 Checking environment variables..."
+          echo "VITE_API_URL: $VITE_API_URL"
           
-          # 1. Create _redirects file (REQUIRED for Render Static Sites)
-          echo "/*    /index.html   200" > _redirects
+          # Check if VITE_API_URL is used in the code
+          if grep -r "import.meta.env.VITE_API_URL" src/; then
+            echo "✅ VITE_API_URL is referenced in code"
+          else
+            echo "❌ VITE_API_URL not found in code"
+          fi
           
-          # 2. Also keep static.json for compatibility
-          cat > static.json << 'EOF'
-          {
-            "root": "dist/",
-            "clean_urls": true,
-            "routes": {
-              "/**": "index.html"
-            }
-          }
-          EOF
-          
-          echo "✅ Created _redirects and static.json"
-          
-          # Build
+          # Build with production URL
+          echo "Building with production API URL..."
           npm run build
           
-          # Copy both files to dist
-          cp _redirects dist/
-          cp static.json dist/
-          
-          echo "✅ Build complete with SPA routing files"
-          
-          # Verify _redirects file
-          echo ""
-          echo "🔍 Verifying _redirects file:"
-          cat dist/_redirects
+          # Check built files for the API URL
+          echo "Checking built JavaScript for API URL..."
+          if grep -r "coffeemates-backend-service" dist/; then
+            echo "✅ Production backend URL found in build"
+          else
+            echo "⚠️  Production backend URL NOT found in build"
+          fi
 
       - name: Test Deployed SPA Routing
         run: |
