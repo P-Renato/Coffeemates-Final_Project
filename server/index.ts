@@ -27,7 +27,8 @@ app.use(cors({
         process.env.CLIENT_URL, // This could be your deployed frontend
         'http://localhost:5173', 
         'http://localhost:5174', 
-        'https://coffeemates-client.onrender.com'
+        'https://coffeemates-client.onrender.com',
+        'https://coffeemates-renatodebakker.onrender.com'
     ].filter(Boolean) as string[], // Remove any undefined/null values
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
