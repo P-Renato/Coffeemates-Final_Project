@@ -106,9 +106,12 @@ jobs:
         run: |
           npm ci
           
-          echo "🔍 Creating SPA routing files..."
+          echo "🔍 Creating SPA routing files for Render Static Site..."
           
-          # 1. Ensure static.json exists
+          # 1. Create _redirects file (REQUIRED for Render Static Sites)
+          echo "/*    /index.html   200" > _redirects
+          
+          # 2. Also keep static.json for compatibility
           cat > static.json << 'EOF'
           {
             "root": "dist/",
@@ -119,33 +122,21 @@ jobs:
           }
           EOF
           
-          # 2. Create _redirects file (Netlify/Render fallback)
-          echo "/*    /index.html   200" > _redirects
-          
-          # 3. Create nginx.conf for additional fallback
-          cat > nginx.conf << 'NGINX'
-          server {
-              listen 8080;
-              root /usr/share/nginx/html;
-              index index.html;
-              
-              location / {
-                  try_files $uri $uri/ /index.html;
-              }
-          }
-          NGINX
-          
-          echo "✅ Created SPA routing files"
+          echo "✅ Created _redirects and static.json"
           
           # Build
           npm run build
           
-          # Copy all SPA config files to dist
-          cp static.json dist/
+          # Copy both files to dist
           cp _redirects dist/
-          cp nginx.conf dist/
+          cp static.json dist/
           
           echo "✅ Build complete with SPA routing files"
+          
+          # Verify _redirects file
+          echo ""
+          echo "🔍 Verifying _redirects file:"
+          cat dist/_redirects
       
       # Step 4: Final verification
       - name: Verify deployment ready
