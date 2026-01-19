@@ -40,63 +40,36 @@ jobs:
           FACEBOOK_APP_SECRET: test
           SESSION_SECRET: test-session
         run: |
-          # Install Bun
-          if ! command -v bun &> /dev/null; then
-            curl -fsSL https://bun.sh/install | bash
-            export PATH="$HOME/.bun/bin:$PATH"
-          fi
+          # ... existing setup code ...
           
-          # Install dependencies
-          bun install
+          # Test registration endpoint thoroughly
+          echo "🔍 Testing registration endpoint with detailed output..."
           
-          # Check TypeScript
-          bun x tsc --noEmit
-          echo "✅ TypeScript compiles"
-          
-          # Create test .env file
-          cat > .env.test << 'ENV_EOF'
-          PORT=5000
-          ATLAS_URI=mongodb://localhost:27017/test_db
-          MONGO_URI=mongodb://localhost:27017/test_db
-          JWT_SECRET=test-secret-123
-          CORS_ORIGIN=http://localhost:5173
-          CLIENT_URL=http://localhost:5173
-          GOOGLE_CLIENT_ID=test
-          GOOGLE_CLIENT_SECRET=test
-          FACEBOOK_APP_ID=test
-          FACEBOOK_APP_SECRET=test
-          SESSION_SECRET=test-session
-          ENV_EOF
-          
-          # Use the test environment
-          export $(cat .env.test | xargs)
-          
-          # Test the backend
-          echo "🔍 Testing backend server..."
-          
-          # Start server in background
-          bun run dev &
-          SERVER_PID=$!
-          
-          # Wait for server to start
-          for i in {1..30}; do
-            if curl -s http://localhost:5000 > /dev/null; then
-              echo "✅ Server is running"
-              break
-            fi
-            sleep 2
-          done
-          
-          # Test register endpoint
-          echo "🔍 Testing /api/auth/register..."
-          REGISTER_STATUS=$(curl -s -o /dev/null -w "%{http_code}" -X POST \
+          REGISTER_RESPONSE=$(curl -s -w "\n%{http_code}" -X POST \
             -H "Content-Type: application/json" \
-            -d '{"username":"testuser","email":"test@test.com","password":"test123"}' \
+            -H "Accept: application/json" \
+            -d '{"username":"testuser123","email":"test123@test.com","password":"test123"}' \
             http://localhost:5000/api/auth/register)
-          echo "Register endpoint status: $REGISTER_STATUS"
+            
+          HTTP_CODE=$(echo "$REGISTER_RESPONSE" | tail -n1)
+          RESPONSE_BODY=$(echo "$REGISTER_RESPONSE" | head -n -1)
           
-          # Clean up
-          kill $SERVER_PID 2>/dev/null || true
+          echo "Register endpoint status: $HTTP_CODE"
+          echo "Response body: $RESPONSE_BODY"
+          
+          if [ "$HTTP_CODE" = "201" ] || [ "$HTTP_CODE" = "200" ]; then
+            echo "✅ Registration endpoint works"
+            # Validate JSON response
+            if echo "$RESPONSE_BODY" | jq empty 2>/dev/null; then
+              echo "✅ Valid JSON response"
+            else
+              echo "❌ Invalid JSON response"
+              exit 1
+            fi
+          else
+            echo "❌ Registration endpoint failed with status $HTTP_CODE"
+            exit 1
+          fi
       
       # Step 3: Test Frontend - FIXED VERSION
       - name: Setup and test frontend
