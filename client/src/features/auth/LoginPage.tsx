@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import type { FormEvent, ChangeEvent } from 'react';
 import { useAuth } from '../../hooks/useAuth';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import bgImage from "../../assets/cafe_login-signup-page.png";
 import styles from './styles.module.css';
 import '../../styles/_global.css';
@@ -229,24 +229,24 @@ const LoginPage: React.FC = () => {
 
           {/* Forgot Password Link */}
           <div className="text-center mt-4">
-            <a 
-              href="/forgot-password" 
+            <Link 
+              to="/forgot-password" 
               className="text-sm text-blue-600 hover:text-blue-800 transition-colors"
             >
               Forgot your password?
-            </a>
+            </Link>
           </div>
 
           {/* Signup Link */}
           <div className="text-center mt-6 pt-6 border-t border-gray-200">
             <p className="text-gray-600">
               Don't have an account?{' '}
-              <a 
-                href="/signup" 
+              <Link 
+                to="/signup" 
                 className="text-blue-600 hover:text-blue-800 font-medium transition-colors"
               >
                 Sign up here
-              </a>
+              </Link>
             </p>
           </div>
 
