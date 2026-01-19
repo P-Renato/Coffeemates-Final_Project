@@ -60,7 +60,6 @@ const LoginPage: React.FC = () => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        mode: 'cors',
         body: JSON.stringify(formData),
       });
 
