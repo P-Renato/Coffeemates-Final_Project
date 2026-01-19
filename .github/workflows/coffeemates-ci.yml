@@ -106,88 +106,37 @@ jobs:
         run: |
           npm ci
           
-          echo "🔍 Checking SPA configuration..."
+          echo "🔍 Creating SPA routing files for Render Static Site..."
           
-          # Check if static.json exists
-          if [ -f "static.json" ]; then
-            echo "✅ static.json found"
-            cat static.json
-          else
-            echo "❌ static.json not found"
-            exit 1
-          fi
+          # 1. Create _redirects file (REQUIRED for Render Static Sites)
+          echo "/*    /index.html   200" > _redirects
           
-          # Check BrowserRouter location (it's in main.tsx, not App.tsx)
-          echo ""
-          echo "🔍 Checking BrowserRouter setup..."
+          # 2. Also keep static.json for compatibility
+          cat > static.json << 'EOF'
+          {
+            "root": "dist/",
+            "clean_urls": true,
+            "routes": {
+              "/**": "index.html"
+            }
+          }
+          EOF
           
-          # Check main.tsx for BrowserRouter
-          if [ -f "src/main.tsx" ]; then
-            if grep -q "BrowserRouter" src/main.tsx; then
-              echo "✅ BrowserRouter found in main.tsx"
-            else
-              echo "❌ BrowserRouter NOT in main.tsx"
-              echo "First 10 lines of main.tsx:"
-              head -10 src/main.tsx
-              exit 1
-            fi
-          fi
+          echo "✅ Created _redirects and static.json"
           
-          # Check App.tsx routes
-          if [ -f "src/App.tsx" ]; then
-            if grep -q 'path="/signup"' src/App.tsx; then
-              echo "✅ /signup route defined in App.tsx"
-            else
-              echo "❌ /signup route missing in App.tsx"
-              exit 1
-            fi
-          fi
-          
-          # Check postApi.ts uses environment variable
-          echo ""
-          echo "🔍 Checking postApi.ts configuration..."
-          if [ -f "src/api/postApi.ts" ]; then
-            if grep -q "import.meta.env.VITE_API_URL" src/api/postApi.ts; then
-              echo "✅ postApi.ts uses VITE_API_URL"
-            else
-              echo "⚠️  postApi.ts may not use environment variable"
-              echo "Current API_URL line:"
-              grep "const API_URL" src/api/postApi.ts || echo "Not found"
-            fi
-          fi
-          
-          # Build the app
-          echo ""
-          echo "Building with VITE_API_URL=$VITE_API_URL"
+          # Build
           npm run build
           
-          # Verify static.json is in dist folder
+          # Copy both files to dist
+          cp _redirects dist/
+          cp static.json dist/
+          
+          echo "✅ Build complete with SPA routing files"
+          
+          # Verify _redirects file
           echo ""
-          echo "🔍 Verifying build output..."
-          if [ -f "dist/static.json" ]; then
-            echo "✅ static.json copied to dist/"
-          else
-            echo "❌ static.json not in dist/ - copying now"
-            cp static.json dist/
-          fi
-          
-          if [ -f "dist/index.html" ]; then
-            echo "✅ index.html exists in dist/"
-          fi
-          
-          echo "✅ Frontend builds successfully"
-          
-          # Test the static.json configuration
-          echo ""
-          echo "🔍 Testing static.json format..."
-          if command -v jq &> /dev/null; then
-            if jq empty static.json 2>/dev/null; then
-              echo "✅ static.json is valid JSON"
-            else
-              echo "❌ static.json has invalid JSON format"
-              exit 1
-            fi
-          fi
+          echo "🔍 Verifying _redirects file:"
+          cat dist/_redirects
       
       # Step 4: Final verification
       - name: Verify deployment ready

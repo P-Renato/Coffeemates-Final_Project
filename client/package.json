@@ -8,7 +8,7 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-     "postbuild": "cp static.json dist/ || true" 
+    "postbuild": "echo '/* /index.html 200' > dist/_redirects && cp static.json dist/"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.1.17",
