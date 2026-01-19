@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import type { FormEvent, ChangeEvent } from 'react';
 import { useAuth } from '../../hooks/useAuth';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import bgImage from "../../assets/cafe_login-signup-page.png";
 import styles from './styles.module.css';
 import '../../styles/_global.css';
@@ -50,22 +50,17 @@ const LoginPage: React.FC = () => {
     setStatus({ loading: true, error: null, success: false });
 
     try {
-      console.log('=== REGISTRATION DEBUG ===');
-      console.log('1. Form data:', formData);
-      console.log('2. API_BASE_URL:', API_BASE_URL);
-      console.log('3. Full URL:', `${API_BASE_URL}/api/auth/register`);
+
 
       
       const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        mode: 'cors',
         body: JSON.stringify(formData),
       });
 
-      console.log('4. Response status:', response.status);
-      console.log('5. Response ok?', response.ok);
+
 
       if (!response.ok) {
         const errorData = await response.json();
@@ -234,24 +229,24 @@ const LoginPage: React.FC = () => {
 
           {/* Forgot Password Link */}
           <div className="text-center mt-4">
-            <a 
-              href="/forgot-password" 
+            <Link 
+              to="/forgot-password" 
               className="text-sm text-blue-600 hover:text-blue-800 transition-colors"
             >
               Forgot your password?
-            </a>
+            </Link>
           </div>
 
           {/* Signup Link */}
           <div className="text-center mt-6 pt-6 border-t border-gray-200">
             <p className="text-gray-600">
               Don't have an account?{' '}
-              <a 
-                href="/signup" 
+              <Link 
+                to="/signup" 
                 className="text-blue-600 hover:text-blue-800 font-medium transition-colors"
               >
                 Sign up here
-              </a>
+              </Link>
             </p>
           </div>
 

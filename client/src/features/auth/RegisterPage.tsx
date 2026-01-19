@@ -49,6 +49,10 @@ const RegisterPage: React.FC = () => {
     setStatus({ loading: true, error: null, success: false });
 
     try {
+      console.log('=== REGISTRATION DEBUG ===');
+      console.log('1. Form data:', formData);
+      console.log('2. API_BASE_URL:', API_BASE_URL);
+      console.log('3. Full URL:', `${API_BASE_URL}/api/auth/register`);
       const response = await fetch(`${API_BASE_URL}/api/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -60,6 +64,9 @@ const RegisterPage: React.FC = () => {
         const errorData = await response.json();
         throw new Error(errorData.message || 'Registration failed due to server error.');
       }
+
+      console.log('4. Response status:', response.status);
+      console.log('5. Response ok?', response.ok);
       
       const result = await response.json();
       setStatus({ loading: false, error: null, success: true });
