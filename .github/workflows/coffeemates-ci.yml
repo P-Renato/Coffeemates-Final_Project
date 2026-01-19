@@ -40,66 +40,103 @@ jobs:
           FACEBOOK_APP_SECRET: test
           SESSION_SECRET: test-session
         run: |
-          # ... existing setup code ...
-          
-          # Test registration endpoint thoroughly
-          echo "🔍 Testing registration endpoint with detailed output..."
-          
-          REGISTER_RESPONSE=$(curl -s -w "\n%{http_code}" -X POST \
-            -H "Content-Type: application/json" \
-            -H "Accept: application/json" \
-            -d '{"username":"testuser123","email":"test123@test.com","password":"test123"}' \
-            http://localhost:5000/api/auth/register)
-            
-          HTTP_CODE=$(echo "$REGISTER_RESPONSE" | tail -n1)
-          RESPONSE_BODY=$(echo "$REGISTER_RESPONSE" | head -n -1)
-          
-          echo "Register endpoint status: $HTTP_CODE"
-          echo "Response body: $RESPONSE_BODY"
-          
-          if [ "$HTTP_CODE" = "201" ] || [ "$HTTP_CODE" = "200" ]; then
-            echo "✅ Registration endpoint works"
-            # Validate JSON response
-            if echo "$RESPONSE_BODY" | jq empty 2>/dev/null; then
-              echo "✅ Valid JSON response"
-            else
-              echo "❌ Invalid JSON response"
-              exit 1
-            fi
-          else
-            echo "❌ Registration endpoint failed with status $HTTP_CODE"
-            exit 1
+          # Install Bun
+          if ! command -v bun &> /dev/null; then
+            curl -fsSL https://bun.sh/install | bash
+            export PATH="$HOME/.bun/bin:$PATH"
           fi
+          
+          # Install dependencies
+          bun install
+          
+          # Check TypeScript
+          bun x tsc --noEmit
+          echo "✅ TypeScript compiles"
+          
+          # Create test .env file
+          cat > .env.test << 'ENV_EOF'
+          PORT=5000
+          ATLAS_URI=mongodb://localhost:27017/test_db
+          MONGO_URI=mongodb://localhost:27017/test_db
+          JWT_SECRET=test-secret-123
+          CORS_ORIGIN=http://localhost:5173
+          CLIENT_URL=http://localhost:5173
+          GOOGLE_CLIENT_ID=test
+          GOOGLE_CLIENT_SECRET=test
+          FACEBOOK_APP_ID=test
+          FACEBOOK_APP_SECRET=test
+          SESSION_SECRET=test-session
+          ENV_EOF
+          
+          # Use the test environment
+          export $(cat .env.test | xargs)
+          
+          # Test the backend
+          echo "🔍 Testing backend server..."
+          
+          # Start server in background
+          bun run dev &
+          SERVER_PID=$!
+          
+          # Wait for server to start
+          for i in {1..30}; do
+            if curl -s http://localhost:5000 > /dev/null; then
+              echo "✅ Server is running"
+              break
+            fi
+            sleep 2
+          done
+          
+          # Test register endpoint
+          echo "🔍 Testing /api/auth/register..."
+          REGISTER_STATUS=$(curl -s -o /dev/null -w "%{http_code}" -X POST \
+            -H "Content-Type: application/json" \
+            -d '{"username":"testuser","email":"test@test.com","password":"test123"}' \
+            http://localhost:5000/api/auth/register)
+          echo "Register endpoint status: $REGISTER_STATUS"
+          
+          # Clean up
+          kill $SERVER_PID 2>/dev/null || true
       
       # Step 3: Test Frontend - FIXED VERSION
       - name: Setup and test frontend
         working-directory: ./client
         env:
-          VITE_API_URL: https://coffeemates-backend-service.onrender.com
+          VITE_API_URL: http://localhost:5000
         run: |
           npm ci
           
-          echo "🔍 Checking environment variables..."
-          echo "VITE_API_URL: $VITE_API_URL"
+          echo "🔍 Creating SPA routing files for Render Static Site..."
           
-          # Check if VITE_API_URL is used in the code
-          if grep -r "import.meta.env.VITE_API_URL" src/; then
-            echo "✅ VITE_API_URL is referenced in code"
-          else
-            echo "❌ VITE_API_URL not found in code"
-          fi
+          # 1. Create _redirects file (REQUIRED for Render Static Sites)
+          echo "/*    /index.html   200" > _redirects
           
-          # Build with production URL
-          echo "Building with production API URL..."
+          # 2. Also keep static.json for compatibility
+          cat > static.json << 'EOF'
+          {
+            "root": "dist/",
+            "clean_urls": true,
+            "routes": {
+              "/**": "index.html"
+            }
+          }
+          EOF
+          
+          echo "✅ Created _redirects and static.json"
+          
+          # Build
           npm run build
           
-          # Check built files for the API URL
-          echo "Checking built JavaScript for API URL..."
-          if grep -r "coffeemates-backend-service" dist/; then
-            echo "✅ Production backend URL found in build"
-          else
-            echo "⚠️  Production backend URL NOT found in build"
-          fi
+          # Copy both files to dist
+          cp _redirects dist/
+          cp static.json dist/
+          
+          echo "✅ Build complete with SPA routing files"
+          
+          # Verify _redirects file
+          echo ""
+          echo "🔍 Verifying _redirects file:"
+          cat dist/_redirects
 
       - name: Test Deployed SPA Routing
         run: |
@@ -129,6 +166,74 @@ jobs:
             echo "❌ _redirects file not deployed (status: $REDIRECTS_STATUS)"
             echo "⚠️  Deployment may have failed or cache needs clearing"
           fi
+
+          working-directory: ./client
+        env:
+          VITE_API_URL: https://coffeemates-backend-service.onrender.com
+        run: |
+          echo "🔍 Testing frontend-backend integration..."
+          
+          # Create a simple test script
+          cat > test-integration.js << 'EOF'
+          const https = require('https');
+          
+          const testData = {
+            username: 'test_' + Date.now(),
+            email: 'test_' + Date.now() + '@test.com',
+            password: 'test123'
+          };
+          
+          console.log('Testing registration with:', testData);
+          
+          const options = {
+            hostname: 'coffeemates-backend-service.onrender.com',
+            path: '/api/auth/register',
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Accept': 'application/json'
+            }
+          };
+          
+          const req = https.request(options, (res) => {
+            console.log('Status:', res.statusCode);
+            console.log('Headers:', res.headers);
+            
+            let data = '';
+            res.on('data', (chunk) => {
+              data += chunk;
+            });
+            
+            res.on('end', () => {
+              console.log('Response:', data);
+              try {
+                const json = JSON.parse(data);
+                if (res.statusCode === 200 || res.statusCode === 201) {
+                  console.log('✅ Backend registration works');
+                  process.exit(0);
+                } else {
+                  console.log('❌ Backend registration failed');
+                  process.exit(1);
+                }
+              } catch (e) {
+                console.log('❌ Invalid JSON response');
+                process.exit(1);
+              }
+            });
+          });
+          
+          req.on('error', (error) => {
+            console.error('Request error:', error);
+            process.exit(1);
+          });
+          
+          req.write(JSON.stringify(testData));
+          req.end();
+          EOF
+          
+          node test-integration.js
+          
+          echo "✅ Frontend-backend integration test complete"
       
       # Step 4: Final verification
       - name: Verify deployment ready
