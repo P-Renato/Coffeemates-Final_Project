@@ -50,10 +50,7 @@ const LoginPage: React.FC = () => {
     setStatus({ loading: true, error: null, success: false });
 
     try {
-      console.log('=== REGISTRATION DEBUG ===');
-      console.log('1. Form data:', formData);
-      console.log('2. API_BASE_URL:', API_BASE_URL);
-      console.log('3. Full URL:', `${API_BASE_URL}/api/auth/register`);
+
 
       
       const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
@@ -63,8 +60,7 @@ const LoginPage: React.FC = () => {
         body: JSON.stringify(formData),
       });
 
-      console.log('4. Response status:', response.status);
-      console.log('5. Response ok?', response.ok);
+
 
       if (!response.ok) {
         const errorData = await response.json();
