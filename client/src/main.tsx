@@ -1,16 +1,14 @@
-
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App.tsx';
-import { BrowserRouter } from 'react-router-dom';
+import { HashRouter } from 'react-router-dom'; // ← CHANGE TO HashRouter
 import './index.css';
-import 'leaflet/dist/leaflet.css';   // map
+import 'leaflet/dist/leaflet.css';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    {/* Use BrowserRouter to enable routing across the app */}
-    <BrowserRouter> 
+    <HashRouter> {/* ← USE HashRouter */}
       <App />
-    </BrowserRouter>
+    </HashRouter>
   </React.StrictMode>,
 );
