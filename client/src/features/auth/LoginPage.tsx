@@ -27,6 +27,8 @@ const initialFormData: LoginFormData = {
 
 // Change to actual backend URL when deployed or running locally
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:4343';
+console.log('API_BASE_URL:', API_BASE_URL);
+console.log('Environment:', import.meta.env.MODE);
 
 const LoginPage: React.FC = () => {
   const { login } = useAuth();
@@ -48,12 +50,22 @@ const LoginPage: React.FC = () => {
     setStatus({ loading: true, error: null, success: false });
 
     try {
+      console.log('=== REGISTRATION DEBUG ===');
+      console.log('1. Form data:', formData);
+      console.log('2. API_BASE_URL:', API_BASE_URL);
+      console.log('3. Full URL:', `${API_BASE_URL}/api/auth/register`);
+
+      
       const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
+        mode: 'cors',
         body: JSON.stringify(formData),
       });
+
+      console.log('4. Response status:', response.status);
+      console.log('5. Response ok?', response.ok);
 
       if (!response.ok) {
         const errorData = await response.json();

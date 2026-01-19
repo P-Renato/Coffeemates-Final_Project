@@ -166,6 +166,74 @@ jobs:
             echo "❌ _redirects file not deployed (status: $REDIRECTS_STATUS)"
             echo "⚠️  Deployment may have failed or cache needs clearing"
           fi
+
+          working-directory: ./client
+        env:
+          VITE_API_URL: https://coffeemates-backend-service.onrender.com
+        run: |
+          echo "🔍 Testing frontend-backend integration..."
+          
+          # Create a simple test script
+          cat > test-integration.js << 'EOF'
+          const https = require('https');
+          
+          const testData = {
+            username: 'test_' + Date.now(),
+            email: 'test_' + Date.now() + '@test.com',
+            password: 'test123'
+          };
+          
+          console.log('Testing registration with:', testData);
+          
+          const options = {
+            hostname: 'coffeemates-backend-service.onrender.com',
+            path: '/api/auth/register',
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Accept': 'application/json'
+            }
+          };
+          
+          const req = https.request(options, (res) => {
+            console.log('Status:', res.statusCode);
+            console.log('Headers:', res.headers);
+            
+            let data = '';
+            res.on('data', (chunk) => {
+              data += chunk;
+            });
+            
+            res.on('end', () => {
+              console.log('Response:', data);
+              try {
+                const json = JSON.parse(data);
+                if (res.statusCode === 200 || res.statusCode === 201) {
+                  console.log('✅ Backend registration works');
+                  process.exit(0);
+                } else {
+                  console.log('❌ Backend registration failed');
+                  process.exit(1);
+                }
+              } catch (e) {
+                console.log('❌ Invalid JSON response');
+                process.exit(1);
+              }
+            });
+          });
+          
+          req.on('error', (error) => {
+            console.error('Request error:', error);
+            process.exit(1);
+          });
+          
+          req.write(JSON.stringify(testData));
+          req.end();
+          EOF
+          
+          node test-integration.js
+          
+          echo "✅ Frontend-backend integration test complete"
       
       # Step 4: Final verification
       - name: Verify deployment ready
