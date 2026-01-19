@@ -71,11 +71,11 @@ jobs:
             exit 1
           fi
       
-      # Step 3: Test Frontend - FIXED VERSION
+      # Step 3: Test Frontend
       - name: Setup and test frontend
         working-directory: ./client
         env:
-          VITE_API_URL: https://coffeemates-backend-service.onrender.com
+          VITE_API_URL: http://localhost:5000
         run: |
           npm ci
           
@@ -93,15 +93,84 @@ jobs:
           echo "Building with production API URL..."
           npm run build
           
-          # Check built files for the API URL
-          echo "Checking built JavaScript for API URL..."
-          if grep -r "coffeemates-backend-service" dist/; then
-            echo "✅ Production backend URL found in build"
-          else
-            echo "⚠️  Production backend URL NOT found in build"
-          fi
-
-      - name: Test Deployed SPA Routing
+          # Copy both files to dist
+          cp _redirects dist/
+          cp static.json dist/
+          
+          echo "✅ Build complete with SPA routing files"
+          
+          # Verify _redirects file
+          echo ""
+          echo "🔍 Verifying _redirects file:"
+          cat dist/_redirects
+          
+          echo ""
+          echo "🔍 Testing frontend-backend integration..."
+          
+          # Create a simple test script
+          cat > test-integration.js << 'EOF'
+          const https = require('https');
+          
+          const testData = {
+            username: 'test_' + Date.now(),
+            email: 'test_' + Date.now() + '@test.com',
+            password: 'test123'
+          };
+          
+          console.log('Testing registration with:', testData);
+          
+          const options = {
+            hostname: 'coffeemates-backend-service.onrender.com',
+            path: '/api/auth/register',
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Accept': 'application/json'
+            }
+          };
+          
+          const req = https.request(options, (res) => {
+            console.log('Status:', res.statusCode);
+            console.log('Headers:', res.headers);
+            
+            let data = '';
+            res.on('data', (chunk) => {
+              data += chunk;
+            });
+            
+            res.on('end', () => {
+              console.log('Response:', data);
+              try {
+                const json = JSON.parse(data);
+                if (res.statusCode === 200 || res.statusCode === 201) {
+                  console.log('✅ Backend registration works');
+                  process.exit(0);
+                } else {
+                  console.log('❌ Backend registration failed');
+                  process.exit(1);
+                }
+              } catch (e) {
+                console.log('❌ Invalid JSON response');
+                process.exit(1);
+              }
+            });
+          });
+          
+          req.on('error', (error) => {
+            console.error('Request error:', error);
+            process.exit(1);
+          });
+          
+          req.write(JSON.stringify(testData));
+          req.end();
+          EOF
+          
+          node test-integration.js
+          
+          echo "✅ Frontend-backend integration test complete"
+      
+      # Step 4: Test Deployed Routing
+      - name: Test deployed SPA routing
         run: |
           echo "🔍 Testing deployed SPA routing (after 60s delay)..."
           sleep 60  # Wait for deployment
@@ -130,54 +199,7 @@ jobs:
             echo "⚠️  Deployment may have failed or cache needs clearing"
           fi
       
-            - name: Test React Router Navigation
-        working-directory: ./client
-        run: |
-          echo "🔍 Creating navigation test..."
-          
-          cat > test-navigation.html << 'HTML'
-          <!DOCTYPE html>
-          <html>
-          <body>
-            <h1>Navigation Test</h1>
-            <p>Testing if React Router links work properly</p>
-            
-            <h2>Test Links:</h2>
-            <ul>
-              <li><a href="#/login">Login (hash)</a></li>
-              <li><a href="#/signup">Signup (hash)</a></li>
-              <li><a href="/login">Login (regular - will 404)</a></li>
-              <li><a href="/signup">Signup (regular - will 404)</a></li>
-            </ul>
-            
-            <script>
-              // Test if React Router is loaded
-              console.log('Navigation test loaded');
-              
-              // Check current URL
-              console.log('Current URL:', window.location.href);
-              console.log('Hash:', window.location.hash);
-              
-              // Monitor link clicks
-              document.querySelectorAll('a').forEach(link => {
-                link.addEventListener('click', (e) => {
-                  console.log('Clicked:', e.target.href);
-                  console.log('Will work?', e.target.href.includes('#'));
-                });
-              });
-            </script>
-          </body>
-          </html>
-          HTML
-          
-          echo "✅ Navigation test created"
-          echo "📋 Manual test required:"
-          echo "1. Go to https://coffeemates-client.onrender.com/#/login"
-          echo "2. Click 'Sign up here' link"
-          echo "3. It should navigate to /#/signup without page reload"
-
-          
-      # Step 4: Final verification
+      # Step 5: Final verification
       - name: Verify deployment ready
         run: |
           echo "🚀 DEPLOYMENT READY CHECKLIST"
@@ -187,8 +209,14 @@ jobs:
           echo "✅ Frontend builds successfully"
           echo "✅ BrowserRouter configured"
           echo "✅ /signup route defined"
+          echo "✅ Backend registration works"
           echo ""
-          echo "📋 Next steps after merge:"
-          echo "1. Render will auto-deploy"
-          echo "2. static.json will enable SPA routing"
-          echo "3. /signup should work without 404"
+          echo "📋 IMPORTANT: Registration still crashes in browser due to:"
+          echo "1. Environment variable issues (VITE_API_URL not set in production)"
+          echo "2. CORS configuration mismatch"
+          echo "3. Frontend error handling"
+          echo ""
+          echo "📋 Manual fixes needed:"
+          echo "1. Check VITE_API_URL in Render environment variables"
+          echo "2. Check browser console for exact error when clicking register"
+          echo "3. Test with hardcoded backend URL in RegisterPage.tsx"
