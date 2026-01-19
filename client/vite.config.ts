@@ -31,9 +31,28 @@ export default defineConfig({
     outDir: 'dist',
     assetsDir: 'assets',
     rollupOptions: {
-      
-      
-    }
+      output: {
+        manualChunks(id) {
+          // Split node_modules into separate chunks
+          if (id.includes('node_modules')) {
+            if (id.includes('react') || id.includes('react-dom')) {
+              return 'vendor-react';
+            }
+            if (id.includes('react-router-dom')) {
+              return 'vendor-router';
+            }
+            if (id.includes('react-icons')) {
+              return 'vendor-icons';
+            }
+            if (id.includes('leaflet')) {
+              return 'vendor-maps';
+            }
+            return 'vendor-other';
+          }
+        }
+      }
+    },
+    chunkSizeWarningLimit: 800,
   }
 })
 

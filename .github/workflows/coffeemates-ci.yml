@@ -137,6 +137,35 @@ jobs:
           echo ""
           echo "🔍 Verifying _redirects file:"
           cat dist/_redirects
+
+      - name: Test Deployed SPA Routing
+        run: |
+          echo "🔍 Testing deployed SPA routing (after 60s delay)..."
+          sleep 60  # Wait for deployment
+          
+          # Test if _redirects file exists
+          echo "Checking _redirects file..."
+          REDIRECTS_STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://coffeemates-client.onrender.com/_redirects)
+          echo "_redirects status: $REDIRECTS_STATUS"
+          
+          if [ "$REDIRECTS_STATUS" = "200" ]; then
+            echo "✅ _redirects file deployed"
+            
+            # Test SPA routing
+            echo "Testing /signup route..."
+            SIGNUP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://coffeemates-client.onrender.com/signup)
+            echo "/signup status: $SIGNUP_STATUS"
+            
+            if [ "$SIGNUP_STATUS" = "200" ]; then
+              echo "✅ SPA routing works! /signup returns 200"
+            else
+              echo "❌ SPA routing still not working. /signup returns $SIGNUP_STATUS"
+              echo "⚠️  Render may need cache clearing or manual configuration"
+            fi
+          else
+            echo "❌ _redirects file not deployed (status: $REDIRECTS_STATUS)"
+            echo "⚠️  Deployment may have failed or cache needs clearing"
+          fi
       
       # Step 4: Final verification
       - name: Verify deployment ready
