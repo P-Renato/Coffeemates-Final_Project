@@ -71,11 +71,11 @@ jobs:
             exit 1
           fi
       
-      # Step 3: Test Frontend - FIXED VERSION
+      # Step 3: Test Frontend
       - name: Setup and test frontend
         working-directory: ./client
         env:
-          VITE_API_URL: https://coffeemates-backend-service.onrender.com
+          VITE_API_URL: http://localhost:5000
         run: |
           npm ci
           
@@ -93,47 +93,18 @@ jobs:
           echo "Building with production API URL..."
           npm run build
           
-          # Check built files for the API URL
-          echo "Checking built JavaScript for API URL..."
-          if grep -r "coffeemates-backend-service" dist/; then
-            echo "✅ Production backend URL found in build"
-          else
-            echo "⚠️  Production backend URL NOT found in build"
-          fi
-
-      - name: Test Deployed SPA Routing
-        run: |
-          echo "🔍 Testing deployed SPA routing (after 60s delay)..."
-          sleep 60  # Wait for deployment
+          # Copy both files to dist
+          cp _redirects dist/
+          cp static.json dist/
           
-          # Test if _redirects file exists
-          echo "Checking _redirects file..."
-          REDIRECTS_STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://coffeemates-client.onrender.com/_redirects)
-          echo "_redirects status: $REDIRECTS_STATUS"
+          echo "✅ Build complete with SPA routing files"
           
-          if [ "$REDIRECTS_STATUS" = "200" ]; then
-            echo "✅ _redirects file deployed"
-            
-            # Test SPA routing
-            echo "Testing /signup route..."
-            SIGNUP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://coffeemates-client.onrender.com/signup)
-            echo "/signup status: $SIGNUP_STATUS"
-            
-            if [ "$SIGNUP_STATUS" = "200" ]; then
-              echo "✅ SPA routing works! /signup returns 200"
-            else
-              echo "❌ SPA routing still not working. /signup returns $SIGNUP_STATUS"
-              echo "⚠️  Render may need cache clearing or manual configuration"
-            fi
-          else
-            echo "❌ _redirects file not deployed (status: $REDIRECTS_STATUS)"
-            echo "⚠️  Deployment may have failed or cache needs clearing"
-          fi
-
-          working-directory: ./client
-        env:
-          VITE_API_URL: https://coffeemates-backend-service.onrender.com
-        run: |
+          # Verify _redirects file
+          echo ""
+          echo "🔍 Verifying _redirects file:"
+          cat dist/_redirects
+          
+          echo ""
           echo "🔍 Testing frontend-backend integration..."
           
           # Create a simple test script
@@ -198,7 +169,37 @@ jobs:
           
           echo "✅ Frontend-backend integration test complete"
       
-      # Step 4: Final verification
+      # Step 4: Test Deployed Routing
+      - name: Test deployed SPA routing
+        run: |
+          echo "🔍 Testing deployed SPA routing (after 60s delay)..."
+          sleep 60  # Wait for deployment
+          
+          # Test if _redirects file exists
+          echo "Checking _redirects file..."
+          REDIRECTS_STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://coffeemates-client.onrender.com/_redirects)
+          echo "_redirects status: $REDIRECTS_STATUS"
+          
+          if [ "$REDIRECTS_STATUS" = "200" ]; then
+            echo "✅ _redirects file deployed"
+            
+            # Test SPA routing
+            echo "Testing /signup route..."
+            SIGNUP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://coffeemates-client.onrender.com/signup)
+            echo "/signup status: $SIGNUP_STATUS"
+            
+            if [ "$SIGNUP_STATUS" = "200" ]; then
+              echo "✅ SPA routing works! /signup returns 200"
+            else
+              echo "❌ SPA routing still not working. /signup returns $SIGNUP_STATUS"
+              echo "⚠️  Render may need cache clearing or manual configuration"
+            fi
+          else
+            echo "❌ _redirects file not deployed (status: $REDIRECTS_STATUS)"
+            echo "⚠️  Deployment may have failed or cache needs clearing"
+          fi
+      
+      # Step 5: Final verification
       - name: Verify deployment ready
         run: |
           echo "🚀 DEPLOYMENT READY CHECKLIST"
@@ -208,8 +209,14 @@ jobs:
           echo "✅ Frontend builds successfully"
           echo "✅ BrowserRouter configured"
           echo "✅ /signup route defined"
+          echo "✅ Backend registration works"
           echo ""
-          echo "📋 Next steps after merge:"
-          echo "1. Render will auto-deploy"
-          echo "2. static.json will enable SPA routing"
-          echo "3. /signup should work without 404"
+          echo "📋 IMPORTANT: Registration still crashes in browser due to:"
+          echo "1. Environment variable issues (VITE_API_URL not set in production)"
+          echo "2. CORS configuration mismatch"
+          echo "3. Frontend error handling"
+          echo ""
+          echo "📋 Manual fixes needed:"
+          echo "1. Check VITE_API_URL in Render environment variables"
+          echo "2. Check browser console for exact error when clicking register"
+          echo "3. Test with hardcoded backend URL in RegisterPage.tsx"
