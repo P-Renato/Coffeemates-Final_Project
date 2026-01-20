@@ -99,18 +99,39 @@ const LoginPage: React.FC = () => {
   return (
     <div className="min-h-screen flex flex-col lg:flex-row">
       {/* Left Sidebar - Hidden on mobile, visible on medium+ */}
-      <div className="hidden md:flex md:w-1/3 lg:w-1/4 bg-gray-50 flex-col items-center justify-center p-8 border-r border-gray-200">
+      <div className="hidden md:flex md:w-1/3 lg:w-1/4 bg-gradient-to-b from-blue-50 to-gray-50 flex-col items-center justify-center p-8 border-r border-gray-200">
         <div className="text-center mb-8">
-          <h2 className={`${styles.courier} text-4xl lg:text-5xl text-gray-800 mb-4`}>Coffeemates</h2>
-          <div className="flex justify-center mb-4">
-            <FaUserCircle className="w-24 h-24 text-gray-400" />
+          <h2 className={`${styles.courier} text-4xl lg:text-5xl text-gray-800 mb-6`}>Coffeemates</h2>
+          <div className="flex justify-center mb-6">
+            <FaUserCircle className="w-32 h-32 text-blue-400" />
           </div>
-          <p className={`${styles.roboto} text-lg text-gray-600`}>Welcome!</p>
-        </div>
-        <div className="mt-8 text-center">
-          <p className="text-gray-500 text-sm">
-            Connect with fellow coffee lovers
+          <p className={`${styles.roboto} text-xl text-gray-700 mb-2`}>Join Our Community</p>
+          <p className="text-gray-500 text-sm max-w-xs">
+            Connect with coffee enthusiasts worldwide. Share recipes, discover beans, and brew together.
           </p>
+        </div>
+        
+        <div className="mt-8 w-full max-w-xs">
+          <div className="space-y-3">
+            <div className="flex items-center gap-3 p-3 bg-white rounded-lg shadow-sm">
+              <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                <span className="text-blue-600 font-bold">☕</span>
+              </div>
+              <span className="text-sm text-gray-700">Share coffee experiences</span>
+            </div>
+            <div className="flex items-center gap-3 p-3 bg-white rounded-lg shadow-sm">
+              <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                <span className="text-green-600 font-bold">🌱</span>
+              </div>
+              <span className="text-sm text-gray-700">Discover new beans</span>
+            </div>
+            <div className="flex items-center gap-3 p-3 bg-white rounded-lg shadow-sm">
+              <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center">
+                <span className="text-orange-600 font-bold">👥</span>
+              </div>
+              <span className="text-sm text-gray-700">Connect with brewers</span>
+            </div>
+          </div>
         </div>
       </div>
 
