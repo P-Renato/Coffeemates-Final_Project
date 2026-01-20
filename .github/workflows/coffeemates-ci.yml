@@ -179,6 +179,29 @@ jobs:
           echo "2. Click 'Sign up here' link"
           echo "3. It should navigate to /#/signup without page reload"
 
+      - name: Test OAuth in Both Environments
+        run: |
+          echo "🔍 Testing OAuth configuration..."
+          
+          echo "1. Testing DEVELOPMENT configuration:"
+          export NODE_ENV=development
+          export BASE_URL=http://localhost:4343
+          
+          echo "   Expected Google callback: http://localhost:4343/api/auth/google/callback"
+          echo "   Expected Facebook callback: http://localhost:4343/api/auth/facebook/callback"
+          
+          echo ""
+          echo "2. Testing PRODUCTION configuration:"
+          export NODE_ENV=production
+          export BASE_URL=https://coffeemates-backend-service.onrender.com
+          
+          echo "   Expected Google callback: https://coffeemates-backend-service.onrender.com/api/auth/google/callback"
+          echo "   Expected Facebook callback: https://coffeemates-backend-service.onrender.com/api/auth/facebook/callback"
+          
+          echo ""
+          echo "3. Testing actual Render configuration:"
+          curl -s "https://coffeemates-backend-service.onrender.com/api/auth/google" | grep -o "redirect_uri=[^&]*" | head -1 || echo "Could not get redirect URI"
+
           
       # Step 4: Final verification
       - name: Verify deployment ready
