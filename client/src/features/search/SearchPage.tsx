@@ -462,3 +462,337 @@ const SearchPage: React.FC = () => {
 };
 
 export default SearchPage;
+
+/*
+
+import React, { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Search, User, Coffee } from 'lucide-react';
+import UserAvatar from '../../components/UserAvatar';
+import { useAuth } from '../../hooks/useAuth';
+import { searchUsers, getAllUsers } from '../../api/userApi'; // Add this import
+
+interface SearchUser {
+  _id: string;
+  username: string;
+  email: string;
+  name?: string;
+  profileImage?: string;
+  bio?: string;
+  photoURL?: string;
+  place?: string;
+}
+
+const SearchPage: React.FC = () => {
+  const navigate = useNavigate();
+  const { user: currentUser } = useAuth();
+  
+  const [searchQuery, setSearchQuery] = useState('');
+  const [users, setUsers] = useState<SearchUser[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [recentSearches, setRecentSearches] = useState<string[]>([]);
+
+  // Load recent searches from localStorage
+  useEffect(() => {
+    const saved = localStorage.getItem('recentSearches');
+    if (saved) {
+      setRecentSearches(JSON.parse(saved));
+    }
+    
+    // Load initial users
+    loadInitialUsers();
+  }, []);
+
+  // Save search to recent
+  const saveToRecent = (query: string) => {
+    if (!query.trim()) return;
+    
+    const updated = [query, ...recentSearches.filter(q => q !== query)].slice(0, 5);
+    setRecentSearches(updated);
+    localStorage.setItem('recentSearches', JSON.stringify(updated));
+  };
+
+  // Load initial users
+  const loadInitialUsers = async () => {
+    setLoading(true);
+    try {
+      const allUsers = await getAllUsers();
+      const transformedUsers = transformUsers(allUsers);
+      setUsers(transformedUsers);
+    } catch (err) {
+      console.error('Failed to load initial users:', err);
+      // Keep empty array if API fails
+      setUsers([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Transform API response to match your interface
+  const transformUsers = (apiUsers: any[]): SearchUser[] => {
+    return apiUsers.map(user => ({
+      _id: user._id || user.id,
+      username: user.username,
+      email: user.email || '',
+      name: user.name || user.username,
+      profileImage: user.photoURL || user.profileImage,
+      bio: user.bio || user.place || 'Coffee enthusiast',
+      photoURL: user.photoURL,
+      place: user.place
+    }));
+  };
+
+  // Real search function using API
+  const performSearch = useCallback(async (query: string) => {
+    if (!query.trim()) {
+      // If empty query, load all users again
+      loadInitialUsers();
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const searchResults = await searchUsers(query);
+      const transformedUsers = transformUsers(searchResults);
+      setUsers(transformedUsers);
+      saveToRecent(query);
+    } catch (err) {
+      setError('Failed to search users. Please try again.');
+      console.error('Search error:', err);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // Handle search input with debounce
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      performSearch(searchQuery);
+    }, 500); // 500ms debounce
+
+    return () => clearTimeout(timer);
+  }, [searchQuery, performSearch]);
+
+  const handleUserClick = (userId: string) => {
+    navigate(`/profile/${userId}`);
+  };
+
+  const handleRecentSearch = (query: string) => {
+    setSearchQuery(query);
+  };
+
+  const clearRecentSearches = () => {
+    setRecentSearches([]);
+    localStorage.removeItem('recentSearches');
+  };
+
+  // Get suggested users (excluding current user if logged in)
+  const getSuggestedUsers = useCallback(() => {
+    if (!currentUser) return users.slice(0, 6);
+    return users.filter(user => user._id !== currentUser._id).slice(0, 6);
+  }, [users, currentUser]);
+
+  // The rest of your component remains mostly the same...
+  // Only change the data source, not the UI
+  
+  return (
+    <div className="min-h-screen bg-gray-50 p-4 md:p-8">
+      <div className="max-w-4xl mx-auto">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-800 mb-2">
+            Find Coffee Mates
+          </h1>
+          <p className="text-gray-600">
+            Search for fellow coffee enthusiasts by username, name, or email
+          </p>
+        </div>
+
+        <div className="relative mb-8">
+          <div className="relative">
+            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search for users..."
+              className="w-full pl-12 pr-4 py-4 text-lg rounded-2xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent shadow-sm"
+              autoFocus
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery('')}
+                className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              >
+                ✕
+              </button>
+            )}
+          </div>
+          
+          <div className="mt-3 flex flex-wrap gap-2">
+            <span className="text-sm text-gray-500">Try searching for:</span>
+            {['coffee', 'latte', 'espresso', 'barista', 'brew'].map((tip) => (
+              <button
+                key={tip}
+                onClick={() => setSearchQuery(tip)}
+                className="text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1 rounded-full transition"
+              >
+                {tip}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {recentSearches.length > 0 && !searchQuery && (
+          <div className="mb-8">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-semibold text-gray-700">Recent Searches</h2>
+              <button
+                onClick={clearRecentSearches}
+                className="text-sm text-gray-500 hover:text-gray-700"
+              >
+                Clear all
+              </button>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {recentSearches.map((query, index) => (
+                <button
+                  key={index}
+                  onClick={() => handleRecentSearch(query)}
+                  className="flex items-center gap-2 bg-white border border-gray-200 hover:border-blue-300 px-4 py-2 rounded-full transition shadow-sm"
+                >
+                  <Search size={14} className="text-gray-400" />
+                  <span className="text-gray-700">{query}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <div className="bg-white rounded-2xl shadow-md overflow-hidden">
+          <div className="border-b border-gray-200 p-6">
+            <div className="flex justify-between items-center">
+              <h2 className="text-xl font-semibold text-gray-800">
+                {searchQuery ? 'Search Results' : 'Coffee Mates Community'}
+              </h2>
+              <span className="text-gray-500">
+                {loading ? 'Loading...' : `${users.length} user${users.length !== 1 ? 's' : ''}`}
+              </span>
+            </div>
+          </div>
+
+          {loading && users.length === 0 && (
+            <div className="p-8 text-center">
+              <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+              <p className="mt-2 text-gray-600">
+                {searchQuery ? 'Searching for users...' : 'Loading users...'}
+              </p>
+            </div>
+          )}
+
+          {error && (
+            <div className="p-8 text-center">
+              <div className="text-red-500 mb-2">⚠️</div>
+              <p className="text-gray-700">{error}</p>
+              <button
+                onClick={() => performSearch(searchQuery)}
+                className="mt-4 text-blue-600 hover:text-blue-800"
+              >
+                Try again
+              </button>
+            </div>
+          )}
+
+          {!loading && !error && users.length === 0 && (
+            <div className="p-8 text-center">
+              <Coffee className="mx-auto text-gray-400 mb-3" size={48} />
+              <h3 className="text-lg font-medium text-gray-700 mb-1">
+                {searchQuery ? 'No users found' : 'No users yet'}
+              </h3>
+              <p className="text-gray-500">
+                {searchQuery 
+                  ? `No users match "${searchQuery}". Try a different search term.`
+                  : 'Be the first to join the coffee community!'}
+              </p>
+            </div>
+          )}
+
+          {!loading && !error && users.length > 0 && (
+            <div className="divide-y divide-gray-100">
+              {users.map((user) => (
+                <div
+                  key={user._id}
+                  onClick={() => handleUserClick(user._id)}
+                  className="p-6 hover:bg-gray-50 cursor-pointer transition group"
+                >
+                  <div className="flex items-center gap-4">
+                    <UserAvatar
+                      username={user.username}
+                      profileImage={user.profileImage || user.photoURL}
+                      size="lg"
+                      className="group-hover:scale-105 transition-transform"
+                    />
+
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <h3 className="text-lg font-semibold text-gray-800 group-hover:text-blue-600 transition">
+                          {user.username}
+                        </h3>
+                        {currentUser?._id === user._id && (
+                          <span className="text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded-full">
+                            You
+                          </span>
+                        )}
+                      </div>
+                      
+                      <p className="text-gray-600 mb-1">{user.name}</p>
+                      
+                      <p className="text-gray-500 text-sm">{user.email}</p>
+                      
+                      {(user.bio || user.place) && (
+                        <p className="text-gray-600 mt-2 text-sm line-clamp-2">
+                          {user.bio || user.place}
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="opacity-0 group-hover:opacity-100 transition">
+                      <button className="flex items-center gap-2 text-blue-600 hover:text-blue-800">
+                        <User size={16} />
+                        <span className="font-medium">View Profile</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {users.length > 0 && searchQuery && (
+            <div className="border-t border-gray-200 p-4 text-center">
+              <p className="text-gray-500 text-sm">
+                Showing {users.length} user{users.length !== 1 ? 's' : ''} for "{searchQuery}"
+              </p>
+            </div>
+          )}
+        </div>
+
+        <div className="mt-8 p-6 bg-blue-50 rounded-2xl">
+          <h3 className="font-semibold text-blue-800 mb-2">Search Tips</h3>
+          <ul className="text-blue-700 text-sm space-y-1">
+            <li>• Search by username, real name, or email address</li>
+            <li>• Use partial matches (e.g., "joh" finds "John", "Johanna")</li>
+            <li>• Search is case-insensitive</li>
+            <li>• Click on any user to visit their profile</li>
+            <li>• Try searching for: coffee, latte, espresso, barista, brew</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default SearchPage;
+*/
