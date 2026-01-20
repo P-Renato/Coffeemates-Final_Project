@@ -46,6 +46,9 @@ jobs:
             export PATH="$HOME/.bun/bin:$PATH"
           fi
           
+          # Install jq for JSON parsing
+          sudo apt-get update && sudo apt-get install -y jq
+          
           # Install dependencies
           bun install
           
@@ -54,7 +57,7 @@ jobs:
           echo "✅ TypeScript compiles"
           
           # Create test .env file
-          cat > .env.test << 'ENV_EOF'
+          cat > .env.test << 'EOF'
           PORT=5000
           ATLAS_URI=mongodb://localhost:27017/test_db
           MONGO_URI=mongodb://localhost:27017/test_db
@@ -66,19 +69,21 @@ jobs:
           FACEBOOK_APP_ID=test
           FACEBOOK_APP_SECRET=test
           SESSION_SECRET=test-session
-          ENV_EOF
+          EOF
           
           # Use the test environment
           export $(cat .env.test | xargs)
           
-          # Test the backend
-          echo "🔍 Testing backend server..."
+          # Test registration endpoint thoroughly
+          echo "🔍 Testing registration endpoint with detailed output..."
           
           # Start server in background
+          echo "Starting test server..."
           bun run dev &
           SERVER_PID=$!
           
           # Wait for server to start
+          echo "Waiting for server to start..."
           for i in {1..30}; do
             if curl -s http://localhost:5000 > /dev/null; then
               echo "✅ Server is running"
@@ -87,31 +92,51 @@ jobs:
             sleep 2
           done
           
-          # Test register endpoint
-          echo "🔍 Testing /api/auth/register..."
-          REGISTER_STATUS=$(curl -s -o /dev/null -w "%{http_code}" -X POST \
+          # Test registration
+          TIMESTAMP=$(date +%s)
+          TEST_USERNAME="testuser_${TIMESTAMP}"
+          TEST_EMAIL="test_${TIMESTAMP}@test.com"
+          
+          REGISTER_RESPONSE=$(curl -s -w "\nHTTP_STATUS:%{http_code}" -X POST \
             -H "Content-Type: application/json" \
-            -d '{"username":"testuser","email":"test@test.com","password":"test123"}' \
+            -H "Accept: application/json" \
+            -d "{\"username\":\"$TEST_USERNAME\",\"email\":\"$TEST_EMAIL\",\"password\":\"test123\"}" \
             http://localhost:5000/api/auth/register)
-          echo "Register endpoint status: $REGISTER_STATUS"
+            
+          HTTP_STATUS=$(echo "$REGISTER_RESPONSE" | grep "HTTP_STATUS:" | cut -d: -f2)
+          RESPONSE_BODY=$(echo "$REGISTER_RESPONSE" | grep -v "HTTP_STATUS:")
+          
+          echo "Register endpoint status: $HTTP_STATUS"
+          echo "Response body: $RESPONSE_BODY"
+          
+          if [ "$HTTP_STATUS" = "201" ] || [ "$HTTP_STATUS" = "200" ]; then
+            echo "✅ Registration endpoint works"
+            # Validate JSON response
+            if echo "$RESPONSE_BODY" | jq empty 2>/dev/null; then
+              echo "✅ Valid JSON response"
+            else
+              echo "❌ Invalid JSON response"
+              exit 1
+            fi
+          else
+            echo "❌ Registration endpoint failed with status $HTTP_STATUS"
+            exit 1
+          fi
           
           # Clean up
           kill $SERVER_PID 2>/dev/null || true
       
-      # Step 3: Test Frontend - FIXED VERSION
+      # Step 3: Test Frontend
       - name: Setup and test frontend
         working-directory: ./client
         env:
-          VITE_API_URL: http://localhost:5000
+          VITE_API_URL: https://coffeemates-backend-service.onrender.com
         run: |
           npm ci
           
-          echo "🔍 Creating SPA routing files for Render Static Site..."
-          
-          # 1. Create _redirects file (REQUIRED for Render Static Sites)
+          echo "🔍 Creating SPA routing files..."
           echo "/*    /index.html   200" > _redirects
           
-          # 2. Also keep static.json for compatibility
           cat > static.json << 'EOF'
           {
             "root": "dist/",
@@ -124,7 +149,16 @@ jobs:
           
           echo "✅ Created _redirects and static.json"
           
-          # Build
+          # Check if VITE_API_URL is used in the code
+          echo "🔍 Checking environment variable usage..."
+          if grep -r "import.meta.env.VITE_API_URL" src/ > /dev/null 2>&1; then
+            echo "✅ VITE_API_URL is referenced in code"
+          else
+            echo "⚠️  VITE_API_URL not found in code"
+          fi
+          
+          # Build with production URL
+          echo "Building with VITE_API_URL=$VITE_API_URL"
           npm run build
           
           # Copy both files to dist
@@ -137,15 +171,15 @@ jobs:
           echo ""
           echo "🔍 Verifying _redirects file:"
           cat dist/_redirects
-
-      - name: Test Deployed SPA Routing
+      
+      # Step 4: Test Deployed SPA Routing
+      - name: Test deployed SPA routing
         run: |
-          echo "🔍 Testing deployed SPA routing (after 60s delay)..."
-          sleep 60  # Wait for deployment
+          echo "🔍 Testing deployed SPA routing..."
           
           # Test if _redirects file exists
           echo "Checking _redirects file..."
-          REDIRECTS_STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://coffeemates-client.onrender.com/_redirects)
+          REDIRECTS_STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://coffeemates-client.onrender.com/_redirects 2>/dev/null || echo "FAILED")
           echo "_redirects status: $REDIRECTS_STATUS"
           
           if [ "$REDIRECTS_STATUS" = "200" ]; then
@@ -153,68 +187,79 @@ jobs:
             
             # Test SPA routing
             echo "Testing /signup route..."
-            SIGNUP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://coffeemates-client.onrender.com/signup)
+            SIGNUP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://coffeemates-client.onrender.com/signup 2>/dev/null || echo "FAILED")
             echo "/signup status: $SIGNUP_STATUS"
             
             if [ "$SIGNUP_STATUS" = "200" ]; then
               echo "✅ SPA routing works! /signup returns 200"
             else
-              echo "❌ SPA routing still not working. /signup returns $SIGNUP_STATUS"
-              echo "⚠️  Render may need cache clearing or manual configuration"
+              echo "⚠️  SPA routing returns $SIGNUP_STATUS (HashRouter should still work)"
             fi
           else
-            echo "❌ _redirects file not deployed (status: $REDIRECTS_STATUS)"
-            echo "⚠️  Deployment may have failed or cache needs clearing"
+            echo "⚠️  _redirects file not deployed (status: $REDIRECTS_STATUS)"
           fi
       
-            - name: Test React Router Navigation
+      # Step 5: Test React Router Navigation
+      - name: Test React Router Navigation
         working-directory: ./client
         run: |
-          echo "🔍 Creating navigation test..."
+          echo "🔍 Checking React Router setup..."
           
-          cat > test-navigation.html << 'HTML'
+          # Check for regular <a href> tags that should be <Link to>
+          echo "Checking for broken navigation links..."
+          
+          if [ -f "src/features/auth/LoginPage.tsx" ]; then
+            if grep -q 'href="/signup"' src/features/auth/LoginPage.tsx; then
+              echo "❌ LoginPage has regular <a href=\"/signup\"> - should use <Link to=\"/signup\">"
+            else
+              echo "✅ LoginPage uses proper React Router navigation"
+            fi
+          fi
+          
+          # Create navigation test file
+          cat > dist/navigation-test.html << 'HTML'
           <!DOCTYPE html>
           <html>
           <body>
-            <h1>Navigation Test</h1>
-            <p>Testing if React Router links work properly</p>
-            
-            <h2>Test Links:</h2>
+            <h1>Navigation Test Results</h1>
+            <p>With HashRouter, always use #/ URLs:</p>
             <ul>
-              <li><a href="#/login">Login (hash)</a></li>
-              <li><a href="#/signup">Signup (hash)</a></li>
-              <li><a href="/login">Login (regular - will 404)</a></li>
-              <li><a href="/signup">Signup (regular - will 404)</a></li>
+              <li><a href="/login">✅ Login </a></li>
+              <li><a href="/signup">✅ Signup </a></li>
+              <li><a href="/login">❌ Login (regular - will 404)</a></li>
+              <li><a href="/signup">❌ Signup (regular - will 404)</a></li>
             </ul>
-            
-            <script>
-              // Test if React Router is loaded
-              console.log('Navigation test loaded');
-              
-              // Check current URL
-              console.log('Current URL:', window.location.href);
-              console.log('Hash:', window.location.hash);
-              
-              // Monitor link clicks
-              document.querySelectorAll('a').forEach(link => {
-                link.addEventListener('click', (e) => {
-                  console.log('Clicked:', e.target.href);
-                  console.log('Will work?', e.target.href.includes('#'));
-                });
-              });
-            </script>
           </body>
           </html>
           HTML
           
           echo "✅ Navigation test created"
-          echo "📋 Manual test required:"
-          echo "1. Go to https://coffeemates-client.onrender.com/#/login"
-          echo "2. Click 'Sign up here' link"
-          echo "3. It should navigate to /#/signup without page reload"
-
+      
+      # Step 6: Test OAuth Configuration
+      - name: Test OAuth configuration
+        run: |
+          echo "🔍 Testing OAuth configuration..."
           
-      # Step 4: Final verification
+          echo "1. Testing OAuth endpoints..."
+          echo "   Google OAuth:"
+          curl -s -o /dev/null -w "   Status: %{http_code}\n" \
+            https://coffeemates-backend-service.onrender.com/api/auth/google || echo "   Failed to connect"
+          
+          echo "   Facebook OAuth:"
+          curl -s -o /dev/null -w "   Status: %{http_code}\n" \
+            https://coffeemates-backend-service.onrender.com/api/auth/facebook || echo "   Failed to connect"
+          
+          echo ""
+          echo "2. Expected callback URLs:"
+          echo "   Google: https://coffeemates-backend-service.onrender.com/api/auth/google/callback"
+          echo "   Facebook: https://coffeemates-backend-service.onrender.com/api/auth/facebook/callback"
+          
+          echo ""
+          echo "⚠️  OAuth requires manual configuration in:"
+          echo "   - Google Cloud Console (add production redirect URIs)"
+          echo "   - Facebook Developer Console (add production settings)"
+      
+      # Step 7: Final verification
       - name: Verify deployment ready
         run: |
           echo "🚀 DEPLOYMENT READY CHECKLIST"
