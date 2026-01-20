@@ -133,7 +133,7 @@ jobs:
             echo "⚠️  Deployment may have failed or cache needs clearing"
           fi
       
-            - name: Test React Router Navigation
+      - name: Test React Router Navigation
         working-directory: ./client
         run: |
           echo "🔍 Creating navigation test..."
