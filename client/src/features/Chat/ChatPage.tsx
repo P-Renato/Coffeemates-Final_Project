@@ -156,7 +156,7 @@ export default function ChatPage() {
     const displayUsers = searchQuery.trim() ? searchResults : users;
 
     return (
-        <div className="flex min-h-screen">
+        <div className="flex min-h-screen sm:mt-[4em]">
             <ToastContainer position="top-right" autoClose={3000} />
 
             <div
@@ -200,7 +200,7 @@ export default function ChatPage() {
                                     />
 
                                     <span
-                                        className="text-green-800 cursor-pointer"
+                                        className="text-green-800 cursor-pointer sm:break-word"
                                         onClick={() => openChat(u._id)}
                                     >
                                         {u.username}
@@ -214,7 +214,7 @@ export default function ChatPage() {
                                 </span>
 
                                 {/* Last Message Preview */}
-                                <span className="text-gray-500 text-sm italic">
+                                <span className="text-gray-500 text-sm italic text-[.8em] absolute left-36 mt-8  md:left-80 lg:left-90 xl:left-110 md:text-sm">
                                     {!lastMsg
                                         ? "No messages yet"
                                         : lastMsg.senderId === auth.id

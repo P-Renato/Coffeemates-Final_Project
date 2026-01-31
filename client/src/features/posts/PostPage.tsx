@@ -9,12 +9,12 @@ export default function PostPage() {
 
   return (
     <div className="">
-      <h2 className="text-left p-2 font-bold border-b border-[#8E8E8E] text-xl ">
+      <h2 className="text-left p-2 md:p-3 font-bold border-b border-[#8E8E8E] text-xl w-full max-w-full ">
         Suggestions for you ({posts.length})
       </h2>
-      <div className="flex flex-col gap-4 p-4">
+      <div className="flex flex-col gap-4 p-4 w-full max-w-full">
         {posts.length === 0 ? (
-          <div className="p-4 text-gray-500 bg-white">No posts yet. Be the first to post!</div>
+          <div className="p-4 text-gray-500 bg-white w-full max-w-full">No posts yet. Be the first to post!</div>
         ) : (
           posts.map((post) => (
             <PostCard key={post._id} post={post} />

@@ -82,7 +82,7 @@ export default function PostCard({ post }: { post: PostType }) {
   }
 
   return (
-    <div className="flex flex-col justify-between bg-white p-4 rounded-2xl shadow-md">
+    <div className="flex flex-col justify-between bg-white p-4 rounded-2xl shadow-md w-full max-w-full">
       <div className="flex justify-between items-center ">
         <div className="flex justify-between items-center gap-2">
           <img
@@ -117,11 +117,11 @@ export default function PostCard({ post }: { post: PostType }) {
 
       </div>
 
-      <div className="flex w-full border-t-3 border-gray-300" key={post._id}>
+      <div className="flex w-full border-t-3 border-gray-300 flex-col md:flex-row m-auto" key={post._id}>
         <img
           src={`${apiUrl}${imagePath}${post.imageUrl}`}
           alt="Coffee post"
-          className="basis-[33%] object-cover max-h-64 max-w-120" // Limits to 256px max height
+          className="basis-[33%] object-cover max-h-64 max-w-120 sm:m-auto sm:pt-2" // Limits to 256px max height
           onError={(e) => {
             e.currentTarget.onerror = null;
             e.currentTarget.src = 'https://placehold.co/400x300/333/fff?text=Coffee+Post';

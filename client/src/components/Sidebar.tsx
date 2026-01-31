@@ -19,50 +19,14 @@ export default function Sidebar() {
     ];
 
     return (
-        <aside className="w-[244px] min-h-screen bg-white flex flex-col items-center border-r border-greyline px-sidebarX py-sidebarY font-base text-text">
-            {/* Logo */}
-            <h1 className={`${styles.courier} text-xl font-bold mb-6`}>Coffeemates</h1>
-
-            {/* No login */}
-            {!user && (
-                <div className="flex flex-col items-center mt-10 w-full">
-                    <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center text-3xl text-gray-500">
-                        👤
-                    </div>
-                    <p className="mt-2 text-profile font-medium text-text">Welcome!</p>
-                    <div className="w-full border-t border-greyline mt-3" />
-                </div>
-            )}
-
-            {/* Login */}
-            {user && (
-                <div className="flex flex-col items-center w-full">
-                    <img
-                        src={user.photoURL || 'https://st3.depositphotos.com/6672868/13701/v/450/depositphotos_137014128-stock-illustration-user-profile-icon.jpg'}
-                        alt={user.username}
-                        className="w-20 h-20 rounded-full object-cover"
-                    />
-                    <p className={`${styles.roboto} mt-3 text-profile`}>
-                        Hello <span className={`${styles.roboto} font-bold text-2xl`}>{user.username}</span>
-                        <button className="cursor-pointer w-full bg-blue-400 text-white"  onClick={() => logout()}>Logout</button>
-                    </p>
-
-                    {/* horizontal */}
-                    <div className="w-full border-t border-greyline mt-3 mb-4"></div>
-
-                    {/* Notification */}
-                    <div className="w-[14em] bg-[#FFFDEE] rounded-md  p-4 mb-10 text-sm">
-                        <div className="flex items-center gap-2 font-semibold">
-                            <span>🔔</span> Notification
-                        </div>
-                        <div className="mt-2 text-xs text-gray-600 border-t border-greyline pt-2">
-                            <p>@coffeeelena commented on your post</p>
-                            <p>@flatwhitelover commented on your post</p>
-                        </div>
-                    </div>
-
-                    {/* nav */}
-                    <nav className="w-full flex flex-col gap-3">
+        <>
+        {/* Mobile Header - Always visible, fixed at top */}
+            <header className="md:hidden fixed top-0 left-0 right-0 bg-white border-b border-greyline z-50  font-base text-text">
+                <div className="flex items-center justify-between px-4 py-3">
+                    {/* Logo */}
+                    <h1 className={`${styles.courier} text-xl font-bold`}>Coffeemates</h1>
+                
+                    <nav className="flex flex-row gap-3">
                         {navItems.map((item) => (
                             <div
                                 key={item.label}
@@ -71,17 +35,85 @@ export default function Sidebar() {
                                     if (item.label === "Post") setPostPopup(!postPopup);
                                 }}
                             >
-                                <span className="text-lg">{item.icon}</span>
                                 {item.url ? (
-                                    <NavLink to={item.url}>{item.label}</NavLink>
+                                    <NavLink to={item.url}>{item.icon}</NavLink>
                                 ) : (
-                                    <span>{item.label}</span>
+                                    <span>{item.icon}</span>
                                 )}
                             </div>
                         ))}
                     </nav>
+                    <button className="cursor-pointer w-[6em] p-[.4em] bg-blue-400 text-white"  onClick={() => logout()}>Logout</button>
+                    
                 </div>
-            )}
-        </aside>
+            </header>
+        
+            <aside className="hidden md:flex w-[244px] min-h-screen bg-white flex flex-col items-center border-r border-greyline px-sidebarX py-sidebarY font-base text-text">
+                {/* Logo */}
+                <h1 className={`${styles.courier} text-xl font-bold mb-6`}>Coffeemates</h1>
+
+                {/* No login */}
+                {!user && (
+                    <div className="flex flex-col items-center mt-10 w-full">
+                        <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center text-3xl text-gray-500">
+                            👤
+                        </div>
+                        <p className="mt-2 text-profile font-medium text-text">Welcome!</p>
+                        <div className="w-full border-t border-greyline mt-3" />
+                    </div>
+                )}
+
+                {/* Login */}
+                {user && (
+                    <div className="flex flex-col items-center w-full">
+                        <img
+                            src={user.photoURL || 'https://st3.depositphotos.com/6672868/13701/v/450/depositphotos_137014128-stock-illustration-user-profile-icon.jpg'}
+                            alt={user.username}
+                            className="w-20 h-20 rounded-full object-cover"
+                        />
+                        <p className={`${styles.roboto} mt-3 text-profile`}>
+                            Hello <span className={`${styles.roboto} font-bold text-2xl`}>{user.username}</span>
+                            <button className="cursor-pointer w-full bg-blue-400 text-white"  onClick={() => logout()}>Logout</button>
+                        </p>
+
+                        {/* horizontal */}
+                        <div className="w-full border-t border-greyline mt-3 mb-4"></div>
+
+                        {/* Notification */}
+                        <div className="w-[14em] bg-[#FFFDEE] rounded-md  p-4 mb-10 text-sm">
+                            <div className="flex items-center gap-2 font-semibold">
+                                <span>🔔</span> Notification
+                            </div>
+                            <div className="mt-2 text-xs text-gray-600 border-t border-greyline pt-2">
+                                <p>@coffeeelena commented on your post</p>
+                                <p>@flatwhitelover commented on your post</p>
+                            </div>
+                        </div>
+
+                        {/* nav */}
+                        <nav className="w-full flex flex-col gap-3">
+                            {navItems.map((item) => (
+                                <div
+                                    key={item.label}
+                                    className="flex items-center gap-3 py-2 px-2 rounded-md text-profile transition-all duration-200 ease-in-out hover:font-semibold cursor-pointer"
+                                    onClick={() => {
+                                        if (item.label === "Post") setPostPopup(!postPopup);
+                                    }}
+                                >
+                                    <span className="text-lg">{item.icon}</span>
+                                    {item.url ? (
+                                        <NavLink to={item.url}>{item.label}</NavLink>
+                                    ) : (
+                                        <span>{item.label}</span>
+                                    )}
+                                </div>
+                            ))}
+                        </nav>
+                    </div>
+                )}
+            </aside>
+        </>
+
+
     );
 }

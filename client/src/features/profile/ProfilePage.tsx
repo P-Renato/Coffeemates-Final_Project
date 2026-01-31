@@ -120,6 +120,24 @@ const ProfilePage: React.FC = () => {
         if (!user || !user.id) {
           throw new Error('User not authenticated');
         }
+
+         if (token) {
+      try {
+        const parts = token.split('.');
+        if (parts.length === 3) {
+          const payload = JSON.parse(atob(parts[1]));
+          console.log('🔓 Decoded Token Payload:', payload);
+          console.log('⏰ Expiry:', new Date(payload.exp * 1000));
+          console.log('⏰ Current time:', new Date());
+          console.log('⏰ Is expired?', payload.exp * 1000 < Date.now());
+          console.log('👤 User ID in token:', payload.userId);
+        }
+      } catch (decodeError) {
+        console.log('❌ Cannot decode token:', decodeError);
+      }
+    }
+    
+    console.log('📤 Sending request with token:', token ? `${token.substring(0, 30)}...` : 'none');
         // Fetch user profile data
         const userResponse = await fetch(`${apiUrl}/api/users/${user.id}?t=${Date.now()}`, {
           headers: {
@@ -143,6 +161,9 @@ const ProfilePage: React.FC = () => {
           },
           credentials: 'include', 
         });
+        console.log('📥 Profile response status:', profileResponse.status);
+    console.log('📥 Profile response headers:', Object.fromEntries(profileResponse.headers.entries()));
+        
 
         if (!profileResponse.ok) {
           throw new Error("Failed to fetch profile questions");
