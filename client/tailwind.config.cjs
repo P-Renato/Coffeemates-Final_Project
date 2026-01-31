@@ -29,6 +29,9 @@ module.exports = {
         greyline: "#C4C4C4",
         typeBox: "#C4C4C4",
         triangle: "#D9D9D9",
+        screens: {
+          'mobile-only': { 'max': '768px' }, 
+        }
       },
       fontFamily: {
         logo: ['"Courier Prime"', 'monospace'],
