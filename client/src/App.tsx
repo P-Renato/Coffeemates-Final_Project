@@ -14,9 +14,12 @@ import OAuthSuccess from "./pages/OAuthSuccess";
 import LoginPage from "./features/auth/LoginPage";
 import AdminPage from "./features/auth/AdminPage"
 import EditProfil from "./features/profile/EditProfile";
-
+import { useOAuthHandler } from "./hooks/useOAuthHandler";
 
 const App = () => {
+
+  useOAuthHandler();
+  
   return (
     <AppProvider>
       <AuthProvider>
