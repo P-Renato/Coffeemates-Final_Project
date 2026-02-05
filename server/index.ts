@@ -115,6 +115,20 @@ app.use("/api/geocode", geocodeRouter);
 initChatSocket(io);  // Initialize chat sockets
 app.use("/api/chat", chatRouter);
 
+/* ---------------------- SPA Routing ---------------------- */
+// Serve static files from client build
+const clientBuildPath = path.join(__dirname, '../client/dist');
+app.use(express.static(clientBuildPath));
+
+// SPA fallback route - serve index.html for all non-API routes
+app.get('*', (req, res) => {
+  // Don't serve index.html for API routes
+  if (req.path.startsWith('/api/') || req.path.startsWith('/uploads/')) {
+    return res.status(404).json({ error: 'Not found' });
+  }
+  res.sendFile(path.join(clientBuildPath, 'index.html'));
+});
+
 /* ---------------------- error handlers ---------------------- */
 
 const port = process.env.PORT || 4343;

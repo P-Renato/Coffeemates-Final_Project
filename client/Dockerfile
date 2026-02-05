@@ -1,4 +1,4 @@
-FROM node:20-alpine AS builder
+FROM node:20-alpine
 
 WORKDIR /app
 
@@ -19,19 +19,6 @@ COPY . .
 # Build the production app
 RUN npm run build
 
-# Serve stage
-FROM node:20-alpine
-
-WORKDIR /app
-
-# Install serve to serve static files
-RUN npm install -g serve
-
-# Copy built files from builder
-COPY --from=builder /app/dist ./dist
-
-# Expose port
-EXPOSE 3000
-
-# Start the app by serving the dist folder
-CMD ["serve", "-s", "dist", "-l", "3000"]
+# Note: The built files in dist/ will be served by the backend Express server
+# This Dockerfile is used by Render's build process, but the actual serving
+# happens in the backend server/index.ts
