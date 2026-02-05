@@ -1,100 +1,67 @@
-// src/hooks/useOAuthHandler.ts
+// src/hooks/useOAuthHandler.ts - STANDALONE VERSION
 import { useEffect, useRef } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
-import { useAuth } from './useAuth';
+import { useNavigate } from 'react-router-dom';
 
 /**
- * Custom hook specifically for handling OAuth callback parameters
- * This solves the Render SPA redirect issue where /oauth-success -> /index.html
- * 
- * Usage: Simply call useOAuthHandler() in your App.tsx component
+ * Standalone OAuth handler that doesn't depend on useAuth
+ * This solves the Render SPA redirect issue
  */
 export const useOAuthHandler = (): void => {
-  const location = useLocation();
   const navigate = useNavigate();
-  const { login, isAuthenticated, isLoading } = useAuth();
-  const hasProcessed = useRef<string>(''); // Track processed URLs to prevent double handling
+  const hasProcessed = useRef<string>('');
 
   useEffect(() => {
-    // Don't process if auth is still loading or already authenticated
-    if (isLoading || isAuthenticated) {
-      return;
-    }
-
-    // Get the current URL with search params
+    // Get current URL
     const currentUrl = window.location.href;
     
-    // Skip if we've already processed this URL
+    // Skip if already processed
     if (hasProcessed.current === currentUrl) {
       return;
     }
 
-    // Extract token and user from URL parameters
+    // Extract OAuth parameters
     const searchParams = new URLSearchParams(window.location.search);
     const token = searchParams.get('token');
     const userParam = searchParams.get('user');
 
-    // Debug logging
     console.log('🔍 useOAuthHandler checking:', {
       hasToken: !!token,
       hasUserParam: !!userParam,
-      windowPath: window.location.pathname,
-      windowSearch: window.location.search,
-      reactPath: location.pathname,
-      reactSearch: location.search,
-      currentUrl
+      url: currentUrl
     });
 
-    // Process OAuth callback if we have both token and user
     if (token && userParam) {
       console.log('🔄 useOAuthHandler processing OAuth callback');
+      hasProcessed.current = currentUrl;
       
       try {
-        // Mark this URL as processed
-        hasProcessed.current = currentUrl;
-        
-        // Decode and parse user data
         const userData = JSON.parse(decodeURIComponent(userParam));
         
-        // Validate required fields
+        // Validate
         if (!userData.id || !userData.email) {
-          throw new Error('Invalid user data received from OAuth provider');
+          throw new Error('Invalid user data');
         }
         
-        // Call the login function from existing useAuth hook
-        login(token, userData);
+        // Save to localStorage (same as AuthProvider.login does)
+        localStorage.setItem('authToken', token);
+        localStorage.setItem('userData', JSON.stringify(userData));
         
-        // Clear URL parameters to prevent re-processing on refresh
-        const cleanUrl = window.location.pathname;
-        window.history.replaceState({}, '', cleanUrl);
+        console.log('✅ OAuth data saved to localStorage');
         
-        console.log('✅ OAuth successful via useOAuthHandler, redirecting to home');
+        // Clear URL parameters
+        window.history.replaceState({}, '', window.location.pathname);
         
-        // Navigate to home page
-        navigate('/home', { replace: true });
+        // Force a page reload to trigger AuthProvider initialization
+        // This is necessary because we can't call login() without useAuth
+        window.location.href = '/home';
         
       } catch (error) {
-        console.error('❌ useOAuthHandler error:', error);
-        
-        // Clear the processed flag on error
-        hasProcessed.current = '';
-        
-        // Redirect to login with error message
+        console.error('❌ OAuth processing error:', error);
         navigate('/login', { 
           replace: true, 
-          state: { 
-            error: 'OAuth login failed',
-            message: (error as Error).message 
-          } 
+          state: { error: 'Login failed' } 
         });
       }
     }
-    
-    // If we're on /oauth-success path but no params, redirect to login
-    else if (window.location.pathname.includes('oauth-success')) {
-      console.log('ℹ️ On /oauth-success but no OAuth params found');
-      navigate('/login', { replace: true });
-    }
-    
-  }, [location, login, navigate, isAuthenticated, isLoading]);
+  }, [navigate]);
 };
