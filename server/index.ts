@@ -55,8 +55,6 @@ app.use("/uploads", express.static(path.join(__dirname, "uploads"), {
 }));
 
 // Also add this debug middleware to see what's being requested:
-app.use('/uploads', (req, res, next) => express.static(path.join(__dirname, 'uploads')));
-
 app.get('/api/debug/uploads', (req, res) => {
   const uploadsDir = path.join(__dirname, 'uploads');
   const profileDir = path.join(uploadsDir, 'profile');
@@ -121,7 +119,7 @@ const clientBuildPath = path.join(__dirname, '../client/dist');
 app.use(express.static(clientBuildPath));
 
 // SPA fallback route - serve index.html for all non-API routes
-app.get('/*', (req, res) => {
+app.get('*', (req, res) => {
   // Don't serve index.html for API routes
   if (req.path.startsWith('/api/') || req.path.startsWith('/uploads/')) {
     return res.status(404).json({ error: 'Not found' });
