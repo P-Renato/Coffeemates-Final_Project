@@ -1,9 +1,10 @@
 import { useEffect, useState, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from '../hooks/useAuth';
 
 const OAuthSuccess = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { login } = useAuth();
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
   const hasHandledOAuth = useRef(false);
@@ -19,7 +20,8 @@ const OAuthSuccess = () => {
 
     const handleOAuthSuccess = async () => {
       try {
-        const urlParams = new URLSearchParams(window.location.search);
+        const searchParams = location.search || window.location.search;
+        const urlParams = new URLSearchParams(searchParams);
         const token = urlParams.get("token");
         const userId = urlParams.get("userId");
         const userParam = urlParams.get("user");
@@ -30,6 +32,11 @@ const OAuthSuccess = () => {
           user: userParam ? 'Present' : 'Missing',
           fullUrl: window.location.href
         });
+        console.log('OAuthSuccess - Processing OAuth callback');
+        console.log('Current path:', location.pathname);
+        console.log('Search params:', searchParams);
+        console.log('Token present:', !!token);
+        console.log('User param present:', !!userParam);
 
         if (!token) {
           throw new Error('No token received from OAuth provider');
@@ -82,7 +89,7 @@ const OAuthSuccess = () => {
         console.log('OAuthSuccess - Login successful, redirecting to home');
         
         // Clear URL parameters to prevent re-triggering
-        window.history.replaceState({}, '', window.location.pathname);
+        window.history.replaceState({}, '', '/');
         
         // Navigate immediately
         navigate("/", { replace: true });
@@ -96,7 +103,7 @@ const OAuthSuccess = () => {
     };
 
     handleOAuthSuccess();
-  }, [navigate, login]);
+  }, [navigate, login, location]);
 
   return (
     <div style={{
