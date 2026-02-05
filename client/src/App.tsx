@@ -14,16 +14,10 @@ import OAuthSuccess from "./pages/OAuthSuccess";
 import LoginPage from "./features/auth/LoginPage";
 import AdminPage from "./features/auth/AdminPage"
 import EditProfil from "./features/profile/EditProfile";
-import { useOAuthHandler } from "./hooks/useOAuthHandler";
 
-const App = () => {
-
-  useOAuthHandler();
-  
+const AppContent = () => {
   return (
-    <AppProvider>
-      <AuthProvider>
-        <Routes>
+    <Routes>
           {/* Redirect root to login */}
           <Route path="/" element={<Navigate to="/home" replace />} />
 
@@ -66,6 +60,14 @@ const App = () => {
           {/* Catch-all */}
           <Route path="*" element={<h1>404: Not Found</h1>} />
         </Routes>
+  );
+}
+const App = () => {
+  
+  return (
+    <AppProvider>
+      <AuthProvider>
+        <AppContent />
       </AuthProvider>
     </AppProvider>
   );
