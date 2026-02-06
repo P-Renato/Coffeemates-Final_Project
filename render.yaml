@@ -1,0 +1,55 @@
+services:
+  - type: web
+    name: coffeemates-backend-service
+    env: docker
+    dockerfilePath: ./Dockerfile
+    repo: https://github.com/P-Renato/Coffeemates-Final_Project
+    region: oregon
+    plan: free
+    branch: main
+    domains:
+      - coffeemates-backend-service.onrender.com
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 4343
+      - key: ATLAS_URI
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: JWT_EXPIRES_IN
+        value: 30d
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false
+      - key: GOOGLE_CALLBACK_URL
+        value: https://coffeemates-backend-service.onrender.com/api/auth/google/callback
+      - key: FACEBOOK_APP_ID
+        sync: false
+      - key: FACEBOOK_APP_SECRET
+        sync: false
+      - key: FACEBOOK_CALLBACK_URL
+        value: https://coffeemates-backend-service.onrender.com/api/auth/facebook/callback
+      - key: BASE_URL
+        value: https://coffeemates-backend-service.onrender.com
+      - key: CLIENT_URL
+        value: https://coffeemates-client.onrender.com
+      - key: VITE_API_URL
+        value: https://coffeemates-backend-service.onrender.com
+
+  - type: web
+    name: coffeemates-client
+    env: node
+    buildCommand: cd client && npm install && npm run build
+    startCommand: npx serve -s client/dist -l 3000
+    repo: https://github.com/P-Renato/Coffeemates-Final_Project
+    region: oregon
+    plan: free
+    branch: main
+    domains:
+      - coffeemates-client.onrender.com
+    envVars:
+      - key: VITE_API_URL
+        value: https://coffeemates-backend-service.onrender.com
