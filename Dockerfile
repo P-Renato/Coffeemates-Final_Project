@@ -14,6 +14,9 @@ RUN bun install --production
 # Copy all server source code
 COPY server/ ./
 
+# Copy built client
+COPY client/dist ./client/dist
+
 EXPOSE 4343
 
 CMD ["bun", "run", "start"]
